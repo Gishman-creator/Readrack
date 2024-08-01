@@ -3,7 +3,7 @@ import harryPotterSerie from '../../../../assets/harry_potter_serie.png'
 
 function Details() {
   return (
-    <div className='w-full md:w-[20rem] md:h-screen md:sticky md:top-0 overflow-auto'>
+    <div className='w-full md:w-[20rem] md:h-full md:sticky md:top-0 md:mt-10 overflow-auto'>
       <img src={harryPotterSerie} alt="serie image" className='h-[18rem] w-[15rem] bg-[#edf4e6] rounded-sm mx-auto' />
       <p className='font-poppins font-medium text-2xl text-center mt-4'>Harry potter serie</p>
       <p className='font-arsenal text-lg text-center'>by J.K Rowling</p>

@@ -4,32 +4,66 @@
 
 /* Hide scrollbar for WebKit browsers */
 .scrollbar-hidden::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 
 /* Hide scrollbar for Firefox */
 .scrollbar-hidden {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
-/* styles.css */
 
 .on-click {
-    background-color: transparent;
-    transition: background-color 0.3s ease; /* Smooth transition */
-  }
-  
-  .on-click:hover {
-    background-color: #edf4e6; /* Tailwind's hover:bg-gray-200 equivalent */
-  }
-  
-  .on-click:active {
-    background-color: #e4eed9; /* Background color when clicked */
-  }
+  background-color: transparent;
+  transition: background-color 0.3s ease;
+  /* Smooth transition */
+}
 
-  .fixed {
-    position: fixed;
-    top: 0;
-    width: 23rem; /* Ensure this matches the width in the component */
-  }
-  
+.on-click:hover {
+  background-color: #edf4e6;
+  /* Tailwind's hover:bg-gray-200 equivalent */
+}
+
+.on-click:active {
+  background-color: #e4eed9;
+  /* Background color when clicked */
+}
+
+.on-click-amzn {
+  transition: background-color 0.3s ease;
+  /* Smooth transition */
+}
+
+.on-click-amzn:hover {
+  background-color: #407645;
+  /* Tailwind's hover:bg-gray-200 equivalent */
+}
+
+.on-click-amzn:active {
+  background-color: #4b8a51;
+  /* Background color when clicked */
+}
+
+.on-click-sidebar {
+  transition: background-color 0.3s ease;
+  /* Smooth transition */
+}
+
+.on-click-sidebar:hover {
+  background-color: #d6e5c4;
+  /* Tailwind's hover:bg-gray-200 equivalent */
+}
+
+.on-click-sidebar:active {
+  background-color: #e0ebd3;
+  /* Background color when clicked */
+}
+
+.fixed {
+  position: fixed;
+  top: 0;
+  width: 23rem;
+  /* Ensure this matches the width in the component */
+}

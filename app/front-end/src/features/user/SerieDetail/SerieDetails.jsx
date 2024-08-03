@@ -1,8 +1,8 @@
 import React from 'react'
 import Details from './Details'
 import Books from './Books'
-import NavBar from '../../components/NavBar'
-import Recommendations from '../../components/Recommendations'
+import NavBar from '../components/NavBar'
+import Recommendations from '../recommendations/Recommendations'
 
 function SerieDetails() {
   return (
@@ -12,7 +12,7 @@ function SerieDetails() {
         <Details />
         <Books />
       </div>
-      <div className='px-[4%] sm:px-[12%]'>
+      <div className='pt-8 px-[4%] sm:px-[12%]'>
       <Recommendations />
       </div>
     </div>

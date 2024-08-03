@@ -1,5 +1,5 @@
 import React from 'react';
-import harryPotter1 from '../../../../assets/harry_potter_1_.jpg';
+import harryPotter1 from '../../../assets/harry_potter_1_.jpg';
 
 function Books() {
   return (
@@ -25,7 +25,7 @@ function Books() {
               </p>
               <a
                 href='#'
-                className='bg-[#37643B] block w-full text-center text-white text-sm font-semibold font-poppins p-3 rounded-lg mt-auto'
+                className='bg-[#37643B] block w-full text-center text-white text-sm font-semibold font-poppins p-3 rounded-lg mt-auto on-click-amzn'
               >
                 Series on Amazon
               </a>

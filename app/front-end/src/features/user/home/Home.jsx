@@ -1,7 +1,7 @@
 import React from 'react'
-import NavBar from '../../components/NavBar'
-import GenreList from '../../components/ui/GenreList'
-import Cards from '../../components/Cards'
+import NavBar from '../components/NavBar'
+import GenreList from '../components/ui/GenreList'
+import Cards from '../components/Cards'
 import { BrowserRouter as Router } from 'react-router-dom'
 
 export default function Home() {

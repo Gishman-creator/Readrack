@@ -31,9 +31,9 @@ function Recommendations() {
     };
 
     return (
-        <div className='pt-4'>
+        <div className=''>
             <div className='flex items-center justify-between'>
-                <p className='font-poppins text-lg'>You may also like:</p>
+                <p className='font-poppins'>You may also like:</p>
                 <div className='hidden md:flex items-center justify-between space-x-2'>
                     <button onClick={scrollLeft} className='text-xl cursor-pointer p-2 rounded-full on-click'>
                     <ChevronLeftIcon className='w-6 h-6' />

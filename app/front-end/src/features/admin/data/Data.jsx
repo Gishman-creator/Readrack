@@ -19,3 +19,137 @@ export const dayData = generateRandomData(24, hoursOfDay);
 export const weekData = generateRandomData(7, daysOfWeek);
 export const monthData = generateRandomData(31, daysOfMonth);
 export const yearData = generateRandomData(12, monthsOfYear);
+
+// src/components/Data.jsx
+
+const seriesData = [
+    {
+      name: "Harry Potter",
+      author: "J.K. Rowling",
+      numBooks: 7,
+      genres: ["Fantasy", "Adventure"],
+      amazonLink: "https://www.amazon.com/dp/B0192CTMYG",
+    },
+    {
+      name: "The Lord of the Rings",
+      author: "J.R.R. Tolkien",
+      numBooks: 3,
+      genres: ["Fantasy", "Epic"],
+      amazonLink: "https://www.amazon.com/dp/B0026REBFK",
+    },
+    {
+      name: "A Song of Ice and Fire",
+      author: "George R.R. Martin",
+      numBooks: 5,
+      genres: ["Fantasy", "Drama"],
+      amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
+    },
+    {
+      name: "A Song of Ice and Fire",
+      author: "George R.R. Martin",
+      numBooks: 5,
+      genres: ["Fantasy", "Drama"],
+      amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
+    },
+    {
+      name: "A Song of Ice and Fire",
+      author: "George R.R. Martin",
+      numBooks: 5,
+      genres: ["Fantasy", "Drama"],
+      amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
+    },
+    {
+      name: "A Song of Ice and Fire",
+      author: "George R.R. Martin",
+      numBooks: 5,
+      genres: ["Fantasy", "Drama"],
+      amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
+    },
+    {
+      name: "A Song of Ice and Fire",
+      author: "George R.R. Martin",
+      numBooks: 5,
+      genres: ["Fantasy", "Drama"],
+      amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
+    },
+    {
+      name: "A Song of Ice and Fire",
+      author: "George R.R. Martin",
+      numBooks: 5,
+      genres: ["Fantasy", "Drama"],
+      amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
+    },
+    {
+      name: "A Song of Ice and Fire",
+      author: "George R.R. Martin",
+      numBooks: 5,
+      genres: ["Fantasy", "Drama"],
+      amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
+    },
+    {
+      name: "A Song of Ice and Fire",
+      author: "George R.R. Martin",
+      numBooks: 5,
+      genres: ["Fantasy", "Drama"],
+      amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
+    },
+    {
+      name: "A Song of Ice and Fire",
+      author: "George R.R. Martin",
+      numBooks: 5,
+      genres: ["Fantasy", "Drama"],
+      amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
+    },
+    {
+      name: "A Song of Ice and Fire",
+      author: "George R.R. Martin",
+      numBooks: 5,
+      genres: ["Fantasy", "Drama"],
+      amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
+    },
+    {
+      name: "A Song of Ice and Fire",
+      author: "George R.R. Martin",
+      numBooks: 5,
+      genres: ["Fantasy", "Drama"],
+      amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
+    },
+    {
+      name: "A Song of Ice and Fire",
+      author: "George R.R. Martin",
+      numBooks: 5,
+      genres: ["Fantasy", "Drama"],
+      amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
+    },
+    {
+      name: "A Song of Ice and Fire",
+      author: "George R.R. Martin",
+      numBooks: 5,
+      genres: ["Fantasy", "Drama"],
+      amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
+    },
+    {
+      name: "A Song of Ice and Fire",
+      author: "George R.R. Martin",
+      numBooks: 5,
+      genres: ["Fantasy", "Drama"],
+      amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
+    },
+    {
+      name: "A Song of Ice and Fire",
+      author: "George R.R. Martin",
+      numBooks: 5,
+      genres: ["Fantasy", "Drama"],
+      amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
+    },
+    {
+      name: "A Song of Ice and Fire",
+      author: "George R.R. Martin",
+      numBooks: 5,
+      genres: ["Fantasy", "Drama"],
+      amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
+    },
+  ];
+  
+  export default seriesData;
+  

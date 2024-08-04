@@ -67,3 +67,7 @@
   width: 23rem;
   /* Ensure this matches the width in the component */
 }
+
+.max-h-custom {
+  max-height: calc(100vh - 17.5rem);
+}

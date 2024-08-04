@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Bars3Icon, HomeIcon, UsersIcon, CodeBracketSquareIcon, ArrowRightStartOnRectangleIcon, FolderOpenIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, HomeIcon, UsersIcon, CodeBracketSquareIcon, ArrowRightStartOnRectangleIcon, FolderOpenIcon, ChartBarIcon, AdjustmentsVerticalIcon, ChartBarSquareIcon } from '@heroicons/react/24/outline';
 import { toggleVisibility, toggleExpansion, setVisibility, setExpansion } from './SideBarSlice';
 
 const SideBar = () => {
@@ -52,12 +52,13 @@ const SideBar = () => {
                             <li>
                                 <Link
                                     to="/admin/dashboard"
+                                    title={isExpanded ? null : 'Dashboard'}
                                     className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} ${location.pathname === '/admin/dashboard' ? 'bg-[#66893d] text-slate-100 hover:bg-[#66893d]' : ''
                                         }`}
                                     onClick={() => dispatch(toggleVisibility())}
                                 >
-                                    <HomeIcon className={`${isExpanded ? 'mr-2' : 'mr-0'} w-9 h-9 p-2`} />
-                                    <span className={`mr-14 ${isExpanded ? 'block' : 'hidden'}`}>
+                                    <ChartBarSquareIcon className={`${isExpanded ? 'mr-2' : 'mr-0'} w-9 h-9 p-2`} />
+                                    <span className={`text-xs mr-14 ${isExpanded ? 'block' : 'hidden'}`}>
                                         Dashboard
                                     </span>
                                 </Link>
@@ -65,12 +66,13 @@ const SideBar = () => {
                             <li>
                                 <Link
                                     to="/admin/catalog"
+                                    title={isExpanded ? null : 'Catalog'}
                                     className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} ${location.pathname === '/admin/catalog' ? 'bg-[#66893d] text-slate-100 hover:bg-[#66893d]' : ''
                                         }`}
                                     onClick={() => dispatch(toggleVisibility())}
                                 >
                                     <FolderOpenIcon className={`${isExpanded ? 'mr-2' : 'mr-0'} w-9 h-9 p-2`} />
-                                    <span className={`mr-14 ${isExpanded ? 'block' : 'hidden'}`}>
+                                    <span className={`text-xs mr-14 ${isExpanded ? 'block' : 'hidden'}`}>
                                         Catalog
                                     </span>
                                 </Link>
@@ -78,12 +80,13 @@ const SideBar = () => {
                             <li>
                                 <Link
                                     to="/admin/editor"
+                                    title={isExpanded ? null : 'Ui elements'}
                                     className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} ${location.pathname === '/admin/editor' ? 'bg-[#66893d] text-slate-100 hover:bg-[#66893d]' : ''
                                         }`}
                                     onClick={() => dispatch(toggleVisibility())}
                                 >
                                     <CodeBracketSquareIcon className={`${isExpanded ? 'mr-2' : 'mr-0'} w-9 h-9 p-2`} />
-                                    <span className={`mr-14 ${isExpanded ? 'block' : 'hidden'}`}>
+                                    <span className={`text-xs mr-14 ${isExpanded ? 'block' : 'hidden'}`}>
                                         Ui elements
                                     </span>
                                 </Link>
@@ -92,11 +95,12 @@ const SideBar = () => {
                         <ul>
                             <li
                                 to="/admin/editor"
+                                    title={isExpanded ? null : 'Logout'}
                                 className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} cursor-pointer`}
                                 onClick={() => dispatch(toggleVisibility())}
                             >
                                 <ArrowRightStartOnRectangleIcon className={`${isExpanded ? 'mr-2' : 'mr-0'} w-9 h-9 p-2`} />
-                                <span className={`mr-14 ${isExpanded ? 'block' : 'hidden'}`}>
+                                <span className={`text-xs mr-14 ${isExpanded ? 'block' : 'hidden'}`}>
                                     Logout
                                 </span>
                             </li>

@@ -16,11 +16,11 @@ function Admin() {
     const {isExpanded} = useSelector((state) => state.sideBar);
 
     return (
-        <div className="flex bg-[#ecf3e5]">
+        <div className="flex min-h-full bg-[#ecf3e5] font-poppins">
             <Sidebar />
-            <div className={`flex-1 bg-[#ecf3e5] transition-margin duration-300 w-full ${isExpanded ? 'md:ml-[14rem]' : 'md:ml-[4.8rem]'}`}>
+            <div className={`flex-1 bg-[#ecf3e5] transition-margin duration-300 w-full ${isExpanded ? 'md:ml-[13.2rem]' : 'md:ml-[4.8rem]'}`}>
             <NavBar />
-                <div className="p-4">
+                <div className="p-4 bg-[#ecf3e5]">
                     <Routes>
                         <Route path="dashboard" element={<Dashboard />} />
                         <Route path="catalog" element={<Catalog />} />

@@ -6,7 +6,7 @@ const { generateVerificationCode } = require('../../utils/verificationUtils'); /
 exports.login = async (req, res) => {
     const { email, password } = req.body;
     try {
-        const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+        const [rows] = await pool.query('SELECT * FROM admin WHERE email = ?', [email]);
 
         if (rows.length > 0) {
             const user = rows[0];
@@ -16,7 +16,7 @@ exports.login = async (req, res) => {
                 const verificationCode = generateVerificationCode();
                 
                 // Store the verification code in the database
-                await pool.query('UPDATE users SET verification_code = ? WHERE email = ?', [verificationCode, email]);
+                await pool.query('UPDATE admin SET verification_code = ? WHERE email = ?', [verificationCode, email]);
 
                 // Send the verification email
                 await sendEmail(

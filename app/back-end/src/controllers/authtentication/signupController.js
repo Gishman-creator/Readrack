@@ -10,7 +10,7 @@ exports.signup = async (req, res) => {
         const verificationCode = generateVerificationCode();
 
         // Insert user into the database with the verification code
-        await pool.query('INSERT INTO users (email, password, firstName, lastName, verification_code) VALUES (?, ?, ?, ?, ?)', [email, hashedPassword, firstName, lastName, verificationCode]);
+        await pool.query('INSERT INTO admin (email, password, firstName, lastName, verification_code) VALUES (?, ?, ?, ?, ?)', [email, hashedPassword, firstName, lastName, verificationCode]);
 
         // Send the verification email
         await sendEmail(

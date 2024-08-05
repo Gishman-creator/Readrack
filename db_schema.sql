@@ -56,3 +56,15 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL
 );
 
+CREATE TABLE admin (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    firstName VARCHAR(255) NOT NULL,
+    lastName VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    refresh_token TEXT,           -- Store the refresh token
+    verification_code VARCHAR(6), -- Store the verification code
+    role ENUM('admin', 'subAccount') NOT NULL DEFAULT 'admin', -- Store user role
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

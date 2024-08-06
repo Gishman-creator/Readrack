@@ -6,12 +6,12 @@ const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
 exports.verifyCode = async (req, res) => {
-    const { email, verificationCode } = req.body;
-    console.log(email, verificationCode);
+    const { email, code } = req.body;
+    console.log("Body:", req.body);
 
     try {
         // Check if the verification code matches
-        const [rows] = await pool.query('SELECT * FROM admin WHERE email = ? AND verification_code = ?', [email, verificationCode]);
+        const [rows] = await pool.query('SELECT * FROM admin WHERE email = ? AND verification_code = ?', [email, code]);
 
         if (rows.length > 0) {
             const user = rows[0];
@@ -19,21 +19,21 @@ exports.verifyCode = async (req, res) => {
             // Clear the verification code to prevent reuse
             await pool.query('UPDATE admin SET verification_code = NULL WHERE email = ?', [email]);
 
-            // Generate access token
+            // Generate access token with email
             const accessToken = jwt.sign(
-                { id: user.id, role: user.role },
+                { id: user.id, email: user.email, role: user.role },
                 ACCESS_TOKEN_SECRET,
-                { expiresIn: '1h' } // Set your desired expiration time
+                { expiresIn: '15m' }
             );
 
             // Generate refresh token
             const refreshToken = jwt.sign(
-                { id: user.id },
+                { id: user.id, email: user.email },
                 REFRESH_TOKEN_SECRET,
-                { expiresIn: '7d' } // Set your desired expiration time
+                { expiresIn: '14d' }
             );
 
-            // Optionally, update the user's refresh token in the database if needed
+            // Update the user's refresh token in the database
             await pool.query('UPDATE admin SET refresh_token = ? WHERE email = ?', [refreshToken, email]);
 
             res.status(200).json({

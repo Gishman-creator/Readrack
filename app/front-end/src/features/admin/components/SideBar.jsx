@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Bars3Icon, HomeIcon, UsersIcon, CodeBracketSquareIcon, ArrowRightStartOnRectangleIcon, FolderOpenIcon, ChartBarIcon, AdjustmentsVerticalIcon, ChartBarSquareIcon } from '@heroicons/react/24/outline';
 import { toggleVisibility, toggleExpansion, setVisibility, setExpansion } from './SideBarSlice';
@@ -8,6 +8,7 @@ const SideBar = () => {
     const dispatch = useDispatch();
     const { isVisible, isExpanded } = useSelector((state) => state.sideBar);
     const location = useLocation(); // Use this hook to get the current location
+    const navigate = useNavigate();
 
     useEffect(() => {
         const handleResize = () => {
@@ -94,10 +95,12 @@ const SideBar = () => {
                         </ul>
                         <ul>
                             <li
-                                to="/admin/editor"
-                                    title={isExpanded ? null : 'Logout'}
+                                title={isExpanded ? null : 'Logout'}
                                 className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} cursor-pointer`}
-                                onClick={() => dispatch(toggleVisibility())}
+                                onClick={() => {
+                                    // Perform any additional actions if needed before navigation
+                                    navigate('/auth/logout');
+                                }}
                             >
                                 <ArrowRightStartOnRectangleIcon className={`${isExpanded ? 'mr-2' : 'mr-0'} w-9 h-9 p-2`} />
                                 <span className={`text-xs mr-14 ${isExpanded ? 'block' : 'hidden'}`}>

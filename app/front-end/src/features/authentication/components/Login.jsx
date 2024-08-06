@@ -81,7 +81,7 @@ function Login() {
                     >
                         {isLoading ? 'Loading...' : 'Login'}
                     </button>
-                    {error && <p className="mt-4 text-red-500">{error}</p>}
+                    {error && <p className="mt-4 text-red-500 text-xs text-center">{error}</p>}
                     <div className='text-center text-xs font-medium mt-2'>
                         <p className='inline'>Don't have an account? </p>
                         <span

@@ -74,20 +74,30 @@ function VerifyEmail() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const fullCode = code.join(''); // Join the array to form the full code
+        const fullCode = code.join('');
     
         try {
-            const response = await dispatch(verifyEmail({ email, fullCode }));
-            // Assuming the response contains tokens or necessary data
-            localStorage.setItem('authToken', response.accessToken); // Store token in local storage
-            localStorage.setItem('userEmail', email); // Optionally store email
-            alert('Email verified successfully!');
-            navigate('/admin');
+            const action = await dispatch(verifyEmail({ email, code: fullCode }));
+            if (verifyEmail.fulfilled.match(action)) {
+                const { accessToken, refreshToken } = action.payload;
+                if ( accessToken ) {
+                    localStorage.setItem('accessToken', accessToken);
+                    localStorage.setItem('refreshToken', refreshToken);
+                    localStorage.setItem('userEmail', email);
+                    console.log('Stored accessToken:', accessToken);
+    
+                    alert('Email verified successfully!');
+                    navigate('/admin');
+                } else {
+                    console.error('Access token is missing in response:', action.payload);
+                }
+            } else {
+                console.error('Verification failed:', action.payload);
+            }
         } catch (err) {
             console.error(err);
         }
     };
-    
     
 
     // Handle resend code request
@@ -134,7 +144,7 @@ function VerifyEmail() {
                     >
                         {isLoading ? 'Loading...' : 'Verify'}
                     </button>
-                    {error && <p className="mt-4 text-red-500">{error}</p>}
+                    {error && <p className="mt-4 text-red-500 text-xs text-center">{error}</p>}
                     <div className='text-center text-xs mt-2'>
                         <p className='inline'>Didn't get the code? </p>
                         <span

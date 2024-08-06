@@ -66,12 +66,30 @@ export const resendCode = createAsyncThunk(
   }
 );
 
+export const logout = createAsyncThunk(
+    'auth/logout',
+    async ({ accessToken, refreshToken }, { rejectWithValue }) => {
+        if (!accessToken || !refreshToken) {
+            return rejectWithValue('No access or refresh token provided');
+        }
+
+        try {
+            // Send a request to the logout endpoint with the access token
+            await axiosUtils('/api/auth/logout', 'POST', {}, { Authorization: `Bearer ${accessToken}`, 'x-refresh-token': refreshToken });
+            return;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to log out');
+        }
+    }
+);
+
+
 const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
         // Reducer to handle logout
-        logout: (state) => {
+        clearAuthState: (state) => {
             state.isLoggedIn = false;
             state.accessToken = null;
             state.refreshToken = null;
@@ -147,9 +165,24 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.error = action.error.message;
             })
+            .addCase(logout.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(logout.fulfilled, (state) => {
+                state.isLoading = false;
+                state.isLoggedIn = false;
+                state.accessToken = null;
+                state.refreshToken = null;
+                state.email = '';
+            })
+            .addCase(logout.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
     },
 });
 
-export const { logout, setTokens } = authSlice.actions;
+export const { clearAuthState, setTokens } = authSlice.actions;
 
 export default authSlice.reducer;

@@ -13,6 +13,7 @@ app.use(cors());
 // Routes
 app.use('/api', apiRoutes);
 
+
 // Example route to send an email
 app.post('/send-email', async (req, res) => {
   const { to, subject, text, html } = req.body;

@@ -1,13 +1,55 @@
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import React from 'react'
+import React, { useRef, useEffect, useState } from 'react';
+import { MagnifyingGlassIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 
-function SearchBar() {
-  return (
-    <div className='bg-[#fafcf8] w-1/2 flex items-center space-x-2 border p-2 px-3 rounded drop-shadow-sm'>
-        <MagnifyingGlassIcon className='w-4 h-4' />
-        <input type="text" placeholder='Search' className='text-xs w-full bg-transparent outline-none' />
-    </div>
-  )
-}
+const SearchBar = ({ isSearchOpen, toggleSearch }) => {
+    const searchBarRef = useRef(null);
 
-export default SearchBar
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (searchBarRef.current && !searchBarRef.current.contains(event.target)) {
+                toggleSearch(false);
+            }
+        };
+
+        if (isSearchOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        } else {
+            document.removeEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isSearchOpen, toggleSearch]);
+
+    return (
+        <div ref={searchBarRef} className={` ${isSearchOpen ? 'w-full' : 'w-fit'} lg:max-w-[50%] sm:w-fit relative block items-center`}>
+            {isSearchOpen ? (
+                <div className='flex sm:justify-end items-center w-full lg:max-w-fit space-x-6'>
+                    <ArrowLeftIcon
+                        className='w-8 h-8 ml-2 cursor-pointer text-black p-1 rounded-full sm:hidden on-click'
+                        onClick={() => toggleSearch(false)}
+                    />
+                    <div className='bg-white flex h-fit w-full sm:w-fit border rounded-md items-center '>
+                        <input
+                            type='text'
+                            placeholder='Search...'
+                            className='p-1 w-full sm:w-60 ml-2 border-none outline-none rounded'
+                        />
+                        <MagnifyingGlassIcon
+                            className='bg-[#eff0eb] w-6 h-6 mr-1 px-1 cursor-pointer font-bold rounded-md text-[#000] on-click'
+                        />
+                    </div>
+                </div>
+            ) : (
+                <MagnifyingGlassIcon
+                    title='Search'
+                    className='w-8 h-8 cursor-pointer text-black rounded-full p-2 on-click'
+                    onClick={() => toggleSearch(true)}
+                />
+            )}
+        </div>
+    );
+};
+
+export default SearchBar;

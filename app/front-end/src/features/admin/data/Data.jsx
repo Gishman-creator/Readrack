@@ -145,7 +145,7 @@ const seriesData = [
     {
       name: "A Song of Ice and Fire",
       author: "George R.R. Martin",
-      numBooks: 5,
+      numBooks: 7,
       genres: ["Fantasy", "Drama"],
       amazonLink: "https://www.amazon.com/dp/B000QCS8TW",
     },

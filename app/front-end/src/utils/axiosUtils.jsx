@@ -15,9 +15,12 @@ const axiosUtils = (url, method, data = {}, headers = {}, params = {}) => {
     return axios({
         url: fullUrl,
         method: method,
-        headers: headers, // Ensure Content-Type is set
-        data: data, // Use data for POST/PUT, otherwise undefined
-        params: params, // Use params for GET/DELETE, otherwise undefined
+        headers: {
+            ...headers,
+            'Content-Type': headers['Content-Type'] || 'application/json',
+        },
+        data: data instanceof FormData ? data : JSON.stringify(data), // Check for FormData
+        params: params,
     }).then(res => res)
       .catch(err => {
           console.error(`Error making request: ${err}`);

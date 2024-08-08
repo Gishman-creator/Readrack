@@ -4,36 +4,11 @@ CREATE DATABASE readRight;
 -- Use the database
 USE readRight;
 
--- Create the books table
-CREATE TABLE books (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    image VARCHAR(255),
-    name VARCHAR(255) NOT NULL,
-    serie VARCHAR(255),
-    serieNo INT,
-    author VARCHAR(255),
-    genres VARCHAR(255),
-    authorNo INT,
-    date DATE,
-    link VARCHAR(255)
-);
-
--- Create the series table
-CREATE TABLE series (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    image VARCHAR(255),
-    name VARCHAR(255) NOT NULL,
-    author VARCHAR(255),
-    booksNo INT,
-    genres VARCHAR(255),
-    link VARCHAR(255)
-);
-
 -- Create the author table
 CREATE TABLE author (
     id INT AUTO_INCREMENT PRIMARY KEY,
     image VARCHAR(255),
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
     seriesNo INT,
     bookNo INT,
     date DATE,
@@ -44,8 +19,40 @@ CREATE TABLE author (
     ig VARCHAR(255),
     link VARCHAR(255),
     genre VARCHAR(255),
-    awards TEXT
+    awards TEXT,
+    searchCount INT DEFAULT 0
 );
+
+-- Create the series table
+CREATE TABLE series (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    image VARCHAR(255),
+    name VARCHAR(255) NOT NULL UNIQUE,
+    author_name VARCHAR(255),
+    booksNo INT,
+    genres VARCHAR(255),
+    link VARCHAR(255),
+    searchCount INT DEFAULT 0,
+    FOREIGN KEY (author_name) REFERENCES author(name) ON DELETE SET NULL
+);
+
+-- Create the books table
+CREATE TABLE books (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    image VARCHAR(255),
+    name VARCHAR(255) NOT NULL,
+    serie_name VARCHAR(255),
+    serieNo INT,
+    author_name VARCHAR(255),
+    genres VARCHAR(255),
+    authorNo INT,
+    date DATE,
+    link VARCHAR(255),
+    searchCount INT DEFAULT 0,
+    FOREIGN KEY (serie_name) REFERENCES series(name) ON DELETE SET NULL,
+    FOREIGN KEY (author_name) REFERENCES author(name) ON DELETE SET NULL
+);
+
 
 -- Create the users table
 CREATE TABLE users (
@@ -53,9 +60,11 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     firstName VARCHAR(255) NOT NULL,
     lastName VARCHAR(255) NOT NULL,
-    password VARCHAR(255) NOT NULL
+    password VARCHAR(255) NOT NULL,
+    verification_code VARCHAR(6) NULL
 );
 
+ -- Admin
 CREATE TABLE admin (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -68,3 +77,5 @@ CREATE TABLE admin (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+

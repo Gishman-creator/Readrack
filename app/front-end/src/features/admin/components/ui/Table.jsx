@@ -1,130 +1,187 @@
 // src/components/Table.js
-
 import React, { useEffect, useRef, useState } from "react";
-import seriesData from "../../data/Data";
-import { ChevronLeftIcon, ChevronRightIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { useSelector } from "react-redux"; // Import useSelector to access the Redux store
+import axiosUtils from "../../../../utils/axiosUtils";
+import TableHeader from "./TableHeader";
 
 function Table() {
-    const [hasShadow, setHasShadow] = useState(false);
-    const containerRef = useRef(null);
+  const [hasShadow, setHasShadow] = useState(false);
+  const containerRef = useRef(null);
 
-    useEffect(() => {
-      const container = containerRef.current;
+  const activeTab = useSelector((state) => state.tabs.activeTab); // Get the active tab from the Redux store
+  const [tableData, setTableData] = useState([]);
+
+  // State to manage which rows are checked
+  const [checkedRows, setCheckedRows] = useState([]);
   
-      const handleScroll = () => {
-        if (container.scrollTop > 0) {
-          setHasShadow(true);
-        } else {
-          setHasShadow(false);
+  // Initialize state for selectAllChecked
+  const [selectAllChecked, setSelectAllChecked] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        let response;
+        if (activeTab === "Series") {
+          response = await axiosUtils('/api/getSeries', 'GET');
+        } else if (activeTab === "Books") {
+          response = await axiosUtils('/api/getBooks', 'GET');
+        } else if (activeTab === "Authors") {
+          response = await axiosUtils('/api/getAuthors', 'GET');
         }
-      };
-  
-      if (container) {
-        container.addEventListener("scroll", handleScroll);
+        setTableData(response.data);
+        setCheckedRows(new Array(response.data.length).fill(false)); // Initialize checked rows
+        setSelectAllChecked(false); // Reset select all checkbox when data changes
+      } catch (error) {
+        console.error(`Error fetching ${activeTab.toLowerCase()}:`, error);
       }
-  
-      // Cleanup the event listener on component unmount
-      return () => {
-        if (container) {
-          container.removeEventListener("scroll", handleScroll);
-        }
-      };
-    }, []);
-
-
-    // State to manage which rows are checked
-    const [checkedRows, setCheckedRows] = useState(
-        new Array(seriesData.length).fill(false)
-    );
-
-    // State to manage the "Select All" checkbox
-    const [selectAllChecked, setSelectAllChecked] = useState(false);
-
-    // Function to handle row click
-    const handleRowClick = (index) => {
-        const updatedCheckedRows = [...checkedRows];
-        updatedCheckedRows[index] = !updatedCheckedRows[index];
-        setCheckedRows(updatedCheckedRows);
-        setSelectAllChecked(updatedCheckedRows.every((checked) => checked));
     };
 
-    // Function to handle "Select All" checkbox
-    const handleSelectAll = (event) => {
-        const isChecked = event.target.checked;
-        setCheckedRows(new Array(seriesData.length).fill(isChecked));
-        setSelectAllChecked(isChecked);
+    fetchData();
+  }, [activeTab]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+
+    const handleScroll = () => {
+      setHasShadow(container.scrollTop > 0);
     };
 
-    return (
-        <div ref={containerRef} className="overflow-y-scroll rounded max-h-custom">
-            <div className={`bg-[#f6f9f2] sticky top-0 p-2 flex justify-between items-center ${hasShadow ? "drop-shadow-sm" : ""}`}>
-                <div className="flex justify-between items-center w-fit py-2 ">
-                    <p className="text-xs px-2 border-r-[1.5px] border-slate-300">Series</p>
-                    <div className="flex space-x-2 px-2">
-                        <PencilSquareIcon className="w-4 h-4 inline" />
-                        <TrashIcon className="w-4 h-4 inline" />
-                    </div>
-                </div>
-                <div className="flex justify-between items-center space-x-2">
-                    <p className="text-xs">1 - 47 of 47</p>
-                    <div>
-                        <ChevronLeftIcon className="w-8 h-8 p-2 rounded-full on-click inline" />
-                        <ChevronRightIcon className="w-8 h-8 p-2 rounded-full on-click inline" />
-                    </div>
-                </div>
-            </div>
-            <table className="min-w-full bg-[#f6f9f2] border-gray-300 text-left text-xs font-normal">
-                <thead>
-                    <tr className="border-b border-slate-200">
-                        <th className="px-2 py-2 text-center">
-                            <input
-                                type="checkbox"
-                                checked={selectAllChecked}
-                                onChange={handleSelectAll}
-                            />
-                        </th>
-                        <th className="px-4 py-2 text-slate-500">Series Name</th>
-                        <th className="px-4 py-2 text-slate-500">Author</th>
-                        <th className="px-4 py-2 text-slate-500">Number of Books</th>
-                        <th className="px-4 py-2 text-slate-500">Genres</th>
-                        <th className="px-4 py-2 text-slate-500">Amazon Link</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {seriesData.map((series, index) => (
-                        <tr
-                            key={index}
-                            className={`cursor-pointer border-b border-slate-200 ${checkedRows[index] ? "bg-blue-100" : ""
-                                }`}
-                            onClick={() => handleRowClick(index)}
-                        >
-                            <td className="px-4 py-2 text-center">
-                                <input
-                                    type="checkbox"
-                                    checked={checkedRows[index]}
-                                    onChange={() => handleRowClick(index)}
-                                />
-                            </td>
-                            <td className="px-4 py-2">{series.name}</td>
-                            <td className="px-4 py-2">{series.author}</td>
-                            <td className="px-4 py-2">{series.numBooks}</td>
-                            <td className="px-4 py-2">{series.genres.join(", ")}</td>
-                            <td className="px-4 py-2">
-                                <a
-                                    href={series.amazonLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-500 underline"
-                                >
-                                    Link
-                                </a>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    );
+    if (container) {
+      container.addEventListener("scroll", handleScroll);
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, []);
+
+
+  // Function to handle row click
+  const handleRowClick = (index) => {
+    const updatedCheckedRows = [...checkedRows];
+    updatedCheckedRows[index] = !updatedCheckedRows[index];
+    setCheckedRows(updatedCheckedRows);
+    setSelectAllChecked(updatedCheckedRows.every((checked) => checked));
+  };
+
+  // Function to handle "Select All" checkbox
+  const handleSelectAll = (event) => {
+    const isChecked = event.target.checked;
+    setCheckedRows(new Array(tableData.length).fill(isChecked));
+    setSelectAllChecked(isChecked);
+  };
+
+  const renderTableHeaders = () => {
+    if (activeTab === "Series") {
+      return (
+        <>
+          <th className="px-4 py-2 text-slate-500">Series Name</th>
+          <th className="px-4 py-2 text-slate-500">Author</th>
+          <th className="px-4 py-2 text-slate-500">Number of Books</th>
+          <th className="px-4 py-2 text-slate-500">Genres</th>
+          <th className="px-4 py-2 text-slate-500">Link</th>
+          <th className="px-4 py-2 text-slate-500">Search Count</th>
+        </>
+      );
+    } else if (activeTab === "Books") {
+      return (
+        <>
+          <th className="px-4 py-2 text-slate-500">Book Name</th>
+          <th className="px-4 py-2 text-slate-500">Series Name</th>
+          <th className="px-4 py-2 text-slate-500">Author</th>
+          <th className="px-4 py-2 text-slate-500">Publish Date</th>
+          <th className="px-4 py-2 text-slate-500">Link</th>
+        </>
+      );
+    } else if (activeTab === "Authors") {
+      return (
+        <>
+          <th className="px-4 py-2 text-slate-500">Author Name</th>
+          <th className="px-4 py-2 text-slate-500">Number of Books</th>
+          <th className="px-4 py-2 text-slate-500">Date of Birth</th>
+          <th className="px-4 py-2 text-slate-500">Nationality</th>
+          <th className="px-4 py-2 text-slate-500">Link</th>
+          <th className="px-4 py-2 text-slate-500">Search Count</th>
+        </>
+      );
+    }
+  };
+
+  const renderTableRows = () => {
+    return tableData.map((item, index) => (
+      <tr
+        key={index}
+        className={`cursor-pointer border-b border-slate-200 ${checkedRows[index] ? "bg-blue-100" : ""}`}
+        onClick={() => handleRowClick(index)}
+      >
+        <td className="px-4 py-2 text-center">
+          <input type="checkbox" checked={checkedRows[index]} onChange={() => handleRowClick(index)} />
+        </td>
+        {activeTab === "Series" && (
+          <>
+            <td className="px-4 py-2">{item.name}</td>
+            <td className="px-4 py-2">{item.authorName}</td>
+            <td className="px-4 py-2">{item.booksNo}</td>
+            <td className="px-4 py-2">{item.genres}</td>
+            <td className="px-4 py-2">
+              <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                Link
+              </a>
+            </td>
+            <td className="px-4 py-2">{item.searchCount}</td>
+          </>
+        )}
+        {activeTab === "Books" && (
+          <>
+            <td className="px-4 py-2">{item.name}</td>
+            <td className="px-4 py-2">{item.serieName}</td>
+            <td className="px-4 py-2">{item.authorName}</td>
+            <td className="px-4 py-2">{item.date}</td>
+            <td className="px-4 py-2">
+              <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                Link
+              </a>
+            </td>
+          </>
+        )}
+        {activeTab === "Authors" && (
+          <>
+            <td className="px-4 py-2">{item.name}</td>
+            <td className="px-4 py-2">{item.bookNo}</td>
+            <td className="px-4 py-2">{item.date}</td>
+            <td className="px-4 py-2">{item.nationality}</td>
+            <td className="px-4 py-2">
+              <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                Link
+              </a>
+            </td>
+            <td className="px-4 py-2">{item.searchCount}</td>
+          </>
+        )}
+      </tr>
+    ));
+  };
+
+  return (
+    <div className="rounded max-h-custom overflow-hidden">
+      <TableHeader hasShadow={hasShadow} hasCheckedRows={checkedRows.some(row => row)} />
+      <div ref={containerRef} className="overflow-y-auto max-h-custom1">
+        <table className="min-w-full bg-[#f6f9f2] border-gray-300 text-left text-xs font-normal">
+          <thead>
+            <tr className="border-b border-slate-200">
+              <th className="px-2 py-2 text-center">
+                <input type="checkbox" checked={selectAllChecked} onChange={handleSelectAll} />
+              </th>
+              {renderTableHeaders()}
+            </tr>
+          </thead>
+          <tbody>{renderTableRows()}</tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
 
 export default Table;

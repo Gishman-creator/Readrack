@@ -1,21 +1,20 @@
 import { FunnelIcon } from '@heroicons/react/24/outline';
 import React from 'react'
 
-function FilterBtn() {
+function FilterBtn({ isSearchOpen }) {
     const options = ['Complete', 'Incomplete'];
 
     return (
-        <div className="relative inline-block text-left">
+        <div className={`${isSearchOpen ? "hidden" : "inline-block"} relative lg:inline-block text-left`}>
             <div className="group">
                 <button
                     type="button"
-                    className="flex justify-between items-center space-x-2 rounded border border-gray-300 shadow-sm px-3 py-2 bg-[#fafcf8] hover:bg-gray-50 focus:outline-none"
+                    className="flex justify-between items-center on-click rounded-full p-2 bg-[#fafcf8] focus:outline-none"
                     id="menu-button"
                     aria-expanded="true"
                     aria-haspopup="true"
                 >
-                    <FunnelIcon className="h-3 w-3" />
-                    <p className='text-xs'>Filter</p>
+                    <FunnelIcon className="h-4 w-4" />
                 </button>
 
                 <div

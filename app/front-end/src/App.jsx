@@ -51,21 +51,23 @@ const App = () => {
 
     if (isLoggedIn === null) {
         // Render a loading state while checking the token
-        return <div className="flex justify-center items-center min-h-screen"></div>;
+        return <div className=" bg-[#ecf3e5] flex justify-center items-center min-h-screen"></div>;
     }
 
     return (
-        <Router>
-            <Routes>
-                <Route path="/*" element={<User />} />
-                <Route
-                    path="/admin/*"
-                    element={isLoggedIn ? <Admin /> : <Navigate to="/auth" />}
-                />
-                <Route path="/auth/*" element={<Authentication />} />
-                <Route path="/" element={<Home />} />
-            </Routes>
-        </Router>
+        <div className='min-h-screen bg-[#ecf3e5]'>
+            <Router>
+                <Routes>
+                    <Route path="/*" element={<User />} />
+                    <Route
+                        path="/admin/*"
+                        element={isLoggedIn ? <Admin /> : <Navigate to="/auth" />}
+                    />
+                    <Route path="/auth/*" element={<Authentication />} />
+                    <Route path="/" element={<Home />} />
+                </Routes>
+            </Router>
+        </div>
     );
 };
 

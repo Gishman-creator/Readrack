@@ -69,5 +69,20 @@
 }
 
 .max-h-custom {
-  max-height: calc(100vh - 17.5rem);
+  min-height: calc(100vh - 13.5rem);
 }
+
+.max-h-custom1 {
+  max-height: calc(100vh - 16.5rem);
+}
+
+.min-h-custom1 {
+  min-height: 80vh;
+}
+
+.max-h-custom2 {
+  max-height: 70vh;
+}
+
+
+

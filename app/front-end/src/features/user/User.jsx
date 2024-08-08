@@ -5,7 +5,7 @@ import SerieDetails from './SerieDetail/SerieDetails';
 
 function User() {
   return (
-    <div>
+    <div className='min-h-screen bg-white'>
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/series/:seriesName' element={<SerieDetails />} />

@@ -26,7 +26,7 @@ function NavBar() {
     }, [])
 
     return (
-        <div className={`sticky z-20 top-0 bg-[#ecf3e5] h-16 px-5 w-full flex flex-row justify-between items-center ${hasShadow ? 'drop-shadow-sm' : ''}`}>
+        <div className={`sticky z-20 top-0 bg-[#e6efdc] h-16 px-5 w-full flex flex-row justify-between items-center ${hasShadow ? 'custom-drop-shadow' : ''}`}>
             <div className='flex flex-row justify-center items-center'>
                 <div className='block md:hidden'>
                     <Bars3Icon

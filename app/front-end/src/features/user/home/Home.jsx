@@ -6,12 +6,9 @@ import { BrowserRouter as Router } from 'react-router-dom'
 
 export default function Home() {
     return (
-        <div>
-            <div><NavBar /></div>
-            <main className=' px-[4%] sm:px-[12%] pb-10'>
-                <GenreList />
-                <Cards />
-            </main>
+        <div className='bg-white px-[4%] sm:px-[12%] pb-10'>
+            <GenreList />
+            <Cards />
         </div>
     )
 }

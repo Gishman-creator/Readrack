@@ -5,6 +5,7 @@ import Home from './features/user/home/Home';
 import User from './features/user/User';
 import Admin from './features/admin/Admin';
 import Authentication from './features/authentication/Authentication';
+import Modal from './features/admin/components/Modal';
 
 const App = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(null); // Start with null to indicate loading state
@@ -64,7 +65,6 @@ const App = () => {
                         element={isLoggedIn ? <Admin /> : <Navigate to="/auth" />}
                     />
                     <Route path="/auth/*" element={<Authentication />} />
-                    <Route path="/" element={<Home />} />
                 </Routes>
             </Router>
         </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ImagePreview from './ImagePreview';
-import axiosUtils from '../../../../utils/axiosUtils';
+import axiosUtils from '../../../../../utils/axiosUtils';
 
 function AddAuthorsForm({ onClose }) {
   const [authorImageURL, setAuthorImageURL] = useState('');
@@ -31,12 +31,12 @@ function AddAuthorsForm({ onClose }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
-  
+
     // Extract last name from the full name
     const fullName = formData.get('authorName') || '';
     const nameParts = fullName.trim().split(' ');
     const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0];
-  
+
     if (authorImageURL) {
       const file = await downloadImage(authorImageURL, lastName);
       if (file) {
@@ -47,23 +47,25 @@ function AddAuthorsForm({ onClose }) {
     } else {
       console.error('No image URL provided');
     }
-  
+
     // Debug output
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }
-  
+
     try {
       const response = await axiosUtils('/api/addAuthor', 'POST', formData);
-  
+
       if (response.status !== 201) throw new Error('Failed to submit form');
       console.log('Form submitted successfully');
       console.log(response);
-  
+
       if (onClose) {
         onClose(); // Call the onClose function to close the modal
       }
-  
+      
+      window.location.reload();
+
     } catch (error) {
       console.error('Error submitting form:', error.response ? error.response.data : error.message);
       // Optionally, you might want to show an error message to the user
@@ -72,7 +74,7 @@ function AddAuthorsForm({ onClose }) {
       }
     }
   };
-  
+
 
   return (
     <div className=''>

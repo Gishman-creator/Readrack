@@ -34,27 +34,27 @@ function GenreList() {
 
             {/* Scrollable Content Container with Blurring Effect */}
             <div className='relative flex-1 overflow-hidden'>
-                <div className='absolute mx-0 sm:mx-0 top-0 left-0 h-full w-8 bg-gradient-to-r from-white to-transparent pointer-events-none'></div>
-                <div className='absolute mx-0 sm:mx-0 top-0 right-0 h-full w-8 bg-gradient-to-l from-white to-transparent pointer-events-none'></div>
+                <div className='absolute mx-0 sm:mx-0 top-0 -left-1 h-full w-10 bg-gradient-to-r from-white to-transparent pointer-events-none'></div>
+                <div className='absolute mx-0 sm:mx-0 top-0 -right-5 h-full w-24 bg-gradient-to-l from-white to-transparent pointer-events-none'></div>
                 <div 
                     ref={scrollContainerRef}
-                    className='flex px-2 py-4 mx-0 sm:mx-0 space-x-2 text-sm font-poppins font-semibold overflow-x-scroll scrollbar-hidden'>
-                    <p className='px-2 py-1 rounded-lg cursor-pointer on-click'>Fantasy</p>
-                    <p className='px-2 py-1 rounded-lg cursor-pointer on-click'>Fantasy</p>
-                    <p className='px-2 py-1 rounded-lg cursor-pointer on-click'>Fantasy</p>
-                    <p className='px-2 py-1 rounded-lg cursor-pointer on-click'>Fantasy</p>
-                    <p className='px-2 py-1 rounded-lg cursor-pointer on-click'>Fantasy</p>
-                    <p className='px-2 py-1 rounded-lg cursor-pointer on-click'>Fantasy</p>
-                    <p className='px-2 py-1 rounded-lg cursor-pointer on-click'>Fantasy</p>
-                    <p className='px-2 py-1 rounded-lg cursor-pointer on-click'>Fantasy</p>
-                    <p className='px-2 py-1 rounded-lg cursor-pointer on-click'>Fantasy</p>
-                    <p className='px-2 py-1 rounded-lg cursor-pointer on-click'>Fantasy</p>
-                    <p className='px-2 py-1 rounded-lg cursor-pointer on-click'>Fantasy</p>
-                    <p className='px-2 py-1 rounded-lg cursor-pointer on-click'>Fantasy</p>
-                    <p className='px-2 py-1 rounded-lg cursor-pointer on-click'>Fantasy</p>
-                    <p className='px-2 py-1 rounded-lg cursor-pointer on-click'>Fantasy</p>
-                    <p className='px-2 py-1 rounded-lg cursor-pointer on-click'>Fantasy</p>
-                    <p className='px-2 py-1 rounded-lg cursor-pointer on-click'>Fantasy</p>
+                    className='flex px-2 py-4 mx-0 sm:mx-0 space-x-2 text-sm font-poppins  overflow-x-scroll scrollbar-hidden'>
+                    <p className='px-3 py-1 rounded-full cursor-pointer on-click'>Fantasy</p>
+                    <p className='px-3 py-1 rounded-full cursor-pointer on-click'>Fantasy</p>
+                    <p className='px-3 py-1 rounded-full cursor-pointer on-click'>Fantasy</p>
+                    <p className='px-3 py-1 rounded-full cursor-pointer on-click'>Fantasy</p>
+                    <p className='px-3 py-1 rounded-full cursor-pointer on-click'>Fantasy</p>
+                    <p className='px-3 py-1 rounded-full cursor-pointer on-click'>Fantasy</p>
+                    <p className='px-3 py-1 rounded-full cursor-pointer on-click'>Fantasy</p>
+                    <p className='px-3 py-1 rounded-full cursor-pointer on-click'>Fantasy</p>
+                    <p className='px-3 py-1 rounded-full cursor-pointer on-click'>Fantasy</p>
+                    <p className='px-3 py-1 rounded-full cursor-pointer on-click'>Fantasy</p>
+                    <p className='px-3 py-1 rounded-full cursor-pointer on-click'>Fantasy</p>
+                    <p className='px-3 py-1 rounded-full cursor-pointer on-click'>Fantasy</p>
+                    <p className='px-3 py-1 rounded-full cursor-pointer on-click'>Fantasy</p>
+                    <p className='px-3 py-1 rounded-full cursor-pointer on-click'>Fantasy</p>
+                    <p className='px-3 py-1 rounded-full cursor-pointer on-click'>Fantasy</p>
+                    <p className='px-3 py-1 rounded-full cursor-pointer on-click'>Fantasy</p>
                 </div>
             </div>
 

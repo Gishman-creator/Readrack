@@ -19,7 +19,7 @@ const axiosUtils = (url, method, data = {}, headers = {}, params = {}) => {
             ...headers,
             'Content-Type': headers['Content-Type'] || 'application/json',
         },
-        data: data instanceof FormData ? data : JSON.stringify(data), // Check for FormData
+        data: data, // Check for FormData
         params: params,
     }).then(res => res)
       .catch(err => {

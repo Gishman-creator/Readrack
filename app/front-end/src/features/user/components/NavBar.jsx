@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Bars3Icon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import SideBar from './SideBar';
@@ -15,9 +15,25 @@ const NavBar = () => {
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
     const toggleSearch = (state) => setIsSearchOpen(state);
+    const [hasShadow, setHasShadow] = useState(false);
+
+    useEffect (() => {
+        const handleScroll = () => {
+            if (window.scrollY > 0) {
+                setHasShadow(true);
+            } else {
+                setHasShadow(false);
+            }
+        }
+            window.addEventListener('scroll', handleScroll);
+
+            return () => {
+                window.removeEventListener('scroll', handleScroll);
+            }
+    }, [])
 
     return (
-        <div className='sticky top-0 flex w-full h-16 justify-between items-center px-[2%] sm:px-[12%] border-b border-[#bcbcbc] bg-white z-20'>
+        <div className={`sticky top-0 flex w-full h-16 justify-between items-center px-[2%] sm:px-[12%] bg-white z-20 ${hasShadow ? 'custom-drop-shadow' : ''}`}>
             <div className={`z-24 sm:flex items-center ${isSearchOpen ? 'hidden' : 'flex'}`}>
                 {/* Hamburger Menu for Small Screens */}
                 <div className={`${isSearchOpen ? 'block' : 'sm:hidden'} lg:hidden mr-1`}>
@@ -26,7 +42,7 @@ const NavBar = () => {
                 {/* Logo */}
                 <div title='Home' className='font-arsenal text-2xl flex cursor-pointer' onClick={navigateToHome}>
                     <h1 className='inline'>Read</h1>
-                    <h1 className='inline font-semibold'>Right</h1>
+                    <h1 className='inline font-bold text-[#0d4f11]'>Right</h1>
                 </div>
             </div>
 

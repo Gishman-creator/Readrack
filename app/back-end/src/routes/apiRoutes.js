@@ -16,6 +16,9 @@ const { searchAuthors, searchSeries } = require('../controllers/catalogControlle
 const getSeriesController = require('../controllers/catalogControllers/getSeriesController');
 const getBooksController = require('../controllers/catalogControllers/getBooksController');
 const getAuthorsController = require('../controllers/catalogControllers/getAuthorsController');
+const updateAuthorController = require('../controllers/catalogControllers/updateAuthorController');
+const updateBookController = require('../controllers/catalogControllers/updateBookController');
+const updateSerieController = require('../controllers/catalogControllers/updateSerieController');
 
 // Middleware to handle file uploads
 const storage = multer.memoryStorage(); // Use memory storage for BLOBs
@@ -34,10 +37,22 @@ router.post('/auth/validate-tokens', tokenValidationController.validateTokens);
 router.post('/addAuthor', upload.single('authorImage'), addAuthor);
 router.post('/addBook', upload.single('bookImage'), addBook);
 router.post('/addSeries', upload.single('seriesImage'), addSeries);
+
+router.put('/updateAuthor/:id', upload.single('authorImage'), updateAuthorController.updateAuthor);
+router.put('/updateBook/:id', upload.single('bookImage'), updateBookController.updateBook);
+router.put('/updateSerie/:id', upload.single('seriesImage'), updateSerieController.updateSerie);
+
 router.get('/searchAuthors', searchAuthors);
 router.get('/searchSeries', searchSeries);
+
 router.get('/getSeries', getSeriesController.getSeries);
 router.get('/getBooks', getBooksController.getBooks);
 router.get('/getAuthors', getAuthorsController.getAuthors);
+
+router.get('/getAuthorById/:id', getAuthorsController.getAuthorById);
+router.get('/getSerieById/:id', getSeriesController.getSerieById);
+router.get('/getBookById/:id', getBooksController.getBookById);
+
+router.get('/getBookBySerie/:serieName', getBooksController.getBookBySerie);
 
 module.exports = router;

@@ -30,14 +30,14 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
                         className='w-8 h-8 ml-2 cursor-pointer text-black p-1 rounded-full sm:hidden on-click'
                         onClick={() => toggleSearch(false)}
                     />
-                    <div className='flex h-fit w-full sm:w-fit border rounded-md items-center'>
+                    <div className='flex h-fit w-full sm:w-fit border rounded-full items-center p-1'>
                         <input
                             type='text'
-                            placeholder='Search...'
-                            className='p-1 w-full sm:w-60 ml-2 border-none outline-none rounded'
+                            placeholder='Search'
+                            className='p-1 w-full sm:w-60 text-sm ml-2 border-none outline-none rounded'
                         />
                         <MagnifyingGlassIcon
-                            className='bg-[#eff0eb] w-9 h-6 mr-1 px-2 cursor-pointer font-bold rounded-md text-[#000] on-click'
+                            className='bg-[#eff0eb] w-7 h-7 p-1 cursor-pointer font-bold rounded-full text-[#000] on-click'
                         />
                     </div>
                 </div>

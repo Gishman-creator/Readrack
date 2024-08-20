@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ImagePreview from './ImagePreview';
-import axiosUtils from '../../../../utils/axiosUtils';
+import axiosUtils from '../../../../../utils/axiosUtils';
 
 function AddSeriesForm({ onClose }) {
   const [seriesImageURL, setSeriesImageURL] = useState('');
@@ -95,6 +95,8 @@ function AddSeriesForm({ onClose }) {
       if (onClose) {
         onClose(); // Call the onClose function to close the modal
       }
+
+      window.location.reload();
 
     } catch (error) {
       console.error('Error submitting form:', error);

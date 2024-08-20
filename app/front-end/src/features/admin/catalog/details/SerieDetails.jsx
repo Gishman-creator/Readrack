@@ -1,15 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import axiosUtils from '../../../utils/axiosUtils';
-import { capitalize, formatDate } from '../../../utils/stringUtils';
-import { bufferToBlobURL } from '../../../utils/imageUtils';
-import { useSelector } from 'react-redux';
+import axiosUtils from '../../../../utils/axiosUtils';
+import { capitalize, formatDate } from '../../../../utils/stringUtils';
+import { bufferToBlobURL } from '../../../../utils/imageUtils';
+import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
+import { PencilSquareIcon, PlusIcon } from '@heroicons/react/24/outline';
+import Modal from '../../components/Modal';  // Assuming you have a reusable Modal component
+import EditBooksForm from '../forms/edit forms/EditBooksForm'; // Import the EditBooksForm component
+import { setBookId, toggleRowSelection } from '../../slices/catalogSlice';
 
 function SerieDetails() {
-  const { serieId } = useParams();
+  const { serieId, name } = useParams();
   const [seriesData, setSeriesData] = useState({});
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);  // Manage modal visibility
+  const serieBookId = useSelector((state) => state.catalog.bookId);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchSeriesData = async () => {
@@ -28,7 +35,6 @@ function SerieDetails() {
         console.log('Books response:', booksResponse.data[0]); // Debugging
 
         const booksWithBlobs = booksResponse.data[0].map((book) => {
-          console.log('Book data:', book); // Debugging
           return {
             ...book,
             image: bufferToBlobURL(book.image) // Convert buffer to Blob URL
@@ -46,12 +52,23 @@ function SerieDetails() {
     fetchSeriesData();
   }, [serieId]);
 
+  const handleEditClick = (bookId) => {
+    dispatch(setBookId(bookId)); // Dispatch action to set the bookId in the store
+    console.log('Edit book ID:', serieBookId);
+    setIsModalOpen(true);  // Show the modal
+    console.log(isModalOpen)
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);  // Hide the modal
+  };
+
   if (loading) {
     return <p className='flex justify-center items-center'>Loading...</p>;
   }
 
   return (
-    <div className='md:flex md:flex-row pt-2 md:space-x-6 xl:space-x-8 px-[4%] sm:px-[12%] pb-10'>
+    <div className='md:flex md:flex-row pt-2 md:space-x-6 xl:space-x-8'>
       <div className='w-full pt-2 md:w-[22rem] md:h-full md:sticky md:top-20 lg:top-20 overflow-auto'>
         <div className=' max-w-[13rem] mx-auto'>
           <img src={seriesData.image} alt="serie image" className='h-[16rem] w-full bg-[#edf4e6] rounded-sm mx-auto' />
@@ -77,21 +94,35 @@ function SerieDetails() {
         </a>
       </div>
       <div className='w-full'>
-        <p className='font-poppins font-semibold text-xl mt-8 md:mt-0 2xl:w-full 2xl:text-center'>
-          {capitalize(seriesData.name)} Books:
-        </p>
-        <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
+        <div className='flex justify-between items-center mt-8 md:mt-0'>
+          <p className='font-poppins font-semibold text-xl 2xl:text-center'>
+            {capitalize(seriesData.name)} Books:
+          </p>
+          <div
+            className='bg-[#37643B] flex items-center space-x-2 text-center text-white text-sm font-semibold font-poppins px-3 p-2 rounded cursor-pointer on-click-amzn'
+          >
+            <PlusIcon className='w-3 h-3 inline' />
+            <p className='text-xs'>Add</p>
+          </div>
+        </div>
+        <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4 mt-2'>
           {books.map((item) => (
-            <div key={item.id} className='flex space-x-2 mt-4 pb-3 border-b-2 border-slate-100 cursor-default'>
+            <div key={item.id} className='flex space-x-2 mt-4 pb-3 border-b-2 border-slate-300 cursor-default'>
               <img
                 src={item.image || '/default-image.jpg'} // Fallback image if Blob URL is null
                 alt='book image'
                 className='h-[9rem] w-[6rem] rounded-sm'
               />
               <div className='min-h-full w-full flex flex-col justify-between'>
-                <p className='font-semibold m-0 leading-5 text-lg'>
-                  {capitalize(item.name)}
-                </p>
+                <div className='flex justify-between items-center'>
+                  <p className='font-semibold m-0 leading-5 text-lg'>
+                    {capitalize(item.name)}
+                  </p>
+                  <PencilSquareIcon
+                    className="w-4 h-4 inline ml-2 cursor-pointer"
+                    onClick={() => handleEditClick(item.id)}  // Handle click to open modal
+                  />
+                </div>
                 <p className='font-arsenal text-sm'>by {capitalize(item.author_name)}</p>
                 <p className='font-arsenal text-slate-400 text-sm mt-1'>
                   #{item.rank}, published {formatDate(item.date)}
@@ -109,6 +140,13 @@ function SerieDetails() {
           ))}
         </div>
       </div>
+
+
+      <Modal isOpen={isModalOpen} onClose={closeModal}>
+        <EditBooksForm
+          onClose={closeModal}  // Pass closeModal to close the modal after edit
+        />
+      </Modal>
     </div>
   );
 }

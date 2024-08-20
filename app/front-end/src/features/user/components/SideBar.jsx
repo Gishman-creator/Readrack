@@ -13,7 +13,7 @@ const SideBar = ({ isMenuOpen, toggleMenu }) => {
         <div
             // Overlay with onClick handler to close the sidebar when clicked
             onClick={toggleMenu}
-            className={`fixed min-w-full inset-0 z-20 bg-[rgba(0,0,0,0.5)] transition-opacity duration-300 ease-in-out ${
+            className={`fixed min-w-full inset-0 z-30 bg-[rgba(0,0,0,0.5)] transition-opacity duration-300 ease-in-out ${
                 isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
             }`}
         >

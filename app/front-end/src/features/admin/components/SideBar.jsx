@@ -28,6 +28,8 @@ const SideBar = () => {
         };
     }, [dispatch]);
 
+    const isCatalogRoute = location.pathname.startsWith('/admin/catalog');
+
     return (
         <>
             <div
@@ -35,7 +37,7 @@ const SideBar = () => {
                 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full'} `}
                 onClick={() => dispatch(toggleVisibility())}
             >
-                <div className="flex flex-col max-w-fit h-screen bg-[#f6f9f2] p-4"
+                <div className="flex flex-col max-w-fit h-screen bg-white p-4"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <div className="flex max-w-fit items-center justify-between">
@@ -68,7 +70,7 @@ const SideBar = () => {
                                 <Link
                                     to="/admin/catalog"
                                     title={isExpanded ? null : 'Catalog'}
-                                    className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} ${location.pathname === '/admin/catalog' ? 'bg-[#66893d] text-slate-100 hover:bg-[#66893d]' : ''
+                                    className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} ${isCatalogRoute ? 'bg-[#66893d] text-slate-100 hover:bg-[#66893d]' : ''
                                         }`}
                                     onClick={() => dispatch(toggleVisibility())}
                                 >

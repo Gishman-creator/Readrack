@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { verifyEmail, resendCode  } from '../slices/authSlice'; // Adjust the import path as needed
+import { verifyEmail, resendCode, setLoginState  } from '../slices/authSlice'; // Adjust the import path as needed
 import { useNavigate } from 'react-router-dom';
 
 function VerifyEmail() {
@@ -87,6 +87,7 @@ function VerifyEmail() {
                     console.log('Stored accessToken:', accessToken);
     
                     alert('Email verified successfully!');
+                    dispatch(setLoginState(true));
                     navigate('/admin');
                 } else {
                     console.error('Access token is missing in response:', action.payload);

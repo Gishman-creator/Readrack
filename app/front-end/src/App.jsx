@@ -6,9 +6,12 @@ import User from './features/user/User';
 import Admin from './features/admin/Admin';
 import Authentication from './features/authentication/Authentication';
 import Modal from './features/admin/components/Modal';
+import { useDispatch, useSelector } from 'react-redux';
+import { setLoginState } from './features/authentication/slices/authSlice';
 
 const App = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(null); // Start with null to indicate loading state
+    const isLoggedIn =  useSelector((state) => state.auth.isLoggedIn); // Start with null to indicate loading state
+    const dispatch = useDispatch();
 
     useEffect(() => {
         const validateTokens = async () => {
@@ -18,7 +21,7 @@ const App = () => {
             console.log('refreshToken:', refreshToken);
 
             if (!accessToken || !refreshToken) {
-                setIsLoggedIn(false);
+                dispatch(setLoginState(false));
                 return;
             }
 
@@ -36,14 +39,14 @@ const App = () => {
                         localStorage.setItem('accessToken', newAccessToken);
                         console.log('New access token received and stored');
                     }
-                    setIsLoggedIn(true);
+                    dispatch(setLoginState(true));
                 } else {
                     console.log('Token validation failed');
-                    setIsLoggedIn(false);
+                    dispatch(setLoginState(false));
                 }
             } catch (error) {
                 console.error('Token validation failed:', error);
-                setIsLoggedIn(false);
+                dispatch(setLoginState(false));
             }
         };
 
@@ -52,11 +55,11 @@ const App = () => {
 
     if (isLoggedIn === null) {
         // Render a loading state while checking the token
-        return <div className=" bg-[#ecf3e5] flex justify-center items-center min-h-screen"></div>;
+        return <div className=" bg-[#f9f9f9] flex justify-center items-center min-h-screen"></div>;
     }
 
     return (
-        <div className='min-h-screen bg-[#ecf3e5]'>
+        <div className='min-h-screen bg-[#f9f9f9]'>
             <Router>
                 <Routes>
                     <Route path="/*" element={<User />} />

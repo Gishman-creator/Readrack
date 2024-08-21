@@ -26,7 +26,7 @@ function NavBar() {
     }, [])
 
     return (
-        <div className={`sticky z-20 top-0 bg-[#e6efdc] h-16 px-5 w-full flex flex-row justify-between items-center ${hasShadow ? 'custom-drop-shadow' : ''}`}>
+        <div className={`sticky z-20 top-0 bg-[#f9f9f9] h-16 px-5 w-full flex flex-row justify-between items-center ${hasShadow ? 'custom-drop-shadow' : ''}`}>
             <div className='flex flex-row justify-center items-center'>
                 <div className='block md:hidden'>
                     <Bars3Icon
@@ -34,7 +34,7 @@ function NavBar() {
                         onClick={() => dispatch(toggleVisibility())}
                     />
                 </div>
-                <div title='Home' className='font-arsenal text-2xl flex cursor-pointer'>
+                <div title='Home' className='font-arima text-2xl flex cursor-pointer'>
                     <h1 className='inline'>Read</h1>
                     <h1 className='inline font-semibold'>Right</h1>
                 </div>

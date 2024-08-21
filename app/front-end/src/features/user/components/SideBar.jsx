@@ -1,13 +1,23 @@
 import React from 'react';
 import { Bars3Icon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
+import { setActiveTab } from '../slices/userSlice';
+import { useDispatch } from 'react-redux';
 
 const SideBar = ({ isMenuOpen, toggleMenu }) => {
 
+    const dispatch = useDispatch();
     const navigate = useNavigate();
     const navigateToHome = () => {
         navigate('/');
     };
+
+    const handleTabClick = (tab) => {
+        console.log(tab);
+        dispatch(setActiveTab(tab));
+        localStorage.setItem('userActiveTab', tab);
+        toggleMenu();
+    }
 
     return (
         <div
@@ -30,21 +40,34 @@ const SideBar = ({ isMenuOpen, toggleMenu }) => {
                         <Bars3Icon className='w-10 h-10 p-2 cursor-pointer rounded-full on-click' onClick={toggleMenu} />
                     </div>
                     {/* Logo */}
-                    <div title='Home' className='font-arsenal text-2xl flex cursor-pointer' onClick={navigateToHome}>
+                    <div title='Home' className='font-arima text-2xl flex cursor-pointer' onClick={navigateToHome}>
                         <h1 className='inline'>Series</h1>
                         <h1 className='inline font-semibold'>Order</h1>
                     </div>
                 </div>
                 <div className="flex flex-col px-[5%] sm:px-[15%] space-y-4">
-                    <a href="#" className="">
-                        Books
-                    </a>
-                    <a href="#" className="">
+                    <span
+                    onClick={() => handleTabClick('Series')}
+                     className="cursor-pointer"
+                    >
+                        Series
+                    </span>
+                    <span
+                    onClick={() => handleTabClick('Authors')}
+                    className="cursor-pointer"
+                    >
+                        Authors
+                    </span>
+                    <span
+                     className="cursor-pointer"
+                    >
                         About
-                    </a>
-                    <a href="#" className="hidden">
+                    </span>
+                    <span
+                     className="hidden cursor-pointer"
+                    >
                         Donate
-                    </a>
+                    </span>
                 </div>
             </div>
         </div>

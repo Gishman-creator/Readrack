@@ -17,11 +17,11 @@ function Admin() {
     const { isExpanded } = useSelector((state) => state.sideBar);
 
     return (
-        <div className="flex min-h-full bg-[#e6efdc] font-poppins">
+        <div className="flex min-h-full bg-[#f9f9f9] font-poppins">
             <Sidebar />
-            <div className={`flex-1 bg-[#e6efdc] transition-margin duration-300 w-full ${isExpanded ? 'md:ml-[13.1rem]' : 'md:ml-[4.8rem]'}`}>
+            <div className={`flex-1 bg-[#f9f9f9] transition-margin duration-300 w-full ${isExpanded ? 'md:ml-[13.1rem]' : 'md:ml-[4.8rem]'}`}>
                 <NavBar />
-                <div className="p-4 px-5 bg-[#e6efdc]">
+                <div className="p-4 px-5 bg-[#f9f9f9]">
                     <Routes>
                         <Route path="/" element={<Navigate to="/admin/dashboard" />} />
                         <Route path="dashboard" element={<Dashboard />} />

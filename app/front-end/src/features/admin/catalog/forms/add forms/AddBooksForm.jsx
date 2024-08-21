@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import ImagePreview from './ImagePreview';
 import axiosUtils from '../../../../../utils/axiosUtils';
+import { useSelector } from 'react-redux';
 
 function AddBooksForm({ onClose }) {
   const [authorImageURL, setAuthorImageURL] = useState('');
   const [imageFile, setImageFile] = useState(null);
-
-  const [authorSearch, setAuthorSearch] = useState('');
-  const [serieSearch, setSerieSearch] = useState('');
+  const detailsSerieName = useSelector((state) => state.catalog.serieName);
+  const serieDetailsAuthorName = useSelector((state) => state.catalog.authorName);
+  const [authorSearch, setAuthorSearch] = useState(serieDetailsAuthorName || '');
+  const [serieSearch, setSerieSearch] = useState(detailsSerieName || '');
   const [authorOptions, setAuthorOptions] = useState([]);
   const [serieOptions, setSerieOptions] = useState([]);
-  const [selectedAuthor, setSelectedAuthor] = useState('');
-  const [selectedSerie, setSelectedSerie] = useState('');
+  const [selectedAuthor, setSelectedAuthor] = useState(serieDetailsAuthorName || '');
+  const [selectedSerie, setSelectedSerie] = useState(detailsSerieName || '');
 
   useEffect(() => {
     if (authorSearch) {

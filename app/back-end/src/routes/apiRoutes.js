@@ -53,6 +53,8 @@ router.get('/getAuthorById/:id', getAuthorsController.getAuthorById);
 router.get('/getSerieById/:id', getSeriesController.getSerieById);
 router.get('/getBookById/:id', getBooksController.getBookById);
 
-router.get('/getBookBySerie/:serieName', getBooksController.getBookBySerie);
+router.get('/getBooksBySerie/:serieName', getBooksController.getBooksBySerie);
+router.get('/getBooksByAuthor/:authorName', getBooksController.getBooksByAuthor);
+router.get('/getSeriesByAuthor/:authorName', getSeriesController.getSeriesByAuthor)
 
 module.exports = router;

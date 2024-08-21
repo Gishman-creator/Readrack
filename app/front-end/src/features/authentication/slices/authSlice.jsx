@@ -3,7 +3,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosUtils from '../../../utils/axiosUtils';
 
 const initialState = {
-    isLoggedIn: false,
+    isLoggedIn: null,
     isLoading: false,
     error: null,
     accessToken: null,
@@ -88,6 +88,9 @@ const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
+        setLoginState: (state, action) => {
+            state.isLoggedIn = action.payload;
+        },
         // Reducer to handle logout
         clearAuthState: (state) => {
             state.isLoggedIn = false;
@@ -183,6 +186,6 @@ const authSlice = createSlice({
     },
 });
 
-export const { clearAuthState, setTokens } = authSlice.actions;
+export const { clearAuthState, setTokens, setLoginState } = authSlice.actions;
 
 export default authSlice.reducer;

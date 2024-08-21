@@ -7,6 +7,8 @@ const catalogSlice = createSlice({
     activeTab: "Series",
     selectedRowIds: [], // State for selected row IDs
     bookId: null, // Store the ID of the book being edited
+    serieName: null,
+    authorName: null,
   },
   reducers: {
     setActiveTab: (state, action) => {
@@ -30,8 +32,14 @@ const catalogSlice = createSlice({
     setBookId: (state, action) => {
       state.bookId = action.payload; // Set the currently edited book ID
     },
+    setSerieName: (state, action) => {
+      state.serieName = action.payload;
+    },
+    setAuthorName: (state, action) => {
+      state.authorName = action.payload;
+    }
   },
 });
 
-export const { setActiveTab, toggleRowSelection, clearSelection, selectAllRows, setBookId } = catalogSlice.actions;
+export const { setActiveTab, toggleRowSelection, clearSelection, selectAllRows, setBookId, setSerieName, setAuthorName } = catalogSlice.actions;
 export default catalogSlice.reducer;

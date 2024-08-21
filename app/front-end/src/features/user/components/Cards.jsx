@@ -1,67 +1,108 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'
-import harryPotterSerie from '../../../assets/harry_potter_serie.png'
+import { useNavigate } from 'react-router-dom';
+import harryPotterSerie from '../../../assets/harry_potter_serie.png';
 import axiosUtils from '../../../utils/axiosUtils';
-import { capitalize } from '../../../utils/stringUtils';
+import { capitalize, formatDate } from '../../../utils/stringUtils';
 import { bufferToBlobURL } from '../../../utils/imageUtils';
+import { useSelector } from 'react-redux';
 
 function Cards() {
-    const [isLoading, setIsLoading] = useState(true)
-    const [series, setSeries] = useState();
+    const activeTab = useSelector((state) => state.user.activeTab);
+    const [isLoading, setIsLoading] = useState(true);
+    const [cardData, setCardData] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axiosUtils('/api/getSeries', 'GET');
-                console.log('Fetched series:', response.data);
+                let response;
+                if (activeTab === 'Series') {
+                    response = await axiosUtils('/api/getSeries', 'GET');
+                } else {
+                    response = await axiosUtils('/api/getAuthors', 'GET');
+                }
+                console.log(`Fetched ${activeTab} data:`, response.data);
 
-                const seriesWithBlobs = response.data.map((serie) => {
-                    console.log('Serie data', serie);
-                    return {
-                        ...serie,
-                        image: bufferToBlobURL(serie.image)
-                    };
-                });
+                const dataWithBlobs = response.data.map((item) => ({
+                    ...item,
+                    image: bufferToBlobURL(item.image),
+                }));
 
-                setSeries(seriesWithBlobs);
-                setIsLoading(false)
-                console.log('Series data:', series)
+                setCardData(dataWithBlobs);
+                setIsLoading(false);
             } catch (error) {
-                setIsLoading(false)
-                console.error('Error fetching series data:', error);
+                setIsLoading(false);
+                console.error(`Error fetching ${activeTab} data:`, error);
             }
-        }
+        };
 
         fetchData();
-    }, [setIsLoading]);
+    }, [activeTab]);
 
     const navigateToDetails = (item) => {
-        navigate(`/series/${item.id}/${encodeURIComponent(item.name)}`)
+        if (activeTab === 'Series') {
+            navigate(`/series/${item.id}/${encodeURIComponent(item.name)}`);
+        } else {
+            navigate(`/authors/${item.id}/${encodeURIComponent(item.name)}`);
+        }
     };
 
     if (isLoading) {
-        return <p className='flex justify-center items-center'>Loading...</p>;
+        return <p className="flex justify-center items-center">Loading...</p>;
     }
 
     return (
-        <div className='mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-6 gap-10'>
-            {series.map((item) => (
-                <div
-                    key={item.id}
-                    className='w-full group hover:border-[#e1e1e1] rounded-md cursor-pointer'
-                    onClick={() => { navigateToDetails(item) }}
-                >
-                    <div className='overflow-hidden rounded-sm'>
-                        <img src={item.image || harryPotterSerie} alt="Serie image" className='h-48 w-full transform transition-transform duration-300 group-hover:scale-105' />
+        <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-6 gap-10">
+            {activeTab === 'Series'
+                ? cardData.map((item) => (
+                    <div
+                        key={item.id}
+                        className="w-full group hover:border-[#e1e1e1] rounded-md cursor-pointer"
+                        onClick={() => navigateToDetails(item)}
+                    >
+                        <div className="overflow-hidden rounded-sm">
+                            <img
+                                src={item.image || harryPotterSerie}
+                                alt="Serie image"
+                                className="h-48 w-full transform transition-transform duration-300 group-hover:scale-105"
+                            />
+                        </div>
+                        <div className="flex-col justify-center items-center py-1">
+                            <p className="font-poppins font-medium">
+                                {capitalize(item.name)} Serie
+                            </p>
+                            <p className="font-arima text-sm leading-3">by {item.author_name}</p>
+                            <p className="font-arima font-medium text-sm text-green-600 mt-2">
+                                {item.booksNo} books
+                            </p>
+                        </div>
                     </div>
-                    <div className='flex-col justify-center items-center py-1'>
-                        <p className='font-poppins font-medium'>{capitalize(item.name)} Serie</p>
-                        <p className='font-arsenal text-sm leading-3'>by {item.author_name}</p>
-                        <p className='font-arsenal font-medium text-sm text-green-800 mt-2'>{item.booksNo} books</p>
+                ))
+                : cardData.map((item) => (
+                    <div
+                        key={item.id}
+                        className="w-full group hover:border-[#e1e1e1] rounded-md cursor-pointer"
+                        onClick={() => navigateToDetails(item)}
+                    >
+                        <div className="overflow-hidden rounded-sm">
+                            <img
+                                src={item.image || harryPotterSerie}
+                                alt="Author image"
+                                className="h-48 w-full transform transition-transform duration-300 group-hover:scale-105"
+                            />
+                        </div>
+                        <div className="flex-col justify-center items-center py-1">
+                            <p className="font-poppins font-medium">
+                                {capitalize(item.name)}
+                            </p>
+                            <p className="font-arima text-sm leading-4">{capitalize(item.nationality)}</p>
+                            <p className="font-arima font-medium text-sm text-green-600 mt-2">
+                                {item.booksNo} books
+                            </p>
+                        </div>
                     </div>
-                </div>
-            ))}
+                ))
+            }
         </div>
     );
 }

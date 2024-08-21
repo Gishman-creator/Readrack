@@ -25,7 +25,7 @@ function Catalog() {
 
   // Retrieve active tab from local storage on mount
   useEffect(() => {
-    const storedTab = localStorage.getItem('activeTab');
+    const storedTab = localStorage.getItem('catalogActiveTab');
     if (storedTab) {
       dispatch(setActiveTab(storedTab));
     }
@@ -45,7 +45,7 @@ function Catalog() {
     const formattedTab = tab.charAt(0).toUpperCase() + tab.slice(1);
     dispatch(setActiveTab(formattedTab));
     // Save active tab to local storage
-    localStorage.setItem('activeTab', formattedTab);
+    localStorage.setItem('catalogActiveTab', formattedTab);
   };
 
   const openModal = (content) => {

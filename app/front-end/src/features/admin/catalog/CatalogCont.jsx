@@ -10,7 +10,7 @@ function CatalogCont() {
         <Routes>
             <Route path='/' element={<Catalog />} />
             <Route path='/serie/:serieId/:serieName' element={<SerieDetails />} />
-            <Route path='/author/:serieId/:authorName' element={<AuthorDetails />} />
+            <Route path='/author/:authorId/:authorName' element={<AuthorDetails />} />
         </Routes>
     </div>
   )

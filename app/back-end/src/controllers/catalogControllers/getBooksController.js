@@ -31,18 +31,42 @@ exports.getBookById = async (req, res) => {
   }
 };
 
-exports.getBookBySerie = async (req, res) => {
+exports.getBooksBySerie = async (req, res) => {
   try {
     let { serieName } = req.params;
 
     // Decode the URL-encoded series name to handle spaces
     serieName = decodeURIComponent(serieName);
 
-    const books = await pool.query('SELECT * FROM books WHERE serie_name = ?', [serieName]);
+    const books = await pool.query(`
+      SELECT * 
+      FROM books 
+      WHERE serie_name = ?
+      order by date desc
+    `, [serieName]);
 
     res.json(books);
   } catch (error) {
     console.error('Error fetching books:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
-};
+}; 
+
+exports.getBooksByAuthor = async (req, res) => {
+  try{
+    let { authorName } = req.params;
+    authorName = decodeURIComponent(authorName);
+
+    const books = await pool.query(`
+      select *
+      from books
+      where author_name = ?
+      order by date desc
+    `, [authorName])
+
+    res.json(books)
+  } catch (error) {
+    console.error("Error fetching books by author", error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}

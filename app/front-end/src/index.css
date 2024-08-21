@@ -100,3 +100,7 @@
 .custom-drop-shadow {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
+
+.custom-drop-shadow2 {
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+}

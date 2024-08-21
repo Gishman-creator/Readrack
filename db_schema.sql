@@ -10,7 +10,7 @@ CREATE TABLE author (
     image VARCHAR(255),
     name VARCHAR(255) NOT NULL UNIQUE,
     seriesNo INT,
-    bookNo INT,
+    booksNo INT,
     date DATE,
     nationality VARCHAR(255),
     bio TEXT,

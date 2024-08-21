@@ -6,6 +6,7 @@ export default {
       fontFamily: {
         arsenal: ['Arsenal', 'sans-serif'],
         poppins: ['Poppins', 'sans-serif'],
+        arima: ['Arima', 'system-ui']
       },
     },
   },

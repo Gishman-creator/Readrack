@@ -57,7 +57,7 @@ function SerieDetails() {
           <img src={seriesData.image} alt="serie image" className='h-[16rem] w-full bg-[#edf4e6] rounded-sm mx-auto' />
           <div className='w-full mx-auto'>
             <p className='font-poppins font-medium text-xl text-center md:text-left mt-2'>{capitalize(seriesData.name)}</p>
-            <p className='font-arsenal text-center md:text-left'>by {capitalize(seriesData.author_name)}</p>
+            <p className='font-arima text-center md:text-left'>by {capitalize(seriesData.author_name)}</p>
             <div className='w-full md:flex md:items-center mt-4'>
               <p className=' font-poppins font-medium text-center md:text-left text-sm'>Genres:</p>
               <div className='flex flex-wrap gap-x-2 md:ml-2 font-normal items-center justify-center md:justify-start w-[90%] mx-auto'>
@@ -92,8 +92,8 @@ function SerieDetails() {
                 <p className='font-semibold m-0 leading-5 text-lg'>
                   {capitalize(item.name)}
                 </p>
-                <p className='font-arsenal text-sm'>by {capitalize(item.author_name)}</p>
-                <p className='font-arsenal text-slate-400 text-sm mt-1'>
+                <p className='font-arima text-sm'>by {capitalize(item.author_name)}</p>
+                <p className='font-arima text-slate-400 text-sm mt-1'>
                   #{item.rank}, published {formatDate(item.date)}
                 </p>
                 <a

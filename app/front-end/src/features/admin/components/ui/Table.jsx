@@ -193,7 +193,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal })
     };
 
     return (
-        <div className="rounded max-h-custom overflow-hidden">
+        <div className="rounded max-h-custom overflow-hidden custom-drop-shadow2">
             <TableHeader
                 hasShadow={hasShadow}
                 openEditAuthorModal={openEditAuthorModal}
@@ -201,7 +201,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal })
                 openEditSeriesModal={openEditSeriesModal}
             />
             <div ref={containerRef} className="overflow-y-auto max-h-custom1">
-                <table className="min-w-full bg-white text-sm text-left">
+                <table className="min-w-full bg-[#fff] text-sm text-left">
                     <thead>
                         <tr className=" border-b border-slate-200">
                             <th className="px-4 py-2 text-slate-500 text-center">

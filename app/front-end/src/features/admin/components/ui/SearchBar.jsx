@@ -1,13 +1,22 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { MagnifyingGlassIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import React, { useRef, useEffect } from 'react';
+import { MagnifyingGlassIcon, ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useDispatch, useSelector } from 'react-redux';
+import { setSearchTerm, setTableLimitEnd, setTableLimitStart } from '../../slices/catalogSlice';
 
 const SearchBar = ({ isSearchOpen, toggleSearch }) => {
+    const searchTerm = useSelector((state) => state.catalog.searchTerm);
     const searchBarRef = useRef(null);
+    const inputRef = useRef(null); // Reference for the input
+    const dispatch = useDispatch();
 
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (searchBarRef.current && !searchBarRef.current.contains(event.target)) {
-                toggleSearch(false);
+            if (
+                searchBarRef.current &&
+                !searchBarRef.current.contains(event.target) &&
+                searchTerm === ''
+            ) {
+                toggleSearch(false); // Close only if searchTerm is empty
             }
         };
 
@@ -20,32 +29,73 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isSearchOpen, toggleSearch]);
+    }, [isSearchOpen, searchTerm, toggleSearch]);
+
+    useEffect(() => {
+        if (isSearchOpen && inputRef.current) {
+            // Delay focusing to ensure the input is rendered
+            const timer = setTimeout(() => inputRef.current.focus(), 100);
+            return () => clearTimeout(timer); // Cleanup timer on unmount or before the next effect
+        }
+    }, [isSearchOpen]);
+
+    const handleSearchClick = () => {
+        toggleSearch(true);
+        if (!searchTerm) {
+            dispatch(setTableLimitStart(0));
+            dispatch(setTableLimitEnd(50));
+        }
+    };
+
+    const handleInputChange = (e) => {
+        dispatch(setSearchTerm(e.target.value));
+        console.log('The search term is:', e.target.value);
+        dispatch(setTableLimitStart(0));
+        dispatch(setTableLimitEnd(50));
+    };
+
+    const clearSearch = () => {
+        dispatch(setSearchTerm(''));
+        inputRef.current.focus();
+        if (searchTerm === '') {
+            toggleSearch(false)
+        }
+    };
 
     return (
-        <div ref={searchBarRef} className={` ${isSearchOpen ? 'w-full' : 'w-fit'} lg:max-w-[50%] sm:w-fit relative block items-center`}>
+        <div
+            ref={searchBarRef}
+            className={`${isSearchOpen ? 'w-full' : 'w-fit'
+                } lg:max-w-[50%] sm:w-fit relative block items-center`}
+        >
             {isSearchOpen ? (
-                <div className='flex sm:justify-end items-center w-full lg:max-w-fit space-x-6'>
+                <div className="flex sm:justify-end items-center w-full lg:max-w-fit space-x-6">
                     <ArrowLeftIcon
-                        className='w-8 h-8 ml-2 cursor-pointer text-black p-1 rounded-full sm:hidden on-click'
-                        onClick={() => toggleSearch(false)}
+                        className="w-8 h-8 ml-2 cursor-pointer text-black p-1 rounded-lg sm:hidden on-click"
+                        onClick={() => {
+                            if (searchTerm === '') toggleSearch(false);
+                        }}
                     />
-                    <div className='bg-white flex h-fit w-full sm:w-fit border rounded-md items-center '>
+                    <div className="bg-white flex text-sm py-1 h-fit w-full sm:w-fit border rounded-lg items-center">
                         <input
-                            type='text'
-                            placeholder='Search...'
-                            className='p-1 w-full sm:w-60 ml-2 border-none outline-none rounded'
+                            type="text"
+                            placeholder="Search..."
+                            value={searchTerm}
+                            onChange={handleInputChange}
+                            className="p-1 w-full sm:w-60 ml-2 border-none outline-none rounded"
+                            ref={inputRef} // Attach the ref to the input
                         />
-                        <MagnifyingGlassIcon
-                            className='bg-[#eff0eb] w-6 h-6 mr-1 px-1 cursor-pointer font-bold rounded-md text-[#000] on-click'
+                        <XMarkIcon
+                            className="w-6 h-6 mr-1 px-1 cursor-pointer font-bold rounded-lg text-[#000] on-click"
+                            onClick={clearSearch} // Clear search term when clicked
                         />
                     </div>
                 </div>
             ) : (
                 <MagnifyingGlassIcon
-                    title='Search'
-                    className='w-8 h-8 cursor-pointer text-black rounded-full p-2 on-click'
-                    onClick={() => toggleSearch(true)}
+                    title="Search"
+                    className="w-8 h-8 cursor-pointer text-black rounded-lg p-2 on-click"
+                    onClick={handleSearchClick}
                 />
             )}
         </div>

@@ -1,32 +1,40 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const apiRoutes = require('./src/routes/apiRoutes');
-const { sendEmail } = require('./src/services/emailService'); // Adjust the path as necessary
+const apiRoutes = require('./src/routes/apiRoutes'); // Ensure this is correct
+const { sendEmail } = require('./src/services/emailService');
+const http = require('http');
+const { Server } = require('socket.io');
 require('dotenv').config();
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*', // Adjust this to your frontend origin for security
+    methods: ['GET', 'POST'],
+  },
+});
 
 app.use(bodyParser.json());
 app.use(cors());
 
-// Routes
-app.use('/api', apiRoutes);
+// Socket.IO connection
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
 
-
-// Example route to send an email
-app.post('/send-email', async (req, res) => {
-  const { to, subject, text, html } = req.body;
-
-  try {
-    const messageId = await sendEmail(to, subject, text, html);
-    res.status(200).json({ message: 'Email sent successfully', messageId });
-  } catch (error) {
-    res.status(500).json({ message: 'Error sending email', error: error.message });
-  }
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
 });
 
-const PORT = process.env.PORT;
-app.listen(PORT, () => {
+// Pass io to routes that need it
+app.use('/api', (req, res, next) => {
+  req.io = io;  // Attach io to req object
+  next();
+}, apiRoutes);
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
   console.log(`App listening from port ${PORT}...`);
 });

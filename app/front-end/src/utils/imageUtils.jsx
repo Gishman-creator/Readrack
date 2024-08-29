@@ -1,12 +1,21 @@
-// utils/conversionUtils.js
+import blank_image from '../assets/brand_blank_image.png'; // Adjust the path according to your project structure
 
-export function bufferToBlobURL(buffer) {
-    if (!buffer || !buffer.data) {
-      console.error('Invalid buffer:', buffer);
-      return null; // or a default image URL
+export function bufferToBlobURL(image) {
+  try {
+    if (!image || !image.data || image.data.length === 0) {
+      // Return the blank image URL if the image data is null, undefined, or empty
+      return blank_image;
     }
-    const blob = new Blob([new Uint8Array(buffer.data)], { type: 'image/jpeg' }); // Adjust type as needed
+
+    // Convert to byte array
+    const byteArray = new Uint8Array(image.data);
+    const mimeType = 'image/jpeg'; // Adjust as needed
+    const blob = new Blob([byteArray], { type: mimeType });
     return URL.createObjectURL(blob);
+  } catch (error) {
+    console.error('Error creating image for series:', image, error);
+    return blank_image; // Return the blank image URL in case of an error
+  }
 }
 
 export async function downloadImage (url, seriesName) {

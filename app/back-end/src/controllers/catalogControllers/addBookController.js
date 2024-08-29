@@ -1,15 +1,20 @@
+// src/controllers/addBookController.js
+
 const pool = require('../../config/db');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() }); // Use memory storage for image blob
+
+// Function to generate a random ID
+const generateRandomId = () => {
+  return Math.floor(100000 + Math.random() * 900000); // Generate a random 6-digit integer
+};
 
 const addBook = async (req, res) => {
   try {
     const {
       bookName,
-      authorName,
-      authorNo,
-      serieName,
-      serieNo,
+      author_id,
+      serie_id,
       publishDate,
       genres,
       link,
@@ -18,28 +23,59 @@ const addBook = async (req, res) => {
     // Check if the file is attached and read the buffer
     const bookImageBlob = req.file ? req.file.buffer : null;
 
-    // Insert book data into the database
+    let uniqueId;
+    let isUnique = false;
+
+    // Generate a unique ID
+    while (!isUnique) {
+      uniqueId = generateRandomId();
+
+      // Check if the ID already exists
+      const [rows] = await pool.execute('SELECT id FROM books WHERE id = ?', [uniqueId]);
+
+      if (rows.length === 0) {
+        isUnique = true;
+      }
+    }
+
+    // Insert book data into the database with the unique ID
     const query = `
       INSERT INTO books (
-        image, name, serie_name, serieNo, author_name, genres, authorNo, date, link
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, image, bookName, author_id, serie_id, genres, publishDate, link
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
+      uniqueId,
       bookImageBlob,
       bookName,
-      serieName || null,
-      serieNo || null,
-      authorName || null,
+      author_id || null,
+      serie_id || null,
       genres || null,
-      authorNo || null,
       publishDate || null,
       link || null,
     ];
 
-    const [result] = await pool.execute(query, values);
+    await pool.execute(query, values);
 
-    res.status(201).json({ message: 'Book added successfully', bookId: result.insertId });
+    const [bookData] = await pool.query(`
+      SELECT books.*, authors.authorName AS author_name, series.serieName AS serie_name
+      FROM books
+      LEFT JOIN authors ON books.author_id = authors.id
+      LEFT JOIN series ON books.serie_id = series.id
+      WHERE books.id = ?
+      `, [uniqueId]
+    );
+
+    // Emit the newly added book data if Socket.IO is initialized
+    if (req.io) {
+      req.io.emit('bookAdded', bookData[0]);  // Emit the full book data
+      console.log('Emitting added book:', bookData[0]);
+    } else {
+      console.log('Socket.IO is not initialized.');
+    }
+
+    res.status(201).json({ message: 'Book added successfully', bookId: uniqueId });
     console.log('Book added successfully');
   } catch (error) {
     console.error('Error adding book:', error);

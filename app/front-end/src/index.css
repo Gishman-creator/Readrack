@@ -16,18 +16,17 @@
 }
 
 .on-click {
-  background-color: transparent;
   transition: background-color 0.3s ease;
   /* Smooth transition */
 }
 
 .on-click:hover {
-  background-color: #edf4e6;
+  background-color: #f1f5f9;
   /* Tailwind's hover:bg-gray-200 equivalent */
 }
 
 .on-click:active {
-  background-color: #e4eed9;
+  background-color: #e2e8f0;
   /* Background color when clicked */
 }
 
@@ -37,12 +36,12 @@
 }
 
 .on-click-amzn:hover {
-  background-color: #407645;
+  background-color: #16a34a;
   /* Tailwind's hover:bg-gray-200 equivalent */
 }
 
 .on-click-amzn:active {
-  background-color: #4b8a51;
+  background-color: #22c55e;
   /* Background color when clicked */
 }
 
@@ -52,12 +51,12 @@
 }
 
 .on-click-sidebar:hover {
-  background-color: #d6e5c4;
+  background-color: #f1f5f9;
   /* Tailwind's hover:bg-gray-200 equivalent */
 }
 
 .on-click-sidebar:active {
-  background-color: #e0ebd3;
+  background-color: #e2e8f0;
   /* Background color when clicked */
 }
 
@@ -69,7 +68,7 @@
 }
 
 .max-h-custom {
-  min-height: calc(100vh - 13.5rem);
+  max-height: calc(100vh - 13.5rem);
 }
 
 .max-h-custom1 {
@@ -84,17 +83,8 @@
   max-height: 70vh;
 }
 
-.modal {
-  position: fixed; /* Ensure the modal is positioned relative to the viewport */
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5); /* Optional: adds a semi-transparent background */
-  z-index: 9999; /* Ensure this is higher than other elements */
-  display: flex; /* Center the content */
-  justify-content: center;
-  align-items: center;
+.h-screen-nonav {
+  height: calc(100vh - 4rem);
 }
 
 .custom-drop-shadow {
@@ -104,3 +94,5 @@
 .custom-drop-shadow2 {
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
 }
+
+

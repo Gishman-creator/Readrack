@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Bars3Icon } from '@heroicons/react/24/outline';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import SideBar from './SideBar';
 import SearchBar from './ui/SearchBar';
 import { useDispatch, useSelector } from 'react-redux';
-import { setActiveTab } from '../slices/userSlice';
+import { setActiveGenre, setActiveTab } from '../slices/userSlice';
+import logo from '../../../assets/logo1.jpg'
 
 const NavBar = () => {
     const activeTab = useSelector((state) => state.user.activeTab);
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
     const navigateToHome = () => {
         navigate('/');
     };
@@ -20,13 +22,6 @@ const NavBar = () => {
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
     const toggleSearch = (state) => setIsSearchOpen(state);
     const [hasShadow, setHasShadow] = useState(false);
-
-    useEffect(() => {
-        const storedTab = localStorage.getItem('userActiveTab');
-        if (storedTab) {
-            dispatch(setActiveTab(storedTab));
-        }
-    }, [dispatch]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -45,20 +40,28 @@ const NavBar = () => {
 
     const handleTabClick = (tab) => {
         dispatch(setActiveTab(tab));
-        localStorage.setItem('userActiveTab', tab);
+        dispatch(setActiveGenre(''));
+        if (tab === 'Series') {
+            navigate('/series');
+        } else {
+            navigate('/authors');
+        }
     }
 
     return (
-        <div className={`sticky top-0 flex w-full h-16 justify-between items-center px-[2%] sm:px-[12%] bg-white z-20 ${hasShadow ? 'custom-drop-shadow' : ''}`}>
+        <div className={`sticky top-0 flex w-full h-16 justify-between items-center px-[2%] sm:px-[12%] bg-white z-20`}>
             <div className={`z-24 sm:flex items-center ${isSearchOpen ? 'hidden' : 'flex'}`}>
                 {/* Hamburger Menu for Small Screens */}
-                <div className={`${isSearchOpen ? 'block' : 'sm:hidden'} lg:hidden mr-1`}>
-                    <Bars3Icon className='w-10 h-10 p-2 cursor-pointer rounded-full on-click' onClick={toggleMenu} />
+                <div className={`${isSearchOpen ? 'block' : 'sm:hidden'} lg:hidden mr-`}>
+                    <Bars3Icon className='w-10 h-10 p-2 cursor-pointer rounded-lg on-click' onClick={toggleMenu} />
                 </div>
                 {/* Logo */}
+                <div>
+                    <img src={logo} alt="Logo" className="w-8 h-8" />
+                </div>
                 <div title='Home' className='font-arima text-2xl flex cursor-pointer' onClick={navigateToHome}>
-                    <h1 className='inline'>Read</h1>
-                    <h1 className='inline font-bold text-[#0d4f11]'>Right</h1>
+                    <h1 className='inline'>read</h1>
+                    <h1 className='inline font-bold text-primary'>rack</h1>
                 </div>
             </div>
 
@@ -66,11 +69,11 @@ const NavBar = () => {
             <div className={`${isSearchOpen ? 'hidden' : 'sm:flex'} lg:flex hidden sm:space-x-4`}>
                 <span
                     onClick={() => handleTabClick('Series')}
-                    className={`cursor-pointer font-arima font-semibold ${ activeTab == 'Series' ? 'text-green-600 font-extrabold' : '' }`}
+                    className={`cursor-pointer font-arima font-semibold ${activeTab == 'Series' ? 'text-primary font-extrabold' : ''}`}
                 >Series</span>
                 <span
                     onClick={() => handleTabClick('Authors')}
-                    className={`cursor-pointer font-arima font-semibold ${ activeTab == 'Authors' ? 'text-green-600 font-extrabold' : '' }`}
+                    className={`cursor-pointer font-arima font-semibold ${activeTab == 'Authors' ? 'text-primary font-extrabold' : ''}`}
                 >Authors</span>
                 <span className='sm:hidden'>Donate</span>
             </div>

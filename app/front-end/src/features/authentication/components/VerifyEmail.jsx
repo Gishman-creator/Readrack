@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { verifyEmail, resendCode, setLoginState  } from '../slices/authSlice'; // Adjust the import path as needed
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 function VerifyEmail() {
     const [code, setCode] = useState(Array(6).fill('')); // Initialize an array of 6 empty strings
@@ -86,7 +87,7 @@ function VerifyEmail() {
                     localStorage.setItem('userEmail', email);
                     console.log('Stored accessToken:', accessToken);
     
-                    alert('Email verified successfully!');
+                    toast.success('Email verified successfully!');
                     dispatch(setLoginState(true));
                     navigate('/admin');
                 } else {
@@ -105,10 +106,10 @@ function VerifyEmail() {
     const handleResendCode = async () => {
         try {
             await dispatch(resendCode()).unwrap();
-            alert('Verification code resent!');
+            toast.success('Verification code resent!');
         } catch (err) {
             // Handle error
-            console.error(err);
+            toast.error(err);
         }
     };
 

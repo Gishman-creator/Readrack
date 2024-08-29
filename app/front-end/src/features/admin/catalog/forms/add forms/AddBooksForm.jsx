@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ImagePreview from './ImagePreview';
 import axiosUtils from '../../../../../utils/axiosUtils';
 import { useSelector } from 'react-redux';
+import toast from 'react-hot-toast';
+import { downloadImage } from '../../../../../utils/imageUtils';
 
 function AddBooksForm({ onClose }) {
   const [authorImageURL, setAuthorImageURL] = useState('');
@@ -19,10 +21,10 @@ function AddBooksForm({ onClose }) {
     if (authorSearch) {
       const fetchAuthors = async () => {
         try {
-          const response = await axiosUtils(`/api/searchAuthors?search=${authorSearch}`, 'GET');
-          setAuthorOptions(response.data.map(author => ({
+          const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
+          setAuthorOptions(response.data.results.map(author => ({
             id: author.id,
-            name: author.name
+            authorName: author.nickname ? author.nickname : author.name
           })));
         } catch (error) {
           console.error('Error fetching authors:', error);
@@ -38,10 +40,10 @@ function AddBooksForm({ onClose }) {
     if (serieSearch) {
       const fetchSeries = async () => {
         try {
-          const response = await axiosUtils(`/api/searchSeries?search=${serieSearch}`, 'GET');
-          setSerieOptions(response.data.map(serie => ({
+          const response = await axiosUtils(`/api/search?query=${serieSearch}&type=series`, 'GET');
+          setSerieOptions(response.data.results.map(serie => ({
             id: serie.id,
-            name: serie.name
+            serieName: serie.serieName
           })));
         } catch (error) {
           console.error('Error fetching series:', error);
@@ -62,34 +64,19 @@ function AddBooksForm({ onClose }) {
   };
 
   const handleAuthorSelect = (author) => {
-    setSelectedAuthor(author.name);
-    setAuthorSearch(author.name);
+    setSelectedAuthor(author.id);
+    setAuthorSearch(author.authorName);
     setAuthorOptions([]);
   };
 
   const handleSerieSelect = (serie) => {
-    setSelectedSerie(serie.name);
-    setSerieSearch(serie.name);
+    setSelectedSerie(serie.id);
+    setSerieSearch(serie.serieName);
     setSerieOptions([]);
   };
 
   const handleImageChange = (url) => {
     setAuthorImageURL(url);
-  };
-
-  const downloadImage = async (url, bookName) => {
-    try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`Failed to fetch image. Status: ${response.status}`);
-      const blob = await response.blob();
-      if (!blob || blob.size === 0) throw new Error('Empty blob received');
-      const fileName = bookName ? `${bookName}.jpg` : 'book-image.jpg';
-      const file = new File([blob], fileName, { type: blob.type });
-      return file; // Return the created file
-    } catch (error) {
-      console.error('Error downloading image:', error);
-      return null; // Return null in case of an error
-    }
   };
 
   const handleSubmit = async (event) => {
@@ -109,8 +96,8 @@ function AddBooksForm({ onClose }) {
       console.error('No image URL provided');
     }
 
-    formData.append('authorName', selectedAuthor);
-    formData.append('serieName', selectedSerie);
+    formData.append('author_id', selectedAuthor);
+    formData.append('serie_id', selectedSerie);
 
     try {
       const response = await axiosUtils('/api/addBook', 'POST', formData, {
@@ -124,8 +111,7 @@ function AddBooksForm({ onClose }) {
       if (onClose) {
         onClose(); // Call the onClose function to close the modal
       }
-
-      window.location.reload();
+      toast.success(response.data.message);
 
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -143,7 +129,7 @@ function AddBooksForm({ onClose }) {
             <input
               type="text"
               name="bookName"
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-[#37643B] focus:ring-[#37643B]"
+              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
@@ -164,7 +150,7 @@ function AddBooksForm({ onClose }) {
                     onClick={() => handleAuthorSelect(author)}
                     className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                   >
-                    {author.name}
+                    {author.authorName}
                   </li>
                 ))}
               </ul>
@@ -187,21 +173,11 @@ function AddBooksForm({ onClose }) {
                     onClick={() => handleSerieSelect(serie)}
                     className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                   >
-                    {serie.name}
+                    {serie.serieName}
                   </li>
                 ))}
               </ul>
             )}
-          </div>
-          <div className="mb-2 flex space-x-2">
-            <div>
-              <label className="block text-sm font-medium">Author book position:</label>
-              <input type="number" name="authorNo" className="w-full border border-gray-300 rounded px-2 py-1" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Serie book position:</label>
-              <input type="number" name="serieNo" className="w-full border border-gray-300 rounded px-2 py-1" />
-            </div>
           </div>
           <div className="mb-2 flex space-x-2">
             <div>
@@ -218,13 +194,13 @@ function AddBooksForm({ onClose }) {
             <input
               type="text"
               name="link"
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-[#37643B] focus:ring-[#37643B]"
+              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
           <button
             type="submit"
-            className="bg-[#37643B] text-white px-4 py-2 rounded hover:bg-[#2a4c2c]"
+            className="bg-green-700 text-white px-4 py-2 rounded on-click-amzn"
           >
             Save Book
           </button>

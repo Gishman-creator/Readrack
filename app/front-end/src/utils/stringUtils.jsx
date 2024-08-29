@@ -1,4 +1,4 @@
-// utils/stringUtils.js
+import { format, parseISO } from 'date-fns';
 
 export function capitalize(str) {
     if (!str) return str;
@@ -10,6 +10,19 @@ export function capitalize(str) {
 
 export function formatDate(date) {
     if (!date) return date;
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(date).toLocaleDateString(undefined, options);
+
+    // Convert the date string to a Date object
+    const d = new Date(date);
+
+    // Extract day, month, and year in UTC
+    const day = d.getUTCDate();
+    const month = d.getUTCMonth(); // Zero-based month
+    const year = d.getUTCFullYear();
+
+    // Array of month names
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    // Format date as 'MMM d, yyyy'
+    return `${monthNames[month]} ${day}, ${year}`;
 }
+

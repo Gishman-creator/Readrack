@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { login } from '../slices/authSlice'; // Adjust the import path as needed
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -15,10 +16,9 @@ function Login() {
         e.preventDefault();
         try {
             await dispatch(login({ email, password })).unwrap();
-            alert('Login successful');
             navigate('/auth/verify-email'); // Redirect to dashboard on successful login
         } catch (err) {
-            // Handle error
+            toast.error(err);
         }
     };
 
@@ -81,14 +81,14 @@ function Login() {
                     >
                         {isLoading ? 'Loading...' : 'Login'}
                     </button>
-                    {error && <p className="mt-4 text-red-500 text-xs text-center">{error}</p>}
-                    <div className='text-center text-xs font-medium mt-2'>
+                    {/* {error && <p className="mt-4 text-red-500 text-xs text-center">{error}</p>} */}
+                    {/* <div className='text-center text-xs font-medium mt-2'>
                         <p className='inline'>Don't have an account? </p>
                         <span
                             className='text-blue-400 underline cursor-pointer'
                             onClick={() => navigate('/auth/signup')}
                         >Create an account</span>
-                    </div>
+                    </div> */}
                 </form>
             </div>
         </div>

@@ -5,9 +5,9 @@ CREATE DATABASE readRight;
 USE readRight;
 
 -- Create the author table
-CREATE TABLE author (
+CREATE TABLE authors (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    image VARCHAR(255),
+    image LONGBLOB,
     name VARCHAR(255) NOT NULL UNIQUE,
     seriesNo INT,
     booksNo INT,
@@ -18,7 +18,7 @@ CREATE TABLE author (
     fb VARCHAR(255),
     ig VARCHAR(255),
     link VARCHAR(255),
-    genre VARCHAR(255),
+    genres VARCHAR(255),
     awards TEXT,
     searchCount INT DEFAULT 0
 );
@@ -26,20 +26,20 @@ CREATE TABLE author (
 -- Create the series table
 CREATE TABLE series (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    image VARCHAR(255),
+    image LONGBLOB,
     name VARCHAR(255) NOT NULL UNIQUE,
     author_name VARCHAR(255),
     booksNo INT,
     genres VARCHAR(255),
     link VARCHAR(255),
     searchCount INT DEFAULT 0,
-    FOREIGN KEY (author_name) REFERENCES author(name) ON DELETE SET NULL
+    FOREIGN KEY (author_name) REFERENCES authors(name) ON DELETE SET NULL
 );
 
 -- Create the books table
 CREATE TABLE books (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    image VARCHAR(255),
+    image LONGBLOB,
     name VARCHAR(255) NOT NULL,
     serie_name VARCHAR(255),
     serieNo INT,
@@ -50,7 +50,7 @@ CREATE TABLE books (
     link VARCHAR(255),
     searchCount INT DEFAULT 0,
     FOREIGN KEY (serie_name) REFERENCES series(name) ON DELETE SET NULL,
-    FOREIGN KEY (author_name) REFERENCES author(name) ON DELETE SET NULL
+    FOREIGN KEY (author_name) REFERENCES authors(name) ON DELETE SET NULL
 );
 
 

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ImagePreview from './ImagePreview';
 import axiosUtils from '../../../../../utils/axiosUtils';
 import { bufferToBlobURL, downloadImage } from '../../../../../utils/imageUtils';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import toast from 'react-hot-toast';
 
 function EditAuthorForm({ onClose }) {
   const initialAuthorId = useSelector((state) => state.catalog.selectedRowIds[0]); // Assuming only one author is selected
@@ -10,6 +11,8 @@ function EditAuthorForm({ onClose }) {
   const [authorData, setAuthorData] = useState({});
   const [authorImageURL, setAuthorImageURL] = useState('');
   const [imageFile, setImageFile] = useState(null);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     // Fetch author data when the component mounts
@@ -74,8 +77,7 @@ function EditAuthorForm({ onClose }) {
       if (response.status !== 200) throw new Error('Failed to update author');
       console.log('Author updated successfully');
       if (onClose) onClose();
-
-      window.location.reload();
+      toast.success(response.data.message);
 
     } catch (error) {
       console.error('Error updating author:', error.response ? error.response.data : error.message);
@@ -94,8 +96,18 @@ function EditAuthorForm({ onClose }) {
             <input
               type="text"
               name="authorName"
-              defaultValue={authorData.name || ''}
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-[#37643B] focus:ring-[#37643B]"
+              defaultValue={authorData.authorName || ''}
+              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              required
+            />
+          </div>
+          <div className="mb-2">
+            <label className="block text-sm font-medium">Author nickname:</label>
+            <input
+              type="text"
+              name="nickname"
+              defaultValue={authorData.nickname || ''}
+              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
@@ -105,7 +117,7 @@ function EditAuthorForm({ onClose }) {
               <input
                 type="number"
                 name="numSeries"
-                defaultValue={authorData.seriesNo || ''}
+                defaultValue={authorData.numSeries || ''}
                 className="w-full border border-gray-300 rounded px-2 py-1"
               />
             </div>
@@ -114,7 +126,7 @@ function EditAuthorForm({ onClose }) {
               <input
                 type="number"
                 name="numBooks"
-                defaultValue={authorData.bookNo || ''}
+                defaultValue={authorData.numBooks || ''}
                 className="w-full border border-gray-300 rounded px-2 py-1"
               />
             </div>
@@ -125,7 +137,7 @@ function EditAuthorForm({ onClose }) {
               <input
                 type="date"
                 name="dob"
-                defaultValue={authorData.date?.split('T')[0] || ''}
+                defaultValue={authorData.dob?.split('T')[0] || ''}
                 className="w-full border border-gray-300 rounded px-2 py-1"
               />
             </div>
@@ -144,7 +156,7 @@ function EditAuthorForm({ onClose }) {
               <label className="block text-sm font-medium">Biography:</label>
               <textarea
                 name="biography"
-                defaultValue={authorData.bio || ''}
+                defaultValue={authorData.biography || ''}
                 className="w-full border border-gray-300 rounded px-2 py-1"
               />
             </div>
@@ -172,7 +184,7 @@ function EditAuthorForm({ onClose }) {
               <input
                 type="text"
                 name="instagram"
-                defaultValue={authorData.ig || ''}
+                defaultValue={authorData.instagram || ''}
                 className="w-full border border-gray-300 rounded px-2 py-1"
               />
             </div>
@@ -181,7 +193,7 @@ function EditAuthorForm({ onClose }) {
               <input
                 type="text"
                 name="facebook"
-                defaultValue={authorData.fb || ''}
+                defaultValue={authorData.facebook || ''}
                 className="w-full border border-gray-300 rounded px-2 py-1"
               />
             </div>
@@ -192,7 +204,7 @@ function EditAuthorForm({ onClose }) {
               <input
                 type="text"
                 name="website"
-                defaultValue={authorData.link || ''}
+                defaultValue={authorData.website || ''}
                 className="w-full border border-gray-300 rounded px-2 py-1"
               />
             </div>
@@ -208,7 +220,7 @@ function EditAuthorForm({ onClose }) {
           </div>
           <button
             type="submit"
-            className="bg-[#37643B] text-white px-4 py-2 rounded hover:bg-[#2a4c2c]"
+            className="bg-green-700 text-white px-4 py-2 rounded on-click-amzn"
           >
             Save Changes
           </button>

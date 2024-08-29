@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ImagePreview from './ImagePreview';
 import axiosUtils from '../../../../../utils/axiosUtils';
 import { bufferToBlobURL, downloadImage } from '../../../../../utils/imageUtils';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import toast from 'react-hot-toast';
 
 function EditBooksForm({ onClose }) {
   const selectedRowBookId = useSelector((state) => state.catalog.selectedRowIds[0]);
@@ -17,6 +18,8 @@ function EditBooksForm({ onClose }) {
   const [serieOptions, setSerieOptions] = useState([]);
   const [selectedAuthor, setSelectedAuthor] = useState('');
   const [selectedSerie, setSelectedSerie] = useState('');
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     console.log('Book ID:', bookId); // Check if bookId is correct
@@ -36,9 +39,9 @@ function EditBooksForm({ onClose }) {
           }
 
           setBookId(response.data.id);
-          setSelectedAuthor(response.data.author_name || '');
+          setSelectedAuthor(response.data.author_id || '');
           setAuthorSearch(response.data.author_name || '');
-          setSelectedSerie(response.data.serie_name || '');
+          setSelectedSerie(response.data.serie_id || '');
           setSerieSearch(response.data.serie_name || '');
         } catch (error) {
           console.error('Error fetching book details:', error);
@@ -53,10 +56,10 @@ function EditBooksForm({ onClose }) {
     if (authorSearch) {
       const fetchAuthors = async () => {
         try {
-          const response = await axiosUtils(`/api/searchAuthors?search=${authorSearch}`, 'GET');
-          setAuthorOptions(response.data.map(author => ({
+          const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
+          setAuthorOptions(response.data.results.map(author => ({
             id: author.id,
-            name: author.name
+            authorName: author.nickname ? author.nickname : author.name
           })));
           console.log(authorOptions);
         } catch (error) {
@@ -73,10 +76,10 @@ function EditBooksForm({ onClose }) {
     if (serieSearch) {
       const fetchSeries = async () => {
         try {
-          const response = await axiosUtils(`/api/searchSeries?search=${serieSearch}`, 'GET');
-          setSerieOptions(response.data.map(serie => ({
+          const response = await axiosUtils(`/api/search?query=${serieSearch}&type=series`, 'GET');
+          setSerieOptions(response.data.results.map(serie => ({
             id: serie.id,
-            name: serie.name
+            serieName: serie.serieName
           })));
         } catch (error) {
           console.error('Error fetching series:', error);
@@ -97,14 +100,14 @@ function EditBooksForm({ onClose }) {
   };
 
   const handleAuthorSelect = (author) => {
-    setSelectedAuthor(author.name);
-    setAuthorSearch(author.name);
+    setSelectedAuthor(author.id);
+    setAuthorSearch(author.authorName);
     setAuthorOptions([]);
   };
 
   const handleSerieSelect = (serie) => {
-    setSelectedSerie(serie.name);
-    setSerieSearch(serie.name);
+    setSelectedSerie(serie.id);
+    setSerieSearch(serie.serieName);
     setSerieOptions([]);
   };
 
@@ -139,8 +142,8 @@ function EditBooksForm({ onClose }) {
       }
     }
 
-    formData.append('authorName', selectedAuthor);
-    formData.append('serieName', selectedSerie);
+    formData.append('author_id', selectedAuthor);
+    formData.append('serie_id', selectedSerie);
 
     // Log form data entries
     for (let [key, value] of formData.entries()) {
@@ -159,8 +162,7 @@ function EditBooksForm({ onClose }) {
       if (onClose) {
         onClose(); // Call the onClose function to close the modal
       }
-
-      window.location.reload();
+      toast.success(response.data.message);
 
     } catch (error) {
       console.error('Error updating book:', error);
@@ -181,8 +183,8 @@ function EditBooksForm({ onClose }) {
             <input
               type="text"
               name="bookName"
-              defaultValue={bookDetails.name || ''}
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-[#37643B] focus:ring-[#37643B]"
+              defaultValue={bookDetails.bookName || ''}
+              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
@@ -203,7 +205,7 @@ function EditBooksForm({ onClose }) {
                     onClick={() => handleAuthorSelect(author)}
                     className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                   >
-                    {author.name}
+                    {author.authorName}
                   </li>
                 ))}
               </ul>
@@ -226,7 +228,7 @@ function EditBooksForm({ onClose }) {
                     onClick={() => handleSerieSelect(serie)}
                     className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                   >
-                    {serie.name}
+                    {serie.serieName}
                   </li>
                 ))}
               </ul>
@@ -234,31 +236,11 @@ function EditBooksForm({ onClose }) {
           </div>
           <div className="mb-2 flex space-x-2">
             <div>
-              <label className="block text-sm font-medium">Author book position:</label>
-              <input
-                type="number"
-                name="authorNo"
-                defaultValue={bookDetails.authorNo || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Serie book position:</label>
-              <input
-                type="number"
-                name="serieNo"
-                defaultValue={bookDetails.serieNo || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
-              />
-            </div>
-          </div>
-          <div className="mb-2 flex space-x-2">
-            <div>
               <label className="block text-sm font-medium">Publish date:</label>
               <input
                 type="date"
                 name="publishDate"
-                defaultValue={bookDetails.date?.split('T')[0] || ''}
+                defaultValue={bookDetails.publishDate?.split('T')[0] || ''}
                 className="w-full border border-gray-300 rounded px-2 py-1"
               />
             </div>
@@ -278,13 +260,13 @@ function EditBooksForm({ onClose }) {
               type="text"
               name="link"
               defaultValue={bookDetails.link || ''}
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-[#37643B] focus:ring-[#37643B]"
+              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
           <button
             type="submit"
-            className="bg-[#37643B] text-white px-4 py-2 rounded hover:bg-[#2a4c2c]"
+            className="bg-green-700 text-white px-4 py-2 rounded on-click-amzn"
           >
             Update Book
           </button>

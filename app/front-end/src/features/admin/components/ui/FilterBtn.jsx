@@ -9,7 +9,7 @@ function FilterBtn({ isSearchOpen }) {
             <div className="group">
                 <button
                     type="button"
-                    className="flex justify-between items-center on-click rounded-full p-2 bg-[#fafcf8] focus:outline-none"
+                    className="flex justify-between items-center on-click rounded-lg p-2 focus:outline-none"
                     id="menu-button"
                     aria-expanded="true"
                     aria-haspopup="true"

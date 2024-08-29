@@ -1,13 +1,44 @@
-// controllers/getAuthorsController.js
 const pool = require('../../config/db');
 
 exports.getAuthors = async (req, res) => {
+
+  const validatePagination = (value, defaultValue) => {
+    return isNaN(value) ? defaultValue : value;
+  };
+
+  const limitStart = req.query.limitStart ? validatePagination(parseInt(req.query.limitStart, 10)) : null;
+  const limitEnd = req.query.limitEnd ? validatePagination(parseInt(req.query.limitEnd, 10)) : null;
+  const genre = req.query.genre ? req.query.genre.trim() : null; // Get genre from query params
+
+  console.log('The limitStart is:', limitStart);
+  console.log('The limitEnd is:', limitEnd);
+  console.log('The genre is:', genre);
+
   try {
-    const [rows] = await pool.query(`
-      SELECT * 
-      FROM authors
-    `);
-    res.json(rows);
+    // Base queries for fetching authors and counting total
+    let dataQuery = 'SELECT * FROM authors order by searchCount desc';
+    let countQuery = 'SELECT COUNT(*) AS totalCount FROM authors';
+    let queryParams = [];
+
+    // Add genre filter to the queries if genre is provided and is not null or empty
+    if (genre && genre !== 'null') {
+      dataQuery += ' WHERE genres LIKE ?';
+      countQuery += ' WHERE genres LIKE ?';
+      queryParams.push(`%${genre}%`);
+    }
+
+    // Add limit clause to the data query
+    if (typeof limitStart === 'number' && typeof limitEnd === 'number') {
+      dataQuery += ' LIMIT ?, ?';
+      queryParams.push(limitStart, limitEnd - limitStart);
+    }
+
+    // Execute both queries in parallel
+    const [dataRows] = await pool.query(dataQuery, queryParams);
+    const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
+
+    // Send both data and total count in the response
+    res.json({ data: dataRows, totalCount: totalCount });
   } catch (error) {
     console.error('Error fetching authors:', error);
     res.status(500).send('Error fetching authors');
@@ -16,9 +47,15 @@ exports.getAuthors = async (req, res) => {
 
 exports.getAuthorById = async (req, res) => {
   const { id } = req.params;
+  const limit = parseInt(req.query.limit, 10) || 100; // Get limit from query params, default to 100
 
   try {
-    const [rows] = await pool.query('SELECT * FROM authors WHERE id = ?', [id]);
+    const [rows] = await pool.query(`
+      SELECT * 
+      FROM authors 
+      WHERE id = ? 
+      LIMIT ?
+    `, [id, limit]);
 
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Author not found' });
@@ -28,5 +65,19 @@ exports.getAuthorById = async (req, res) => {
   } catch (error) {
     console.error('Error fetching author:', error);
     res.status(500).send('Error fetching author');
+  }
+};
+
+exports.getAuthorsCount = async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT COUNT(*) AS count
+      FROM authors
+    `);
+
+    res.json({ count: rows[0].count });
+  } catch (error) {
+    console.error('Error fetching authors count:', error);
+    res.status(500).send('Error fetching authors count');
   }
 };

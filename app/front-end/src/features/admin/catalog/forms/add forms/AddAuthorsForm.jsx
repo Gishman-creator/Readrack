@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import ImagePreview from './ImagePreview';
 import axiosUtils from '../../../../../utils/axiosUtils';
+import toast from 'react-hot-toast';
+import { downloadImage } from '../../../../../utils/imageUtils';
 
 function AddAuthorsForm({ onClose }) {
   const [authorImageURL, setAuthorImageURL] = useState('');
@@ -8,24 +10,6 @@ function AddAuthorsForm({ onClose }) {
 
   const handleImageChange = (url) => {
     setAuthorImageURL(url);
-  };
-
-  const downloadImage = async (url, lastName) => {
-    try {
-      console.log('Fetching image from URL:', url);
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`Failed to fetch image. Status: ${response.status}`);
-      const blob = await response.blob();
-      console.log('Blob received:', blob);
-      if (!blob || blob.size === 0) throw new Error('Empty blob received');
-      const fileName = lastName ? `${lastName}.jpg` : 'author-image.jpg';
-      const file = new File([blob], fileName, { type: blob.type });
-      console.log('File created:', file);
-      return file; // Return the created file
-    } catch (error) {
-      console.error('Error downloading image:', error);
-      return null; // Return null in case of an error
-    }
   };
 
   const handleSubmit = async (event) => {
@@ -59,12 +43,11 @@ function AddAuthorsForm({ onClose }) {
       if (response.status !== 201) throw new Error('Failed to submit form');
       console.log('Form submitted successfully');
       console.log(response);
-
+      
       if (onClose) {
         onClose(); // Call the onClose function to close the modal
       }
-      
-      window.location.reload();
+      toast.success(response.data.message);
 
     } catch (error) {
       console.error('Error submitting form:', error.response ? error.response.data : error.message);
@@ -87,7 +70,16 @@ function AddAuthorsForm({ onClose }) {
             <input
               type="text"
               name="authorName"
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-[#37643B] focus:ring-[#37643B]"
+              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              required
+            />
+          </div>
+          <div className="mb-2">
+            <label className="block text-sm font-medium">Author nickname: (optional)</label>
+            <input
+              type="text"
+              name="nickname"
+              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
@@ -148,7 +140,7 @@ function AddAuthorsForm({ onClose }) {
           </div>
           <button
             type="submit"
-            className="bg-[#37643B] text-white px-4 py-2 rounded hover:bg-[#2a4c2c]"
+            className="bg-green-700 text-white px-4 py-2 rounded on-click-amzn"
           >
             Save Author
           </button>

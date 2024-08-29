@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import ImagePreview from './ImagePreview';
 import axiosUtils from '../../../../../utils/axiosUtils';
 import { bufferToBlobURL, downloadImage } from '../../../../../utils/imageUtils';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import toast from 'react-hot-toast';
 
 function EditSeriesForm({ onClose }) {
   const initialSeriesId = useSelector((state) => state.catalog.selectedRowIds[0]); // Assuming only one series is selected
-  const [seriesId, setSeriesId] = useState(initialSeriesId);
+  const serieId = useSelector((state) => state.catalog.serieId);
+  const [seriesId, setSeriesId] = useState(serieId || initialSeriesId);
   const [seriesData, setSeriesData] = useState({});
   const [seriesImageURL, setSeriesImageURL] = useState('');
   const [imageFile, setImageFile] = useState(null);
@@ -14,6 +16,8 @@ function EditSeriesForm({ onClose }) {
   const [authorSearch, setAuthorSearch] = useState('');
   const [authorOptions, setAuthorOptions] = useState([]);
   const [selectedAuthor, setSelectedAuthor] = useState('');
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchSeriesData = async () => {
@@ -29,7 +33,8 @@ function EditSeriesForm({ onClose }) {
         }
 
         setSeriesId(response.data.id);
-        setSelectedAuthor(response.data.author_name || '');
+        setSelectedAuthor(response.data.author_id || '');
+        setAuthorSearch(response.data.author_name || '');
       } catch (error) {
         console.error('Error fetching series data:', error);
       }
@@ -42,10 +47,10 @@ function EditSeriesForm({ onClose }) {
     if (authorSearch) {
       const fetchAuthors = async () => {
         try {
-          const response = await axiosUtils(`/api/searchAuthors?search=${authorSearch}`, 'GET');
-          setAuthorOptions(response.data.map(author => ({
+          const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
+          setAuthorOptions(response.data.results.map(author => ({
             id: author.id,
-            name: author.name
+            authorName: author.nickname ? author.nickname : author.name
           })));
         } catch (error) {
           console.error('Error fetching authors:', error);
@@ -62,8 +67,8 @@ function EditSeriesForm({ onClose }) {
   };
 
   const handleAuthorSelect = (author) => {
-    setSelectedAuthor(author.name);
-    setAuthorSearch(author.name); // Set the selected author in the input
+    setSelectedAuthor(author.id);
+    setAuthorSearch(author.authorName); // Set the selected author in the input
     setAuthorOptions([]);
   };
 
@@ -84,7 +89,7 @@ function EditSeriesForm({ onClose }) {
       }
     }
 
-    formData.append('authorName', selectedAuthor);
+    formData.append('author_id', selectedAuthor);
 
     try {
       const response = await axiosUtils(`/api/updateSerie/${seriesId}`, 'PUT', formData, {
@@ -93,8 +98,7 @@ function EditSeriesForm({ onClose }) {
       if (response.status !== 200) throw new Error('Failed to update series');
       console.log('Series updated successfully');
       if (onClose) onClose();
-
-      window.location.reload();
+      toast.success(response.data.message);
 
     } catch (error) {
       console.error('Error updating series:', error);
@@ -112,8 +116,8 @@ function EditSeriesForm({ onClose }) {
             <input
               type="text"
               name="serieName"
-              defaultValue={seriesData.name || ''}
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-[#37643B] focus:ring-[#37643B]"
+              defaultValue={seriesData.serieName || ''}
+              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
@@ -134,7 +138,7 @@ function EditSeriesForm({ onClose }) {
                     onClick={() => handleAuthorSelect(author)}
                     className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                   >
-                    {author.name}
+                    {author.authorName}
                   </li>
                 ))}
               </ul>
@@ -146,7 +150,7 @@ function EditSeriesForm({ onClose }) {
               <input
                 type="number"
                 name="numBooks"
-                defaultValue={seriesData.booksNo || ''}
+                defaultValue={seriesData.numBooks || ''}
                 className="w-full border border-gray-300 rounded px-2 py-1"
               />
             </div>
@@ -166,13 +170,13 @@ function EditSeriesForm({ onClose }) {
               type="text"
               name="link"
               defaultValue={seriesData.link || ''}
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-[#37643B] focus:ring-[#37643B]"
+              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
           <button
             type="submit"
-            className="bg-[#37643B] text-white px-4 py-2 rounded hover:bg-[#2a4c2c]"
+            className="bg-green-700 text-white px-4 py-2 rounded on-click-amzn"
           >
             Save Changes
           </button>

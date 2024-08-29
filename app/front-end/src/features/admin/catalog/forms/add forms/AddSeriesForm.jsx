@@ -1,23 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import ImagePreview from './ImagePreview';
 import axiosUtils from '../../../../../utils/axiosUtils';
+import toast from 'react-hot-toast';
+import { downloadImage } from '../../../../../utils/imageUtils';
+import { useSelector } from 'react-redux';
 
 function AddSeriesForm({ onClose }) {
+  const authorDetailsAuthorName = useSelector((state) => state.catalog.authorName);
   const [seriesImageURL, setSeriesImageURL] = useState('');
   const [imageFile, setImageFile] = useState(null);
 
-  const [authorSearch, setAuthorSearch] = useState('');
+  const [authorSearch, setAuthorSearch] = useState(authorDetailsAuthorName || '');
   const [authorOptions, setAuthorOptions] = useState([]);
-  const [selectedAuthor, setSelectedAuthor] = useState('');
+  const [selectedAuthor, setSelectedAuthor] = useState(authorDetailsAuthorName || '');
 
   useEffect(() => {
     if (authorSearch) {
       const fetchAuthors = async () => {
         try {
-          const response = await axiosUtils(`/api/searchAuthors?search=${authorSearch}`, 'GET');
-          setAuthorOptions(response.data.map(author => ({
+          const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
+          setAuthorOptions(response.data.results.map(author => ({
             id: author.id,
-            name: author.name
+            authorName: author.nickname ? author.nickname : author.name
           })));
         } catch (error) {
           console.error('Error fetching authors:', error);
@@ -34,28 +38,13 @@ function AddSeriesForm({ onClose }) {
   };
 
   const handleAuthorSelect = (author) => {
-    setSelectedAuthor(author.name);
-    setAuthorSearch(author.name); // Set the selected author in the input
+    setSelectedAuthor(author.id);
+    setAuthorSearch(author.authorName); // Set the selected author in the input
     setAuthorOptions([]);
   };
 
   const handleImageChange = (url) => {
     setSeriesImageURL(url);
-  };
-
-  const downloadImage = async (url, seriesName) => {
-    try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`Failed to fetch image. Status: ${response.status}`);
-      const blob = await response.blob();
-      if (!blob || blob.size === 0) throw new Error('Empty blob received');
-      const fileName = seriesName ? `${seriesName}.jpg` : 'series-image.jpg';
-      const file = new File([blob], fileName, { type: blob.type });
-      return file; // Return the created file
-    } catch (error) {
-      console.error('Error downloading image:', error);
-      return null; // Return null in case of an error
-    }
   };
 
   const handleSubmit = async (event) => {
@@ -75,7 +64,7 @@ function AddSeriesForm({ onClose }) {
       console.error('No image URL provided');
     }
 
-    formData.append('authorName', selectedAuthor);
+    formData.append('author_id', selectedAuthor);
 
     // Debug output
     for (let [key, value] of formData.entries()) {
@@ -95,8 +84,7 @@ function AddSeriesForm({ onClose }) {
       if (onClose) {
         onClose(); // Call the onClose function to close the modal
       }
-
-      window.location.reload();
+      toast.success(response.data.message);
 
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -114,7 +102,7 @@ function AddSeriesForm({ onClose }) {
             <input
               type="text"
               name="serieName"
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-[#37643B] focus:ring-[#37643B]"
+              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
@@ -135,7 +123,7 @@ function AddSeriesForm({ onClose }) {
                     onClick={() => handleAuthorSelect(author)}
                     className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                   >
-                    {author.name}
+                    {author.authorName}
                   </li>
                 ))}
               </ul>
@@ -156,13 +144,13 @@ function AddSeriesForm({ onClose }) {
             <input
               type="text"
               name="link"
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-[#37643B] focus:ring-[#37643B]"
+              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
           <button
             type="submit"
-            className="bg-[#37643B] text-white px-4 py-2 rounded hover:bg-[#2a4c2c]"
+            className="bg-green-700 text-white px-4 py-2 rounded on-click-amzn"
           >
             Save Series
           </button>

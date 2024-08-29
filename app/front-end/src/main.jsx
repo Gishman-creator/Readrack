@@ -6,11 +6,15 @@ import { Provider } from 'react-redux';
 import Store from './redux/Store.jsx'; // Import the configured store
 import App from './App.jsx';
 import './index.css';
+import { SocketProvider } from './context/SocketContext.jsx';
+import { Toaster } from 'react-hot-toast';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <Provider store={Store}> {/* Wrap your app with the Provider */}
-      <App />
-    </Provider>
+    <SocketProvider>
+      <Provider store={Store}> {/* Wrap your app with the Provider */}
+        <App />
+        <Toaster />
+      </Provider></SocketProvider>
   </React.StrictMode>
 );

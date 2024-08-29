@@ -1,12 +1,13 @@
 // Modal.js
 import React from 'react';
+import ReactDOM from 'react-dom';
 
 function Modal({ isOpen, onClose, children }) {
   if (!isOpen) return null;
 
-  return (
+  return ReactDOM.createPortal(
     <div
-      className="fixed modal left-0 right-0 min-h-screen min-w-full bg-black bg-opacity-50 flex justify-center items-center "
+      className="fixed z-30 left-0 right-0 top-0 bottom-0 min-h-screen min-w-full bg-black bg-opacity-50 flex justify-center items-center "
       onClick={onClose}
     >
       <div
@@ -25,7 +26,8 @@ function Modal({ isOpen, onClose, children }) {
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.getElementById('portal')
   );
 }
 

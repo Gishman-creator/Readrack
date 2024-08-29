@@ -1,16 +1,47 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
-import harryPotterSerie from '../../../assets/harry_potter_serie.png';
+import axiosUtils from '../../../utils/axiosUtils';
+import { SkeletonCard } from '../components/skeletons/SkeletonCard';
+import Card from '../components/Card';
+import { useSelector } from 'react-redux';
+import { bufferToBlobURL } from '../../../utils/imageUtils';
 
-function Recommendations() {
+function Recommendations({ genres }) {
+
+    const [cardData, setCardData] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const activeTab = useSelector((state) => state.user.activeTab);
     const navigate = useNavigate();
     const scrollContainerRef = useRef(null);
 
-    const navigateToSeriesDetails = (serieName) => {
-        const formattedSerieName = serieName.toLowerCase().replace(/\s+/g, '-');
-        navigate(`/series/${formattedSerieName}`);
-    };
+    useEffect(() => {
+        const fetchData = async () => {
+            setIsLoading(true);
+            if (!activeTab || !genres) return;
+
+            try {
+                let response;
+                if(activeTab == 'Series') {
+                    response = await axiosUtils(`/api/recommendSeries?genres=${genres}`, 'GET')
+                } else {
+                    response = await axiosUtils(`/api/recommendAuthors?genres=${genres}`, 'GET')
+                }
+
+                const dataWithBlobs = response.data.map((item) => ({
+                    ...item,
+                    image: bufferToBlobURL(item.image),
+                }));
+
+                setCardData(dataWithBlobs);
+                setIsLoading(false);
+            } catch (error) {
+                console.error('Error fetching recommendations:', error);
+            }
+        }
+
+        fetchData();
+    }, [genres, activeTab]);
 
     const scrollLeft = () => {
         if (scrollContainerRef.current) {
@@ -33,44 +64,29 @@ function Recommendations() {
     return (
         <div className=''>
             <div className='flex items-center justify-between'>
-                <p className='font-poppins'>You may also like:</p>
+                <p className='font-poppins font-semibold text-lg 2xl:text-center'>You may also like:</p>
                 <div className='hidden md:flex items-center justify-between space-x-2'>
                     <button onClick={scrollLeft} className='text-xl cursor-pointer p-2 rounded-full on-click'>
-                    <ChevronLeftIcon className='w-6 h-6' />
+                        <ChevronLeftIcon className='w-6 h-6' />
                     </button>
                     <button onClick={scrollRight} className='text-xl cursor-pointer p-2 rounded-full on-click'>
-                    <ChevronRightIcon className='w-6 h-6' />
+                        <ChevronRightIcon className='w-6 h-6' />
                     </button>
                 </div>
             </div>
             <div
                 ref={scrollContainerRef}
-                className='w-full flex flex-row pt-4 pb-10 space-x-4 overflow-x-scroll scrollbar-hidden'
+                className='w-full flex flex-row pt-4 space-x-4 overflow-x-scroll scrollbar-hidden'
             >
-                {[...Array(5)].map((_, index) => (
-                    <div
-                        key={index}
-                        className='w-[12rem] flex-shrink-0 border border-[#ededed] hover:border-[#e1e1e1] hover:shadow-sm rounded-md cursor-pointer'
-                        onClick={() => {
-                            navigateToSeriesDetails('Harry Potter');
-                        }}
-                    >
-                        <img
-                            src={harryPotterSerie}
-                            alt='Serie image'
-                            className='h-44 w-full bg-[#edf4e6] rounded-sm'
-                        />
-                        <div className='flex-col justify-center items-center py-2 px-2'>
-                            <p className='font-poppins font-semibold text-sm'>
-                                Harry Potter Series
-                            </p>
-                            <p className='font-arsenal text-xs'>by J.K. Rowling</p>
-                            <p className='font-poppins font-semibold text-xs text-[#b5b5b5]'>
-                                7 books
-                            </p>
-                        </div>
-                    </div>
-                ))}
+                {isLoading ? (
+                    [...Array(10)].map((_, index) => (
+                        <SkeletonCard key={index} />
+                    ))
+                ) : (
+                    cardData.map((item) => (
+                        <Card key={item.id} card={item} activeTab={activeTab} fixedWidth={true} />
+                    ))
+                )}
             </div>
         </div>
     );

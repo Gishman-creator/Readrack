@@ -7,7 +7,7 @@ import { toggleVisibility, toggleExpansion, setVisibility, setExpansion } from '
 const SideBar = () => {
     const dispatch = useDispatch();
     const { isVisible, isExpanded } = useSelector((state) => state.sideBar);
-    const location = useLocation(); // Use this hook to get the current location
+    const location = useLocation();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -56,7 +56,7 @@ const SideBar = () => {
                                 <Link
                                     to="/admin/dashboard"
                                     title={isExpanded ? null : 'Dashboard'}
-                                    className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} ${location.pathname === '/admin/dashboard' ? 'bg-[#66893d] text-slate-100 hover:bg-[#66893d]' : ''
+                                    className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} ${location.pathname === '/admin/dashboard' ? 'bg-primary text-white hover:bg-primary' : ''
                                         }`}
                                     onClick={() => dispatch(toggleVisibility())}
                                 >
@@ -68,9 +68,9 @@ const SideBar = () => {
                             </li>
                             <li>
                                 <Link
-                                    to="/admin/catalog"
+                                    to="/admin/catalog?tab=series"
                                     title={isExpanded ? null : 'Catalog'}
-                                    className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} ${isCatalogRoute ? 'bg-[#66893d] text-slate-100 hover:bg-[#66893d]' : ''
+                                    className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} ${isCatalogRoute ? 'bg-primary text-white hover:bg-primary' : ''
                                         }`}
                                     onClick={() => dispatch(toggleVisibility())}
                                 >
@@ -84,7 +84,7 @@ const SideBar = () => {
                                 <Link
                                     to="/admin/editor"
                                     title={isExpanded ? null : 'Ui elements'}
-                                    className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} ${location.pathname === '/admin/editor' ? 'bg-[#66893d] text-slate-100 hover:bg-[#66893d]' : ''
+                                    className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} ${location.pathname === '/admin/editor' ? 'bg-primary text-white hover:bg-primary' : ''
                                         }`}
                                     onClick={() => dispatch(toggleVisibility())}
                                 >

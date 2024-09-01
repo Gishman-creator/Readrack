@@ -13,8 +13,8 @@ export default function Home() {
     const activeTab = useSelector((state) => state.user.activeTab);
     const activeGenre = useSelector((state) => state.user.activeGenre);
 
-    const [pageLimitStart, setPageLimitStart] = useState(1);
-    const [pageLimitEnd, setPageLimitEnd] = useState(31);
+    const [pageLimitStart, setPageLimitStart] = useState(0);
+    const [pageLimitEnd, setPageLimitEnd] = useState(30);
     const [pageInterval, setPageInterval] = useState(30);
     const [totalItems, setTotalItems] = useState(0);
 
@@ -78,7 +78,7 @@ export default function Home() {
                 }));
 
                 setTotalItems(totalCount);
-                console.log('Data fetched', dataWithBlobs);
+                // console.log('Data fetched', dataWithBlobs);
                 setCardData(dataWithBlobs);
                 setIsLoading(false);
             } catch (error) {

@@ -37,28 +37,28 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal })
                 let response, data, totalCount;
                 if (searchTerm) {
                     const type = activeTab.toLowerCase();
-                    console.log('The search type is:', type);
+                    // console.log('The search type is:', type);
                     const response = await axiosUtils(`/api/search?query=${searchTerm}&type=${type}&seriePageLimitStart=${limitStart}&seriePageLimitEnd=${limitEnd}&authorPageLimitStart=${limitStart}&authorPageLimitEnd=${limitEnd}&bookPageLimitStart=${limitStart}&bookPageLimitEnd=${limitEnd}`, 'GET');
                     data = response.data.results;
                     totalCount = response.data.totalBooksCount;
                 } else {
                     if (activeTab === "Series") {
-                        console.log('Getting series');
+                        // console.log('Getting series');
                         response = await axiosUtils(`/api/getSeries?limitStart=${limitStart}&limitEnd=${limitEnd}`, 'GET');
                     } else if (activeTab === "Books") {
-                        console.log('Getting books');
+                        // console.log('Getting books');
                         response = await axiosUtils(`/api/getBooks?limitStart=${limitStart}&limitEnd=${limitEnd}`, 'GET');
                     } else if (activeTab === "Authors") {
-                        console.log('Getting authors');
+                        // console.log('Getting authors');
                         response = await axiosUtils(`/api/getAuthors?limitStart=${limitStart}&limitEnd=${limitEnd}`, 'GET');
                     }
                     data = response.data.data;
                     totalCount = response.data.totalCount;
                 }
-                console.log('Total data fetched:', data);
+                // console.log('Total data fetched:', data);
                 setTableData(data);
                 dispatch(setTableTotalItems(totalCount));
-                console.log('Total count of data:', totalCount)
+                // console.log('Total count of data:', totalCount)
                 setSelectAllChecked(false); // Reset select all checkbox
                 dispatch(clearSelection()); // Clear selections when data changes
                 setIsLoading(false);
@@ -69,9 +69,14 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal })
 
         fetchData();
 
+        if (!socket) {
+            console.error("Socket is not initialized");
+            return;
+        }
+
         // Listen for series updates via socket
         socket.on('seriesUpdated', (updatedSeries) => {
-            console.log("Series updated via socket:", updatedSeries);
+            // console.log("Series updated via socket:", updatedSeries);
             setTableData((prevData) => {
                 const updatedData = prevData.map((series) =>
                     series.id === updatedSeries.id ? updatedSeries : series
@@ -81,7 +86,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal })
         });
 
         socket.on('booksUpdated', (updatedBooks) => {
-            console.log('Books updated via socket:', updatedBooks);
+            // console.log('Books updated via socket:', updatedBooks);
             setTableData((prevData) => {
                 const updatedData = prevData.map((book) =>
                     book.id === updatedBooks.id ? updatedBooks : book
@@ -91,7 +96,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal })
         });
 
         socket.on('authorsUpdated', (updatedAuthors) => {
-            console.log('Authors updated via socket:', updatedAuthors);
+            // console.log('Authors updated via socket:', updatedAuthors);
             setTableData((prevData) => {
                 const updatedData = prevData.map((book) =>
                     book.id === updatedAuthors.id ? updatedAuthors : book
@@ -101,25 +106,25 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal })
         });
 
         socket.on('dataDeleted', ({ ids, type }) => {
-            console.log('Data deleted via socket:', { ids, type });
+            // console.log('Data deleted via socket:', { ids, type });
             setTableData((prevData) => prevData.filter((item) => !ids.includes(item.id)));
         });
 
         // New event listener for authorAdded
         socket.on('authorAdded', (newAuthor) => {
-            console.log('New author added via socket:', newAuthor);
+            // console.log('New author added via socket:', newAuthor);
             setTableData((prevData) => [...prevData, newAuthor]);
         });
 
         // New event listener for serieAdded
         socket.on('serieAdded', (serieData) => {
-            console.log('New serie added via socket:', serieData);
+            // console.log('New serie added via socket:', serieData);
             setTableData((prevData) => [...prevData, serieData]);
         });
 
         // New event listener for bookAdded
         socket.on('bookAdded', (bookData) => {
-            console.log('New book added via socket:', bookData);
+            // console.log('New book added via socket:', bookData);
             setTableData((prevData) => [...prevData, bookData]);
         });
 
@@ -159,13 +164,13 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal })
     }, [selectedRowIds, tableData]);
 
     const handleRowClick = (rowId, item) => {
-        console.log(`Row ${rowId} clicked`);
+        // console.log(`Row ${rowId} clicked`);
 
         // Navigate based on the activeTab
         if (activeTab === "Series") {
-            navigate(`series/${item.id}/${encodeURIComponent(item.name)}`); // Navigate to SerieDetails
+            navigate(`series/${item.id}/${encodeURIComponent(item.serieName)}`); // Navigate to SerieDetails
         } else if (activeTab === "Authors") {
-            navigate(`authors/${item.id}/${encodeURIComponent(item.name)}`); // Navigate to AuthorDetails
+            navigate(`authors/${item.id}/${encodeURIComponent(item.authorName)}`); // Navigate to AuthorDetails
         } else if (activeTab === "Books") {
             dispatch(toggleRowSelection(rowId));
         }
@@ -296,7 +301,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal })
                         </td>
                         <td className="px-4 py-2">
                             <a href={item.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-                            {item.website}
+                            Website
                             </a>
                         </td>
                         <td className="px-4 py-2">{item.searchCount}</td>

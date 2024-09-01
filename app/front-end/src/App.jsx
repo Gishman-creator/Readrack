@@ -8,17 +8,18 @@ import Authentication from './features/authentication/Authentication';
 import Modal from './features/admin/components/Modal';
 import { useDispatch, useSelector } from 'react-redux';
 import { setLoginState } from './features/authentication/slices/authSlice';
+import NotFoundPage from './pages/NotFoundPage';
 
 const App = () => {
-    const isLoggedIn =  useSelector((state) => state.auth.isLoggedIn); // Start with null to indicate loading state
+    const isLoggedIn =  useSelector((state) => state.auth.isLoggedIn);
     const dispatch = useDispatch();
 
     useEffect(() => {
         const validateTokens = async () => {
             const accessToken = localStorage.getItem('accessToken');
             const refreshToken = localStorage.getItem('refreshToken');
-            console.log('accessToken:', accessToken);
-            console.log('refreshToken:', refreshToken);
+            // console.log('accessToken:', accessToken);
+            // console.log('refreshToken:', refreshToken);
 
             if (!accessToken || !refreshToken) {
                 dispatch(setLoginState(false));
@@ -31,17 +32,17 @@ const App = () => {
                     'x-refresh-token': refreshToken,
                 });
 
-                console.log('Token validation response:', response);
+                // console.log('Token validation response:', response);
 
                 if (response.status === 200) {
                     const newAccessToken = response.data.accessToken; // Ensure `accessToken` is in response.data
                     if (newAccessToken) {
                         localStorage.setItem('accessToken', newAccessToken);
-                        console.log('New access token received and stored');
+                        // console.log('New access token received and stored');
                     }
                     dispatch(setLoginState(true));
                 } else {
-                    console.log('Token validation failed');
+                    // console.log('Token validation failed');
                     dispatch(setLoginState(false));
                 }
             } catch (error) {
@@ -68,6 +69,7 @@ const App = () => {
                         element={isLoggedIn ? <Admin /> : <Navigate to="/auth" />}
                     />
                     <Route path="/auth/*" element={<Authentication />} />
+                    <Route path='*' element={<NotFoundPage />} />
                 </Routes>
             </Router>
         </div>

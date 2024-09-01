@@ -17,7 +17,7 @@ const SideBarSlice = createSlice({
     toggleExpansion: (state) => {
       if (window.innerWidth >= 768) {
         state.isExpanded = !state.isExpanded;
-        console.log(state.isExpanded);
+        // console.log(state.isExpanded);
       }
     },
     setVisibility: (state, action) => {

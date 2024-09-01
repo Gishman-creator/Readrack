@@ -27,7 +27,7 @@ const SideBar = ({ isMenuOpen, toggleMenu }) => {
             <div
                 // Sidebar with event stopPropagation to prevent the toggleMenu function from firing when inside the sidebar
                 onClick={(e) => e.stopPropagation()}
-                className={`max-w-fit h-full bg-white border border-[#bcbcbc] fixed top-0 left-0 transition-transform duration-300 ease-in-out p-2 pr-4 pt-0 z-50 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'
+                className={`max-w-fit h-full bg-white border border-[#bcbcbc] fixed top-0 left-0 transition-transform duration-300 ease-in-out p-2 px-3 pt-0 z-50 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'
                     }`}
             >
                 <div className='z-24 flex items-center py-3 '>
@@ -39,12 +39,12 @@ const SideBar = ({ isMenuOpen, toggleMenu }) => {
                     <div>
                         <img src={logo} alt="Logo" className="w-8 h-8" />
                     </div>
-                    <div title='Home' className='font-arima text-2xl flex cursor-pointer' onClick={navigateToHome}>
+                    <div title='Home' className='font-arima text-2xl flex cursor-pointer' onClick={() => {navigateToHome(); toggleMenu()}}>
                         <h1 className='inline'>read</h1>
                         <h1 className='inline font-bold text-green-700'>rack</h1>
                     </div>
                 </div>
-                <ul className="space-y-2 font-poppins font-medium">
+                <ul className="space-y-2 font-poppins font-medium mt-5">
                     <li>
                         <Link
                             to="/series"
@@ -53,7 +53,7 @@ const SideBar = ({ isMenuOpen, toggleMenu }) => {
                                 }`}
                         >
                             <FaLayerGroup className='mr-2 w-8 h-8 p-2' />
-                            <span className='text-sm mr-28'>
+                            <span className='text-xs mr-28'>
                                 Series
                             </span>
                         </Link>
@@ -66,7 +66,7 @@ const SideBar = ({ isMenuOpen, toggleMenu }) => {
                                 }`}
                         >
                             <FaUserPen className='mr-2 w-8 h-8 p-2' />
-                            <span className='text-sm mr-28'>
+                            <span className='text-xs mr-28'>
                                 Authors
                             </span>
                         </Link>
@@ -78,7 +78,7 @@ const SideBar = ({ isMenuOpen, toggleMenu }) => {
                                 }`}
                         >
                             <FaInfoCircle className='mr-2 w-8 h-8 p-2' />
-                            <span className='text-sm mr-28'>
+                            <span className='text-xs mr-28'>
                                 About
                             </span>
                         </Link>

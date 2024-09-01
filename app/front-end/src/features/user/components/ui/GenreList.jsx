@@ -3,6 +3,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useDispatch, useSelector } from 'react-redux';
 import axiosUtils from '../../../../utils/axiosUtils'; // Adjust the import path as needed
 import { setActiveGenre } from '../../slices/userSlice';
+import { capitalize } from '../../../../utils/stringUtils';
 
 function GenreList() {
     const activeTab = useSelector((state) => state.user.activeTab);
@@ -72,7 +73,7 @@ function GenreList() {
                                     }`}
                                 onClick={() => handleGenreClick(genre)}
                             >
-                                {genre}
+                                {capitalize(genre)}
                             </p>
                         ))}
                     </div>

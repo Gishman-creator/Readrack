@@ -17,7 +17,7 @@ function SerieDetails() {
   const { serieId, serieName } = useParams();
   const [serieData, setSerieData] = useState({});
   const [books, setBooks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [IsLoading, setIsLoading] = useState(true);
   const [modalType, setModalType] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);  // Manage modal visibility
   const dispatch = useDispatch();
@@ -52,6 +52,7 @@ function SerieDetails() {
       try {
         const serieResponse = await axiosUtils(`/api/getSerieById/${serieId}`, 'GET');
         setSerieData(serieResponse.data);
+        // console.log('Fetched serie data:', serieResponse.data);
 
         // Convert series image
         if (serieResponse.data.image) {
@@ -59,16 +60,15 @@ function SerieDetails() {
         }
 
         // If serieName is not in the URL, update it
-        if (!serieName) {
-          const fetchedSerieName = serieResponse.data.serieName;
-          navigate(`/serie/${serieId}/${encodeURIComponent(fetchedSerieName)}`, { replace: true });
+        if (!serieName || serieName !== serieResponse.data.serieName) {
+          navigate(`/admin/catalog/series/${serieId}/${encodeURIComponent(serieResponse.data.serieName)}`, { replace: true });
         }
 
         const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}?limit=${booksLimit}`, 'GET');
-        console.log('Books response:', booksResponse.data); // Debugging
+        // console.log('Books response:', booksResponse.data); // Debugging
 
         const booksWithBlobs = booksResponse.data.books.map((book) => {
-          console.log('Book data:', book); // Debugging
+          // console.log('Book data:', book); // Debugging
           return {
             ...book,
             image: bufferToBlobURL(book.image) // Convert buffer to Blob URL
@@ -76,20 +76,41 @@ function SerieDetails() {
         });
         setBooks(booksWithBlobs);
         SetBooksCount(booksResponse.data.totalCount);
-        console.log('The total count is:', booksResponse.data.totalCount);
+        // console.log('The total count is:', booksResponse.data.totalCount);
 
-        setLoading(false);
+        setIsLoading(false);
       } catch (error) {
         console.error('Error fetching series data:', error);
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
     fetchSeriesData();
 
+    if (!socket) {
+      console.error("Socket is not initialized");
+      return;
+    }
+
+    socket.on('seriesUpdated', (updatedSeries) => {
+      setSerieData((prevSerieData) => {
+        // Only update if the IDs match
+        if (prevSerieData.id === updatedSeries.id) {
+          // console.log("The ids are equal...............")
+          return {
+            ...prevSerieData,
+            ...updatedSeries,
+            image: bufferToBlobURL(updatedSeries.image), // Convert updated series image to Blob URL
+          };
+        }
+
+        return prevSerieData; // Return the previous state if IDs don't match
+      });
+    });
+
     // Event listener for booksUpdated
     socket.on('booksUpdated', (updatedBooks) => {
-      console.log('Books updated via socket:', updatedBooks);
+      // console.log('Books updated via socket:', updatedBooks);
       setBooks((prevData) => {
         const updatedData = prevData.map((book) =>
           book.id === updatedBooks.id
@@ -120,6 +141,7 @@ function SerieDetails() {
 
 
     return () => {
+      socket.off('seriesUpdated');
       socket.off('booksUpdated');
       socket.off('bookAdded');
     };
@@ -132,7 +154,7 @@ function SerieDetails() {
     } else {
       setBooksLimit(booksLimit === 5 ? booksCount : 5);
     }
-    console.log('Books limit set to:', booksLimit);
+    // console.log('Books limit set to:', booksLimit);
   }
 
   const handleEditClick = (book) => {
@@ -152,7 +174,7 @@ function SerieDetails() {
     setIsModalOpen(false);  // Hide the modal
   };
 
-  if (loading) {
+  if (IsLoading) {
     return <p className='flex justify-center items-center'>Loading...</p>;
   }
 

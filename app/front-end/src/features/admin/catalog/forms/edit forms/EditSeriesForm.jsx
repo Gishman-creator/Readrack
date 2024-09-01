@@ -24,6 +24,7 @@ function EditSeriesForm({ onClose }) {
       try {
         const response = await axiosUtils(`/api/getSerieById/${seriesId}`, 'GET');
         setSeriesData(response.data);
+        // console.log("Serie fetched by id:", response.data);
 
         if (response.data.image && response.data.image.data) {
           const imageBlobURL = bufferToBlobURL(response.data.image);
@@ -80,23 +81,29 @@ function EditSeriesForm({ onClose }) {
     event.preventDefault();
     const formData = new FormData(event.target);
 
-    if (seriesImageURL !== seriesData.imageURL) {
+    // console.log('Series image URL:', seriesImageURL); // Log the URL
+  
+    if (seriesImageURL && seriesImageURL !== seriesData.imageURL) {
+      // console.log('Image there:', seriesImageURL);
       const file = await downloadImage(seriesImageURL, formData.get('serieName') || '');
       if (file) {
         formData.append('seriesImage', file);
       } else {
         console.error('Image file not available');
       }
+    } else {
+      // console.log('No image url');
     }
 
     formData.append('author_id', selectedAuthor);
+    // console.log("The formdata are:", formData);
 
     try {
       const response = await axiosUtils(`/api/updateSerie/${seriesId}`, 'PUT', formData, {
         'Content-Type': 'multipart/form-data',
       });
       if (response.status !== 200) throw new Error('Failed to update series');
-      console.log('Series updated successfully');
+      // console.log('Series updated successfully');
       if (onClose) onClose();
       toast.success(response.data.message);
 

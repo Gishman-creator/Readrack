@@ -3,7 +3,7 @@ import logo from '../assets/logo1.jpg'
 import { useNavigate } from 'react-router-dom';
 
 function NotFoundPage({ type }) {
-  console.log("The type is:", type);
+  // console.log("The type is:", type);
 
   let data;
   

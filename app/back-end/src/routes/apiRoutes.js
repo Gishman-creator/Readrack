@@ -23,6 +23,8 @@ const deleteDataController = require('../controllers/catalogControllers/deleteDa
 const recommendationController = require('../controllers/otherControllers/recommendationController');
 const getGenresController = require('../controllers/otherControllers/getGenresController');
 const searchCountController = require('../controllers/otherControllers/searchCountController');
+const logVisitsController = require('../controllers/otherControllers/logVisitsController');
+const getCountController = require('../controllers/otherControllers/getCountController');
 
 const dataController = require('../controllers/dataControllers/dataController')
 const generateDataController = require('../controllers/dataControllers/generateDataController');
@@ -47,6 +49,8 @@ router.post('/addBook', upload.single('bookImage'), addBook);
 router.post('/addSeries', upload.single('seriesImage'), addSeries);
 router.post('/incrementSearchCount', searchCountController.incrementSearchCount);
 
+router.post('/log-visit', logVisitsController.logVisit);
+
 router.put('/updateAuthor/:id', upload.single('authorImage'), updateAuthorController.updateAuthor);
 router.put('/updateBook/:id', upload.single('bookImage'), updateBookController.updateBook);
 router.put('/updateSerie/:id', upload.single('seriesImage'), updateSerieController.updateSerie);
@@ -56,6 +60,8 @@ router.delete('/deleteData', deleteDataController.deleteData);
 // router.get('/searchAuthors', searchController.searchAuthors);
 // router.get('/searchSeries', searchController.searchSeries);
 router.get('/search', searchController.search);
+router.get('/get-visits-data', logVisitsController.getVisitsData);
+router.get('/getCount', getCountController.getCount);
 
 router.get('/getSeries', getSeriesController.getSeries);
 router.get('/getBooks', getBooksController.getBooks);

@@ -76,12 +76,18 @@ exports.getSeriesByAuthorId = async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || null;
 
   try {
-    // Query for fetching series by author_id with author_name
+    // Query for fetching series by author_id with author_name, first and last book dates
     let seriesQuery = `
-      SELECT series.*, authors.nickname, authors.authorName AS author_name
+      SELECT series.*, 
+             authors.nickname, 
+             authors.authorName AS author_name,
+             YEAR(MIN(books.publishDate)) AS first_book_year,
+             YEAR(MAX(books.publishDate)) AS last_book_year
       FROM series
       LEFT JOIN authors ON series.author_id = authors.id
+      LEFT JOIN books ON books.serie_id = series.id
       WHERE series.author_id = ?
+      GROUP BY series.id, authors.nickname, authors.authorName
     `;
     let countQuery = 'SELECT COUNT(*) AS totalCount FROM series WHERE author_id = ?';
 
@@ -102,6 +108,7 @@ exports.getSeriesByAuthorId = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 exports.getSeriesCount = async (req, res) => {
   try {

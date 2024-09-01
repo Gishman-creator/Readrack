@@ -19,10 +19,10 @@ function EditAuthorForm({ onClose }) {
     const fetchAuthorData = async () => {
       try {
         const response = await axiosUtils(`/api/getAuthorById/${authorId}`, 'GET');
-        console.log('Author data fetched:', response.data); // Log the entire response data
+        // console.log('Author data fetched:', response.data); // Log the entire response data
 
         setAuthorData(response.data);
-        console.log('Author data:', response.data);
+        // console.log('Author data:', response.data);
 
         if (response.data.image && response.data.image.data) {
           // Convert Buffer to Blob URL
@@ -55,9 +55,9 @@ function EditAuthorForm({ onClose }) {
     const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0];
 
     // Check if the URL has changed and a file should be appended
-    if (authorImageURL !== authorData.imageURL) {
+    if (authorImageURL && authorImageURL !== authorData.imageURL) {
       const file = await downloadImage(authorImageURL, lastName);
-      console.log('File:', file);
+      // console.log('File:', file);
       if (file) {
         formData.append('authorImage', file); // Ensure this is appending correctly
       } else {
@@ -67,7 +67,7 @@ function EditAuthorForm({ onClose }) {
 
     // Log form data entries
     for (let [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`);
+      // console.log(`${key}: ${value}`);
     }
 
     try {
@@ -75,7 +75,7 @@ function EditAuthorForm({ onClose }) {
         'Content-Type': 'multipart/form-data',
       });
       if (response.status !== 200) throw new Error('Failed to update author');
-      console.log('Author updated successfully');
+      // console.log('Author updated successfully');
       if (onClose) onClose();
       toast.success(response.data.message);
 

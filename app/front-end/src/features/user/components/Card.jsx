@@ -45,7 +45,13 @@ function Card({ card, activeTab, fixedWidth }) {
                     title={`${capitalize(card.name)} ${activeTab === 'Series' ? 'Serie' : ''}`}
                     className="font-poppins font-medium overflow-hidden whitespace-nowrap text-ellipsis"
                 >
-                    {capitalize(card.name)} {activeTab === 'Series' && 'Serie'}
+                    {activeTab === 'Series'
+                        ? capitalize(card.serieName)
+                        : card.nickname
+                            ? capitalize(card.nickname)
+                            : capitalize(card.authorName)
+                    }
+                    {activeTab === 'Series' && ' Serie'}
                 </p>
                 {activeTab === 'Series' ? (
                     <>
@@ -54,17 +60,17 @@ function Card({ card, activeTab, fixedWidth }) {
                             className="font-arima text-sm overflow-hidden whitespace-nowrap text-ellipsis"
                             onClick={(e) => navigateToAuthor(e, card.author_id)}
                         >
-                            by {card.author_name}
+                            by {card.nickname ? capitalize(card.nickname) : capitalize(card.author_name)}
                         </p>
                         <p className="font-arima font-bold text-xs text-green-700 mt-4">
-                            {card.booksNo} books
+                            {card.numBooks} books
                         </p>
                     </>
                 ) : (
                     <>
                         <p className="font-arima text-sm leading-4">{capitalize(card.nationality)}</p>
                         <p className="font-arima font-bold text-xs text-green-700 mt-2">
-                            {card.booksNo} books
+                            {card.numBooks} books
                         </p>
                     </>
                 )}

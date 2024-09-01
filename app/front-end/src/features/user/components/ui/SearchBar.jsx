@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { MagnifyingGlassIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom'; // Assuming you are using react-router for navigation
 import axiosUtils from '../../../../utils/axiosUtils';
 import { capitalize } from '../../../../utils/stringUtils';
@@ -11,11 +11,16 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isLoading, setIsLoading] = useState(false); // Loading state
+    const [isInputFocused, setIsInputFocused] = useState(true); // Input focus state
     const navigate = useNavigate();
 
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (searchBarRef.current && !searchBarRef.current.contains(event.target)) {
+            if (
+                searchBarRef.current &&
+                !searchBarRef.current.contains(event.target) &&
+                searchTerm.trim() === '' // Close only if the search term is empty
+            ) {
                 toggleSearch(false);
             }
         };
@@ -29,11 +34,14 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isSearchOpen, toggleSearch]);
+    }, [isSearchOpen, toggleSearch, searchTerm]); // Include searchTerm in the dependency array
+
 
     useEffect(() => {
         if (isSearchOpen && inputRef.current) {
             inputRef.current.focus();
+        } else if (!isSearchOpen) {
+            setSearchTerm(''); // Clear search term when search is closed
         }
     }, [isSearchOpen]);
 
@@ -51,10 +59,12 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     }, [searchTerm]);
 
     const searchInstant = async (term) => {
+        setIsInputFocused(true);
         setIsLoading(true); // Set loading to true when search starts
         try {
             const response = await axiosUtils('/api/search', 'GET', {}, {}, { query: term, type: 'all' });
             const results = response.data.results || []; // Ensure results is an array
+            // console.log('The total count is:', response.data)
             setSearchResults(results.slice(0, 5));
         } catch (error) {
             console.error('Error searching:', error);
@@ -65,20 +75,31 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     };
 
     const handleSearchSubmit = (e) => {
+        // console.log('Handle search submit called');
         e.preventDefault(); // Prevent form submission
         navigate(`/search?q=${encodeURIComponent(searchTerm)}&type=all`);
-        toggleSearch(false);
+        setIsInputFocused(false);
         setSearchTerm('');
+        toggleSearch(false);
     };
 
     const handleSelectResult = (result) => {
+        // console.log('Result selected:', result);
         if (result.type == 'serie') {
             navigate(`/series/${result.id}/${encodeURIComponent(result.name)}`);
         } else {
             navigate(`/authors/${result.id}/${encodeURIComponent(result.name)}`);
         }
+        setIsInputFocused(false);
         incrementSearchCount(result.type, result.id);
-        toggleSearch(false);
+    };
+
+    const clearSearch = () => {
+        setSearchTerm('');
+        inputRef.current.focus();
+        if (searchTerm === '') {
+            toggleSearch(false)
+        }
     };
 
     return (
@@ -97,16 +118,31 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
                             className='p-1 w-full sm:w-60 text-sm ml-2 border-none outline-none rounded-lg'
                             value={searchTerm}
                             onChange={(e) => { setSearchTerm(e.target.value); setIsLoading(true); }}
+                            onFocus={() => setIsInputFocused(true)} // Set focus state to true
                             onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(e)} // Handle Enter key press
                         />
                         {isLoading ? (
-                            <div className=" w-7 h-7 rounded-full border-t-2 border-green-700 animate-spin"></div>
-                        ) : (
+                            searchTerm ?
+                                <div className=" w-7 h-7 rounded-full border-t-2 border-green-700 animate-spin"></div>
+                            :
                             <MagnifyingGlassIcon
                                 type='submit'
                                 onClick={handleSearchSubmit} // Ensure this triggers form submission
                                 className='on-click w-7 h-7 p-1 cursor-pointer font-bold rounded-lg text-[#000]'
                             />
+                        ) : (
+                            searchTerm ?
+                                <XMarkIcon
+                                    className="w-6 h-6 mr-1 px-1 cursor-pointer font-bold rounded-lg text-[#000] on-click"
+                                    onClick={clearSearch} // Clear search term when clicked
+                                />
+                                :
+                                <MagnifyingGlassIcon
+                                    type='submit'
+                                    onClick={handleSearchSubmit} // Ensure this triggers form submission
+                                    className='on-click w-7 h-7 p-1 cursor-pointer font-bold rounded-lg text-[#000]'
+                                />
+
                         )}
                     </form>
                 </div>
@@ -117,31 +153,32 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
                     onClick={() => { toggleSearch(true) }}
                 />
             )}
-            {!isLoading &&
+            {isInputFocused && !isLoading &&
                 searchResults.length > 0 && isSearchOpen ? (
                 <div>
-                    <div className='absolute top-full right-0 min-w-[84%] sm:min-w-[97%] bg-white border rounded shadow-md z-50 p-1'>
+                    <div className='absolute top-full right-0 min-w-[88%] sm:min-w-[17.7rem] bg-white border rounded shadow-md z-50 p-1 space-y-1'>
                         {searchResults.map((result) => (
                             <div
                                 key={result.id}
                                 className='p-2 cursor-pointer on-click rounded text-sm font-poppins font-medium'
-                                onClick={() => handleSelectResult(result)}
+                                onClick={() => handleSelectResult(result)} // Make sure this is correctly bound
                             >
-                                {capitalize(result.name)} <span className='font-arima text-green-700'>({capitalize(result.type)})</span>
+                                {result.serieName ? capitalize(result.serieName) : (result.nickname ? capitalize(result.nickname) : capitalize(result.authorName))}
+                                <span className='font-arima text-green-700'>({capitalize(result.type)})</span>
                             </div>
                         ))}
                         <div
                             className='bg-gray-100 p-2 px-3 cursor-pointer on-click rounded text-sm font-arima font-medium'
-                            onClick={(e) => handleSearchSubmit(e)}
+                            onClick={handleSearchSubmit}
                         >
                             See all results for "{searchTerm}"
                         </div>
                     </div>
                 </div>
             ) : (
-                isSearchOpen && searchTerm && !isLoading && (
+                isInputFocused && isSearchOpen && searchTerm && !isLoading && (
 
-                    <div className='absolute top-full right-0 max-w-[84%] sm:max-w-full bg-white border rounded shadow-md z-50 p-1'>
+                    <div className='absolute top-full right-0 min-w-[88%] sm:min-w-[17.7rem] bg-white border rounded shadow-md z-50 p-1'>
                         <div
                             className='p-2 cursor-pointer on-click rounded text-sm font-medium font-arima text-gray-700'
                             onClick={() => { toggleSearch(false); setSearchTerm(''); }}

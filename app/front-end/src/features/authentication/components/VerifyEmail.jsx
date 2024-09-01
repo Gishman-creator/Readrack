@@ -85,7 +85,7 @@ function VerifyEmail() {
                     localStorage.setItem('accessToken', accessToken);
                     localStorage.setItem('refreshToken', refreshToken);
                     localStorage.setItem('userEmail', email);
-                    console.log('Stored accessToken:', accessToken);
+                    // console.log('Stored accessToken:', accessToken);
     
                     toast.success('Email verified successfully!');
                     dispatch(setLoginState(true));

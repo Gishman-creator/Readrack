@@ -12,8 +12,8 @@ const Logout = () => {
         const handleLogout = async () => {
             const accessToken = localStorage.getItem('accessToken');
             const refreshToken = localStorage.getItem('refreshToken');
-            console.log('accessToken:', accessToken);
-            console.log('refreshToken:', refreshToken);
+            // console.log('accessToken:', accessToken);
+            // console.log('refreshToken:', refreshToken);
             if (accessToken && refreshToken) {
                 try {
                     const action = await dispatch(logout({ accessToken, refreshToken }));

@@ -22,14 +22,14 @@ function EditBooksForm({ onClose }) {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    console.log('Book ID:', bookId); // Check if bookId is correct
+    // console.log('Book ID:', bookId); // Check if bookId is correct
 
     if (bookId) {
       const fetchBookDetails = async () => {
         try {
           const response = await axiosUtils(`/api/getBookById/${bookId}`, 'GET');
           setBookDetails(response.data);
-          console.log('Book Details:', response.data);
+          // console.log('Book Details:', response.data);
 
           if (response.data.image && response.data.image.data) {
             const imageBlobURL = bufferToBlobURL(response.data.image);
@@ -61,7 +61,7 @@ function EditBooksForm({ onClose }) {
             id: author.id,
             authorName: author.nickname ? author.nickname : author.name
           })));
-          console.log(authorOptions);
+          // console.log(authorOptions);
         } catch (error) {
           console.error('Error fetching authors:', error);
         }
@@ -127,14 +127,14 @@ function EditBooksForm({ onClose }) {
 
     // Log form data entries
     for (let [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`);
+      // console.log(`${key}: ${value}`);
     }
 
     const bookName = formData.get('bookName') || '';
 
     if (bookImageURL) {
       const file = await downloadImage(bookImageURL, bookName);
-      console.log('File:', file);
+      // console.log('File:', file);
       if (file) {
         formData.append('bookImage', file);
       } else {
@@ -147,7 +147,7 @@ function EditBooksForm({ onClose }) {
 
     // Log form data entries
     for (let [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`);
+      // console.log(`${key}: ${value}`);
     }
 
     try {
@@ -156,8 +156,8 @@ function EditBooksForm({ onClose }) {
       });
 
       if (response.status !== 200) throw new Error('Failed to update book');
-      console.log('Book updated successfully');
-      console.log(response);
+      // console.log('Book updated successfully');
+      // console.log(response);
 
       if (onClose) {
         onClose(); // Call the onClose function to close the modal

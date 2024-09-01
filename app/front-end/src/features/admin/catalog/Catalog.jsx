@@ -28,7 +28,7 @@ function Catalog() {
     const queryParams = new URLSearchParams(location.search);
     const tab = queryParams.get('tab') || 'series'; // Default to 'series' if no tab is set
     const formattedTab = tab.charAt(0).toUpperCase() + tab.slice(1);
-    console.log('The tab is:', formattedTab);
+    // console.log('The tab is:', formattedTab);
     dispatch(setActiveTab(formattedTab));
   }, [location.search, dispatch]);
 

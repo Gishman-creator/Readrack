@@ -42,7 +42,7 @@ const addBook = async (req, res) => {
     const query = `
       INSERT INTO books (
         id, image, bookName, author_id, serie_id, genres, publishDate, link
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [

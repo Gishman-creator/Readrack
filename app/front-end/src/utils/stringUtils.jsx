@@ -20,7 +20,7 @@ export function formatDate(date) {
     const year = d.getUTCFullYear();
 
     // Array of month names
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
     // Format date as 'MMM d, yyyy'
     return `${monthNames[month]} ${day}, ${year}`;

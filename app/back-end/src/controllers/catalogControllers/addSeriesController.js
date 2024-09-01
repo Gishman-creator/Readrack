@@ -34,7 +34,7 @@ const addSeries = async (req, res) => {
         );
 
         const [serieData] = await pool.query(`
-            SELECT series.*, author.nickname, authors.authorName AS author_name
+            SELECT series.*, authors.nickname, authors.authorName AS author_name
             FROM series
             LEFT JOIN authors ON series.author_id = authors.id
             WHERE series.id = ?

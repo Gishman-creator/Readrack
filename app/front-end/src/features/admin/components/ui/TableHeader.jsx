@@ -46,7 +46,7 @@ function TableHeader({ hasShadow, openEditAuthorModal, openEditBooksModal, openE
 
   const confirmDelete = () => {
     const type = activeTab.toLowerCase(); // Dynamically determine the type
-    console.log(`Deleting from table: ${type}`);
+    // console.log(`Deleting from table: ${type}`);
 
     axiosUtils('/api/deleteData', 'DELETE', { ids: selectedRowIds, type })
       .then((response) => {

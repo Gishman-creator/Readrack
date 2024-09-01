@@ -1,12 +1,20 @@
 const pool = require('../../config/db');
 
+// Function to build the SQL for any-order search
+const buildAnyOrderQuery = (query, columnName) => {
+  const characters = query.split('');
+  let conditions = characters.map(char => `${columnName} LIKE ?`).join(' AND ');
+  let queryParams = characters.map(char => `%${char}%`);
+  return { conditions, queryParams };
+};
+
 exports.search = async (req, res) => {
 
   const validatePagination = (value, defaultValue) => {
     return isNaN(value) ? defaultValue : value;
   };
 
-  const query = req.query.query ? `%${req.query.query.trim().replace(/%/g, '\\%').replace(/_/g, '\\_')}%` : null;
+  const query = req.query.query ? req.query.query.trim().replace(/%/g, '\\%').replace(/_/g, '\\_') : null;
   const type = req.query.type;
   const seriePageLimitStart = validatePagination(parseInt(req.query.seriePageLimitStart, 10));
   const seriePageLimitEnd = validatePagination(parseInt(req.query.seriePageLimitEnd, 10));
@@ -15,40 +23,45 @@ exports.search = async (req, res) => {
   const bookPageLimitStart = validatePagination(parseInt(req.query.bookPageLimitStart, 10));
   const bookPageLimitEnd = validatePagination(parseInt(req.query.bookPageLimitEnd, 10));
 
-  console.log('The seriePageLimitStart is:', seriePageLimitStart);
-  console.log('The seriePageLimitEnd is:', seriePageLimitEnd);
-  console.log('The authorPageLimitStart is:', authorPageLimitStart);
-  console.log('The authorPageLimitEnd is:', authorPageLimitEnd);
-  console.log('The bookPageLimitStart is:', bookPageLimitStart);
-  console.log('The bookPageLimitEnd is:', bookPageLimitEnd);
   console.log('The query is:', query);
   console.log('The type is:', type);
 
   try {
-    // Initialize queries and parameters
-    let seriesQuery = 'SELECT * FROM series';
+    // Initialize queries
+    let seriesQuery = 'SELECT series.*, authors.nickname, authors.authorName AS author_name FROM series LEFT JOIN authors ON series.author_id = authors.id';
     let authorsQuery = 'SELECT * FROM authors';
     let booksQuery = 'SELECT * FROM books';
     let seriesCountQuery = 'SELECT COUNT(*) AS totalCount FROM series';
     let authorsCountQuery = 'SELECT COUNT(*) AS totalCount FROM authors';
     let booksCountQuery = 'SELECT COUNT(*) AS totalCount FROM books';
-
+    
     let seriesQueryParams = [];
     let authorsQueryParams = [];
     let booksQueryParams = [];
     let countQueryParams = [];
 
-    // Apply query filter if available
+    // Apply query filter if available (for any order search)
     if (query) {
-      seriesQuery += ' WHERE serieName LIKE ?';
-      authorsQuery += ' WHERE authorName LIKE ?';
-      booksQuery += ' WHERE bookName LIKE ?';
-      seriesCountQuery += ' WHERE serieName LIKE ?';
-      authorsCountQuery += ' WHERE authorName LIKE ?';
-      booksCountQuery += ' WHERE bookName LIKE ?';
-      seriesQueryParams.push(query);
-      authorsQueryParams.push(query);
-      booksQueryParams.push(query);
+      const { conditions: seriesConditions, queryParams: seriesParams } = buildAnyOrderQuery(query, 'serieName');
+      const { conditions: authorsConditions, queryParams: authorsParams } = buildAnyOrderQuery(query, 'authorName');
+      const { conditions: authorsNicknameConditions, queryParams: authorsNicknameParams } = buildAnyOrderQuery(query, 'nickname');
+      const { conditions: booksConditions, queryParams: booksParams } = buildAnyOrderQuery(query, 'bookName');
+      
+      // Append WHERE clauses
+      seriesQuery += ` WHERE ${seriesConditions}`;
+      authorsQuery += ` WHERE ${authorsConditions} OR ${authorsNicknameConditions}`;
+      booksQuery += ` WHERE ${booksConditions}`;
+      
+      seriesCountQuery += ` WHERE ${seriesConditions}`;
+      authorsCountQuery += ` WHERE ${authorsConditions} OR ${authorsNicknameConditions}`;
+      booksCountQuery += ` WHERE ${booksConditions}`;
+      
+      // Append params
+      seriesQueryParams.push(...seriesParams);
+      authorsQueryParams.push(...authorsParams, ...authorsNicknameParams); // for nickname search
+      booksQueryParams.push(...booksParams);
+
+      countQueryParams.push(...seriesParams, ...seriesParams);
     }
 
     // Apply limits and offsets
@@ -56,30 +69,24 @@ exports.search = async (req, res) => {
       seriesQuery += ' LIMIT ?, ?';
       seriesQueryParams.push(seriePageLimitStart, seriePageLimitEnd - seriePageLimitStart);
     }
-
     if (typeof authorPageLimitStart === 'number' && typeof authorPageLimitEnd === 'number') {
       authorsQuery += ' LIMIT ?, ?';
       authorsQueryParams.push(authorPageLimitStart, authorPageLimitEnd - authorPageLimitStart);
     }
-
     if (typeof bookPageLimitStart === 'number' && typeof bookPageLimitEnd === 'number') {
       booksQuery += ' LIMIT ?, ?';
       booksQueryParams.push(bookPageLimitStart, bookPageLimitEnd - bookPageLimitStart);
     }
 
-    // Execute queries in parallel with separate parameter arrays
+    // Execute queries
     const [seriesRows] = await pool.query(seriesQuery, seriesQueryParams);
     const [authorsRows] = await pool.query(authorsQuery, authorsQueryParams);
     const [booksRows] = await pool.query(booksQuery, booksQueryParams);
+
+    // Log queries for debugging
     console.log(seriesQuery, seriesQueryParams);
     console.log(authorsQuery, authorsQueryParams);
     console.log(booksQuery, booksQueryParams);
-
-    // Reset count query params
-    countQueryParams = [];
-    if (query) {
-      countQueryParams.push(query);
-    }
 
     // Execute count queries
     const [[{ totalCount: totalSeries }]] = await pool.query(seriesCountQuery, countQueryParams);
@@ -91,7 +98,7 @@ exports.search = async (req, res) => {
     console.log('Total authors count:', totalAuthors);
     console.log('Total books count:', totalBooks);
 
-    // Combine results for 'all' type
+    // Combine results
     let results = [];
     if (type === 'all') {
       results = [

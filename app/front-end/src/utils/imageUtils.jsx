@@ -2,13 +2,23 @@ import blank_image from '../assets/brand_blank_image.png'; // Adjust the path ac
 
 export function bufferToBlobURL(image) {
   try {
-    if (!image || !image.data || image.data.length === 0) {
-      // Return the blank image URL if the image data is null, undefined, or empty
+    let byteArray;
+
+    // Check if the image is an ArrayBuffer directly
+    if (image instanceof ArrayBuffer) {
+      byteArray = new Uint8Array(image);
+    }
+    // Check if the image is an object with a `data` property
+    else if (image && image.data) {
+      byteArray = new Uint8Array(image.data);
+    } else if (!image || !(image instanceof ArrayBuffer)) {
       return blank_image;
     }
+    // Handle the case where image data is missing or invalid
+    else {
+      return blank_image; // Return the blank image URL if the image data is null, undefined, or empty
+    }
 
-    // Convert to byte array
-    const byteArray = new Uint8Array(image.data);
     const mimeType = 'image/jpeg'; // Adjust as needed
     const blob = new Blob([byteArray], { type: mimeType });
     return URL.createObjectURL(blob);
@@ -18,7 +28,7 @@ export function bufferToBlobURL(image) {
   }
 }
 
-export async function downloadImage (url, seriesName) {
+export async function downloadImage(url, seriesName) {
   try {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Failed to fetch image. Status: ${response.status}`);

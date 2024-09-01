@@ -22,7 +22,7 @@ function AuthorDetails() {
   const [authorData, setAuthorData] = useState({});
   const [series, setSeries] = useState([]);
   const [books, setBooks] = useState([]);
-  const [isloading, setIsLoading] = useState(true);
+  const [IsLoading, setIsLoading] = useState(true);
   const [modalType, setModalType] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);  // Manage modal visibility
 
@@ -58,10 +58,10 @@ function AuthorDetails() {
   useEffect(() => {
     const fetchBooksData = async () => {
       setIsLoading(true);
-      if(!seriesLimit || !booksLimit) return;
+      if (!seriesLimit || !booksLimit) return;
       try {
         const authorResponse = await axiosUtils(`/api/getAuthorById/${authorId}`, 'GET');
-        console.log(authorResponse.data);
+        // console.log(authorResponse.data);
         setAuthorData(authorResponse.data);
 
         // Convert books image
@@ -69,15 +69,16 @@ function AuthorDetails() {
           authorResponse.data.image = bufferToBlobURL(authorResponse.data.image);
         }
 
-        // If serieName is not in the URL, update it
-        if (!authorName) {
-          const fetchedAuthorName = authorResponse.data.name;
-          navigate(`/admin/catalog/authors/${authorId}/${encodeURIComponent(fetchedAuthorName)}`, { replace: true });
+        // console.log('The author name is:', authorName);
+
+        // If authorName is not in the URL, update it
+        if (!authorName || authorName !== authorResponse.data.authorName) {
+          navigate(`/admin/catalog/authors/${authorId}/${encodeURIComponent(authorResponse.data.authorName)}`, { replace: true });
         }
 
         // Fetching series by the author
         const seriesResponse = await axiosUtils(`/api/getSeriesByAuthorId/${authorResponse.data.id}?limit=${seriesLimit}`, 'GET');
-        console.log('Series response:', seriesResponse.data); // Debugging
+        // console.log('Series response:', seriesResponse.data); // Debugging
 
         const seriesWithBlobs = seriesResponse.data.series.map((serie) => {
           return {
@@ -90,7 +91,7 @@ function AuthorDetails() {
 
         // Fetching books by the author
         const booksResponse = await axiosUtils(`/api/getBooksByAuthorId/${authorResponse.data.id}?limit=${booksLimit}`, 'GET');
-        console.log('Books response:', booksResponse.data); // Debugging
+        // console.log('Books response:', booksResponse.data); // Debugging
 
         const booksWithBlobs = booksResponse.data.books.map((book) => {
           return {
@@ -110,27 +111,48 @@ function AuthorDetails() {
 
     fetchBooksData();
 
+    if (!socket) {
+        console.error("Socket is not initialized");
+        return;
+    }
+
+    socket.on('authorsUpdated', (updatedAuthors) => {
+      setAuthorData((prevAuthorData) => {
+        // Only update if the IDs match
+        if (prevAuthorData.id === updatedAuthors.id) {
+          // console.log("The ids are equal...............")
+          return {
+            ...prevAuthorData,
+            ...updatedAuthors,
+            image: bufferToBlobURL(updatedAuthors.image), // Convert updated series image to Blob URL
+          };
+        }
+
+        return prevAuthorData; // Return the previous state if IDs don't match
+      });
+    });
+
     // Listen for series updates via socket
     socket.on('seriesUpdated', (updatedSeries) => {
-        console.log("Series updated via socket:", updatedSeries);
-        setSeries((prevData) => {
-            const updatedData = prevData.map((series) =>
-              series.id === updatedSeries.id
-                ? {
-                  ...updatedSeries,
-                  image: bufferToBlobURL(updatedSeries.image), // Convert buffer to Blob URL
-                }
-                : series
-            );
-    
-            // Sort the updatedData by date in ascending order (oldest first)
-            return updatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
-        });
+      // console.log("Series updated via socket:", updatedSeries);
+      setSeries((prevData) => {
+        const updatedData = prevData.map((series) =>
+          series.id === updatedSeries.id
+            ? {
+              ...updatedSeries,
+              image: bufferToBlobURL(updatedSeries.image), // Convert buffer to Blob URL
+            }
+            : series
+        );
+
+        // Sort the updatedData by date in ascending order (oldest first)
+        return updatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+      });
     });
 
     // Event listener for booksUpdated
     socket.on('booksUpdated', (updatedBooks) => {
-      console.log('Books updated via socket:', updatedBooks);
+      // console.log('Books updated via socket:', updatedBooks);
       setBooks((prevData) => {
         const updatedData = prevData.map((book) =>
           book.id === updatedBooks.id
@@ -148,21 +170,21 @@ function AuthorDetails() {
 
     // New event listener for serieAdded
     socket.on('serieAdded', (serieData) => {
-        console.log('New serie added via socket:', serieData);
-        if (serieData.author_name === authorName) {
-          serieData.image = bufferToBlobURL(serieData.image); // Convert buffer to Blob URL
-          setSeries((prevData) => {
-            const updatedData = [...prevData, serieData];
-  
-            // Sort the updatedData by date in ascending order (oldest first)
-            return updatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
-          });
-        }
+      // console.log('New serie added via socket:', serieData);
+      if (serieData.author_name === authorName) {
+        serieData.image = bufferToBlobURL(serieData.image); // Convert buffer to Blob URL
+        setSeries((prevData) => {
+          const updatedData = [...prevData, serieData];
+
+          // Sort the updatedData by date in ascending order (oldest first)
+          return updatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        });
+      }
     });
 
     // Event listener for bookAdded
     socket.on('bookAdded', (bookData) => {
-      console.log('Books added via socket:', bookData);
+      // console.log('Books added via socket:', bookData);
       if (bookData.author_name === authorName) {
         bookData.image = bufferToBlobURL(bookData.image); // Convert buffer to Blob URL
         setBooks((prevData) => {
@@ -175,16 +197,17 @@ function AuthorDetails() {
     });
 
     socket.on('dataDeleted', ({ ids, type }) => {
-        console.log('Data deleted via socket:', { ids, type });
-        if(type = 'series') {
-          setSeries((prevData) => prevData.filter((item) => !ids.includes(item.id)));
-        } else {
-          setBooks((prevData) => prevData.filter((item) => !ids.includes(item.id)));
-        }
+      // console.log('Data deleted via socket:', { ids, type });
+      if (type = 'series') {
+        setSeries((prevData) => prevData.filter((item) => !ids.includes(item.id)));
+      } else {
+        setBooks((prevData) => prevData.filter((item) => !ids.includes(item.id)));
+      }
     });
 
 
     return () => {
+      socket.off('authorsUpdated');
       socket.off('seriesUpdated');
       socket.off('booksUpdated');
       socket.off('serieAdded');
@@ -201,14 +224,14 @@ function AuthorDetails() {
       } else {
         setSeriesLimit(seriesLimit === 3 ? booksCount : 3);
       }
-      console.log('Series limit set to:', seriesLimit);
+      // console.log('Series limit set to:', seriesLimit);
     } else {
       if (window.innerWidth >= 1024) {
         setBooksLimit(booksLimit === 6 ? booksCount : 6);
       } else {
         setBooksLimit(booksLimit === 5 ? booksCount : 5);
       }
-      console.log('Books limit set to:', booksLimit);
+      // console.log('Books limit set to:', booksLimit);
     }
   }
 
@@ -238,7 +261,7 @@ function AuthorDetails() {
     setIsModalOpen(false);  // Hide the modal
   };
 
-  if (isloading) {
+  if (IsLoading) {
     return <p className='flex justify-center items-center'>Loading...</p>;
   }
 
@@ -257,7 +280,7 @@ function AuthorDetails() {
             <p className='font-arima font-medium text-sm text-center md:text-left'>{capitalize(authorData.nationality)}, Born on {formatDate(authorData.dob)}</p>
             <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
               <p className='md:inline font-medium font-poppins text-center md:text-left text-sm'>Genres:</p>
-              <div className='md:inline flex flex-wrap gap-x-2 md:ml-1 text-sm text-center md:text-left font-arima font-semibold items-center justify-center md:justify-start w-[90%] mx-auto'>
+              <div className='md:inline flex flex-wrap gap-x-2 md:ml-1 text-sm text-center md:text-left font-arima items-center justify-center md:justify-start w-[90%] mx-auto'>
                 {authorData.genres}
               </div>
             </div>
@@ -344,28 +367,30 @@ function AuthorDetails() {
                   <div className='min-h-full w-full flex flex-col justify-between'>
                     <div
                       className='flex justify-between items-center'
-                      onClick={(e) => e.stopPropagation()}
+                    // onClick={(e) => e.stopPropagation()}
                     >
                       <p className='font-semibold m-0 leading-5 text-lg'>
                         {capitalize(item.serieName)}
                       </p>
                       <PencilSquareIcon
                         className="w-4 h-4 inline ml-2 cursor-pointer"
-                        onClick={() => handleEditClick('serie', item)}  // Handle click to open modal
+                        onClick={(e) => { e.stopPropagation(); handleEditClick('serie', item) }}  // Handle click to open modal
                       />
                     </div>
-                    <p className='font-arima text-sm'>by {capitalize(item.author_name)}</p>
+                    <p className='font-arima text-sm'>by {capitalize(item.nickname ? item.nickname : item.author_name)}</p>
                     <p className='font-arima text-gray-400 text-sm mt-1'>
-                      #{index + 1}, {item.firstBook?.date ? `from ${formatDate(item.firstBook.date)}` : 'Coming soon'}
+                      #{index + 1}, {item.first_book_year && item.last_book_year ? `from ${item.first_book_year} to ${item.last_book_year}` : 'Coming soon'}
                     </p>
-                    <a
-                      href={item.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className='bg-primary block w-full text-center text-white text-sm font-semibold font-poppins p-3 rounded-lg mt-auto on-click-amzn'
-                    >
-                      Find on Amazon
-                    </a>
+                    {item.link &&
+                      <a
+                        href={item.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className='bg-primary block w-full text-center text-white text-sm font-semibold font-poppins p-3 rounded-lg mt-auto on-click-amzn'
+                      >
+                        Find on Amazon
+                      </a>
+                    }
                   </div>
                 </div>
               ))}
@@ -412,7 +437,7 @@ function AuthorDetails() {
                     onClick={() => handleEditClick('book', item)}  // Handle click to open modal
                   />
                 </div>
-                <p className='font-arima text-sm'>by {capitalize(item.author_name)}</p>
+                <p className='font-arima text-sm'>by {capitalize(item.nickname ? item.nickname : item.author_name)}</p>
                 <p className='font-arima text-slate-400 text-sm mt-1'>
                   #{index + 1}, published {formatDate(item.publishDate)}
                 </p>

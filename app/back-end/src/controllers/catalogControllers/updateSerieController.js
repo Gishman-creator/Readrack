@@ -6,6 +6,7 @@ const updateSerie = async (req, res) => {
 
   let image = req.file ? req.file.buffer : null;
   console.log('The image is:', image);
+  console.log('Image content type:', req.file ? req.file.mimetype : 'No file uploaded');
 
   try {
     const [result] = await pool.query(
@@ -13,12 +14,20 @@ const updateSerie = async (req, res) => {
       [serieName, numBooks, genres, link, author_id, image, id]
     );
 
+    console.log('Serie updated successfully1 for:', id);
+
     // Fetch the updated serie data
     const [serieRows] = await pool.query(`
-      SELECT series.*, authors.authorName AS author_name
+      SELECT series.*, 
+             authors.nickname, 
+             authors.authorName AS author_name,
+             YEAR(MIN(books.publishDate)) AS first_book_year,
+             YEAR(MAX(books.publishDate)) AS last_book_year
       FROM series
       LEFT JOIN authors ON series.author_id = authors.id
+      LEFT JOIN books ON books.serie_id = series.id
       WHERE series.id = ?
+      GROUP BY series.id, authors.nickname, authors.authorName
       `, [id]
     );
 
@@ -49,6 +58,8 @@ const updateSerie = async (req, res) => {
     } else {
       console.error('Socket.IO is not initialized.');
     }
+
+    console.log('Serie updated successfully2');
 
     res.status(200).json({ message: 'Serie updated successfully', result });
   } catch (error) {

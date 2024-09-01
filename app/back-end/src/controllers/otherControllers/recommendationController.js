@@ -1,34 +1,33 @@
-// recommendationController.js
-const pool = require('../../config/db'); // Assuming your db.js is in the config folder
+const pool = require('../../config/db');
 
 /**
- * Get recommended series based on the genres provided by the user.
+ * Get recommended authors based on the genres provided by the user.
  * @param {Array} userGenres - An array of genres that the user prefers.
- * @returns {Array} - An array of recommended series sorted by searchCount.
+ * @returns {Array} - An array of recommended authors sorted by searchCount.
  */
 exports.recommendAuthors = async (req, res) => {
-    const { genres } = req.query;
+    const { data } = req.query;
+    const genres = data.genres;
+    const excludeId = data.id;
 
     if (!genres || genres.length === 0) {
         return res.status(400).json({ message: 'No genres provided' });
     }
 
     try {
-        // Convert the user genres to an array
         const userGenres = genres.split(',');
 
-        // SQL query to match series genres and order by searchCount
         const query = `
             SELECT * FROM authors 
             WHERE ${userGenres.map(() => `genres LIKE ?`).join(' OR ')}
+            AND id != ?
             ORDER BY searchCount DESC 
             LIMIT 10;
         `;
 
-        // Map the genres to match SQL wildcards
         const genreParams = userGenres.map(genre => `%${genre.trim()}%`);
+        genreParams.push(excludeId);
 
-        // Execute the query
         const [results] = await pool.query(query, genreParams);
 
         res.json(results);
@@ -38,30 +37,31 @@ exports.recommendAuthors = async (req, res) => {
     }
 }
 
-
 exports.recommendSeries = async (req, res) => {
-    const { genres } = req.query;
+    const { data } = req.query;
+    const genres = data.genres;
+    const excludeId = data.id;
 
     if (!genres || genres.length === 0) {
         return res.status(400).json({ message: 'No genres provided' });
     }
 
     try {
-        // Convert the user genres to an array
         const userGenres = genres.split(',');
 
-        // SQL query to match series genres and order by searchCount
         const query = `
-            SELECT * FROM series 
-            WHERE ${userGenres.map(() => `genres LIKE ?`).join(' OR ')}
-            ORDER BY searchCount DESC 
+            SELECT series.*, authors.nickname, authors.authorName AS author_name
+            FROM series
+            LEFT JOIN authors ON series.author_id = authors.id
+            WHERE ${userGenres.map(() => `series.genres LIKE ?`).join(' OR ')}
+            AND series.id != ?
+            ORDER BY series.searchCount DESC
             LIMIT 10;
         `;
 
-        // Map the genres to match SQL wildcards
         const genreParams = userGenres.map(genre => `%${genre.trim()}%`);
+        genreParams.push(excludeId);
 
-        // Execute the query
         const [results] = await pool.query(query, genreParams);
 
         res.json(results);
@@ -70,4 +70,3 @@ exports.recommendSeries = async (req, res) => {
         return res.status(500).json({ message: 'Error fetching recommendations' });
     }
 }
-

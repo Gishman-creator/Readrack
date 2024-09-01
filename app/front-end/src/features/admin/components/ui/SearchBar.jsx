@@ -49,7 +49,7 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
 
     const handleInputChange = (e) => {
         dispatch(setSearchTerm(e.target.value));
-        console.log('The search term is:', e.target.value);
+        // console.log('The search term is:', e.target.value);
         dispatch(setTableLimitStart(0));
         dispatch(setTableLimitEnd(50));
     };

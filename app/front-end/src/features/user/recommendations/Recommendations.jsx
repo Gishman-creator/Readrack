@@ -7,8 +7,7 @@ import Card from '../components/Card';
 import { useSelector } from 'react-redux';
 import { bufferToBlobURL } from '../../../utils/imageUtils';
 
-function Recommendations({ genres }) {
-
+function Recommendations({ data }) {
     const [cardData, setCardData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const activeTab = useSelector((state) => state.user.activeTab);
@@ -18,30 +17,31 @@ function Recommendations({ genres }) {
     useEffect(() => {
         const fetchData = async () => {
             setIsLoading(true);
-            if (!activeTab || !genres) return;
+            if (!activeTab || !data) return;
 
             try {
                 let response;
-                if(activeTab == 'Series') {
-                    response = await axiosUtils(`/api/recommendSeries?genres=${genres}`, 'GET')
+                if (activeTab === 'Series') {
+                    response = await axiosUtils(`/api/recommendSeries?data=${data}`, 'GET');
                 } else {
-                    response = await axiosUtils(`/api/recommendAuthors?genres=${genres}`, 'GET')
+                    response = await axiosUtils(`/api/recommendAuthors?data=${data}`, 'GET');
                 }
 
                 const dataWithBlobs = response.data.map((item) => ({
                     ...item,
-                    image: bufferToBlobURL(item.image),
+                    image: item.image ? bufferToBlobURL(item.image) : null,
                 }));
 
                 setCardData(dataWithBlobs);
                 setIsLoading(false);
             } catch (error) {
                 console.error('Error fetching recommendations:', error);
+                setIsLoading(false);
             }
-        }
+        };
 
         fetchData();
-    }, [genres, activeTab]);
+    }, [data, activeTab]);
 
     const scrollLeft = () => {
         if (scrollContainerRef.current) {
@@ -65,12 +65,12 @@ function Recommendations({ genres }) {
         <div className=''>
             <div className='flex items-center justify-between'>
                 <p className='font-poppins font-semibold text-lg 2xl:text-center'>You may also like:</p>
-                <div className='hidden md:flex items-center justify-between space-x-2'>
+                <div className='flex items-center justify-between space-x-2'>
                     <button onClick={scrollLeft} className='text-xl cursor-pointer p-2 rounded-full on-click'>
-                        <ChevronLeftIcon className='w-6 h-6' />
+                        <ChevronLeftIcon className='w-5 h-5' />
                     </button>
                     <button onClick={scrollRight} className='text-xl cursor-pointer p-2 rounded-full on-click'>
-                        <ChevronRightIcon className='w-6 h-6' />
+                        <ChevronRightIcon className='w-5 h-5' />
                     </button>
                 </div>
             </div>
@@ -82,6 +82,8 @@ function Recommendations({ genres }) {
                     [...Array(10)].map((_, index) => (
                         <SkeletonCard key={index} />
                     ))
+                ) : cardData.length === 0 ? (
+                    <p className='text-center font-arima mb-10'>Sorry! No recommendations available</p>
                 ) : (
                     cardData.map((item) => (
                         <Card key={item.id} card={item} activeTab={activeTab} fixedWidth={true} />

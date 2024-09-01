@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     AreaChart as RechartsAreaChart,
     Area,
@@ -9,40 +9,37 @@ import {
     ResponsiveContainer,
 } from 'recharts';
 import Dropdown from '../../components/ui/Dropdown';
-import { dayData, weekData, monthData, yearData } from '../../data/Data';
+import axiosUtils from '../../../../utils/axiosUtils';
 
 const AreaChart = () => {
     const [selectedOption, setSelectedOption] = useState('Day');
+    const [chartData, setChartData] = useState([]);
 
-    const getData = () => {
-        switch (selectedOption) {
-            case 'Day':
-                return dayData;
-            case 'Week':
-                return weekData;
-            case 'Month':
-                return monthData;
-            case 'Year':
-                return yearData;
-            default:
-                return dayData;
+    const fetchData = async () => {
+        try {
+            const response = await axiosUtils(`/api/get-visits-data?filter=${selectedOption}`, 'GET');
+            const formattedData = response.data.map(visit => ({
+                name: visit.label, // Adjusted from visit_time to label
+                visits: visit.visits,
+            }));
+            setChartData(formattedData);
+        } catch (error) {
+            console.error('Error fetching chart data:', error);
         }
     };
 
-    // Custom function to filter labels based on interval
-    const customTickFormatter = (value, index, array) => {
-        if (selectedOption === 'Day') {
-            const hour = parseInt(value.split(':')[0], 10);
-            // Display labels only for hours divisible by 6
-            return hour % 6 === 0 ? value : '';
-        }else if (selectedOption === 'Month') {
-            const hour = parseInt(value);
-            // Display labels only for hours divisible by 6
-            return hour % 6 === 0 ? value : '';
-        }
+    useEffect(() => {
+        fetchData();
+    }, [selectedOption]);
 
-        // For other options, show all labels
-        return value;
+    // Custom tick formatter to only display labels divisible by 6
+    const customTickFormatter = (tick) => {
+        if (selectedOption === 'Day') {
+            return tick % 6 === 0 ? tick : '';
+        } else if (selectedOption === 'Month') {
+            return tick % 6 === 0 ? tick : '';
+        }
+        return tick;
     };
 
     return (
@@ -55,7 +52,7 @@ const AreaChart = () => {
                 <RechartsAreaChart
                     width={500}
                     height={200}
-                    data={getData()}
+                    data={chartData}
                     syncId="anyId"
                     margin={{
                         top: 10,
@@ -66,14 +63,10 @@ const AreaChart = () => {
                 >
                     <CartesianGrid
                         strokeDasharray="3 3"
-                        vertical={false} // Hide vertical grid lines
-                        horizontal={true} // Show horizontal grid lines
+                        vertical={false}
+                        horizontal={true}
                     />
-                    <XAxis
-                        dataKey="name"
-                        tickFormatter={customTickFormatter}
-                        interval={0} // Ensure all labels are processed for formatting
-                    />
+                    <XAxis dataKey="name" tickFormatter={customTickFormatter} />
                     <YAxis />
                     <Tooltip />
                     <Area type="monotone" dataKey="visits" stroke="#8884d8" fill="#8884d8" />

@@ -68,7 +68,7 @@ function AddSeriesForm({ onClose }) {
 
     // Debug output
     for (let [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
+      // console.log(`${key}:`, value);
     }
 
     // Process form data (e.g., send to server)
@@ -78,8 +78,8 @@ function AddSeriesForm({ onClose }) {
       });
 
       if (response.status !== 201) throw new Error('Failed to submit form');
-      console.log('Form submitted successfully');
-      console.log(response);
+      // console.log('Form submitted successfully');
+      // console.log(response);
 
       if (onClose) {
         onClose(); // Call the onClose function to close the modal

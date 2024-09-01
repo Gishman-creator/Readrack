@@ -85,7 +85,7 @@ exports.getBooksBySerieId = async (req, res) => {
       LEFT JOIN authors ON books.author_id = authors.id
       LEFT JOIN series ON books.serie_id = series.id
       WHERE books.serie_id = ?
-      ORDER BY books.date ASC
+      ORDER BY books.publishDate ASC
     `;
     let countQuery = `
       SELECT COUNT(*) AS totalCount 
@@ -121,7 +121,7 @@ exports.getBooksByAuthorId = async (req, res) => {
       LEFT JOIN authors ON books.author_id = authors.id
       LEFT JOIN series ON books.serie_id = series.id
       WHERE books.author_id = ?
-      ORDER BY books.date ASC
+      ORDER BY books.publishDate ASC
     `;
     let countQuery = `
       SELECT COUNT(*) AS totalCount 

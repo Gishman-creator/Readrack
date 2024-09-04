@@ -13,6 +13,7 @@ import AboutUs from './about us/AboutUs';
 import SerieDetails from './detailsPages/SerieDetails'
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 import Footer from './components/Footer';
+import CollectionDetails from './detailsPages/CollectionDetails';
 
 function User() {
   const activeTab = useSelector((state) => state.user.activeTab);
@@ -54,16 +55,18 @@ function User() {
   return (
     <div className='block min-h-screen bg-white'>
       <NavBar />
-      <div className='h-screen-nonav flex flex-col justify-between'>
+      <div className='h-screen-nonav mt-[4rem] flex flex-col justify-between'>
         <div>
           <Routes>
             <Route path='/' element={<Navigate to='/series' />} />
             <Route path='/series' element={<Home />} />
             <Route path='/authors' element={<Home />} />
             <Route path='/series/:serieId/:serieName?' element={<SerieDetails />} />
+            <Route path='/collections/:collectionId/:collectionName?' element={<CollectionDetails />} />
             <Route path='/authors/:authorId/:authorName?' element={<AuthorDetails />} />
             <Route path='/search' element={<SearchResults />} />
             <Route path='/about-us' element={<AboutUs />} />
+            <Route path='*' element={<NotFoundPage />} />
           </Routes>
           <a
             href='https://insigh.to/b/readrack-recommend-book-series-or-authors-or-report-an-issue'

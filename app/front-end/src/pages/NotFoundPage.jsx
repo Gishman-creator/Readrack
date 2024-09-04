@@ -22,7 +22,7 @@ function NotFoundPage({ type }) {
   };
 
   return (
-    <div className='px-[4%] sm:px-[12%]'>
+    <div className='px-[4%] sm:px-[12%] pb-10 md:pb-0'>
       <div className='h-screen-nonav flex flex-col md:flex-row justify-center md:justify-evenly items-center'>
         <img src={logo} alt="Logo" className="w-[20rem] h-[20rem]" />
         <div className='flex flex-col justify-center items-center mt-6'>

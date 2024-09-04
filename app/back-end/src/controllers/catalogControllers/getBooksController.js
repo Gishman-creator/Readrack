@@ -16,10 +16,11 @@ exports.getBooks = async (req, res) => {
 
     // Fetch books with pagination and join with authors and series to get their names
     let dataQuery = `
-      SELECT books.*, authors.nickname, authors.authorName AS author_name, series.serieName AS serie_name
+      SELECT books.*, authors.authorName AS author_name, authors.nickname, series.serieName AS serie_name, collections.collectionName AS collection_name
       FROM books
       LEFT JOIN authors ON books.author_id = authors.id
       LEFT JOIN series ON books.serie_id = series.id
+      LEFT JOIN collections ON books.collection_id = collections.id
     `;
     const queryParams = [];
 
@@ -47,10 +48,11 @@ exports.getBookById = async (req, res) => {
   try {
     // Fetch a specific book by ID and join with authors and series to get their names
     let query = `
-      SELECT books.*, authors.nickname, authors.authorName AS author_name, series.serieName AS serie_name
+      SELECT books.*, authors.authorName AS author_name, authors.nickname, series.serieName AS serie_name, collections.collectionName AS collection_name
       FROM books
       LEFT JOIN authors ON books.author_id = authors.id
       LEFT JOIN series ON books.serie_id = series.id
+      LEFT JOIN collections ON books.collection_id = collections.id
       WHERE books.id = ?
     `;
     const queryParams = [id];
@@ -80,10 +82,11 @@ exports.getBooksBySerieId = async (req, res) => {
   try {
     // Fetch books by serie_id and join with authors and series to get their names
     let query = `
-      SELECT books.*, authors.nickname, authors.authorName AS author_name, series.serieName AS serie_name
+      SELECT books.*, authors.authorName AS author_name, authors.nickname, series.serieName AS serie_name, collections.collectionName AS collection_name
       FROM books
       LEFT JOIN authors ON books.author_id = authors.id
       LEFT JOIN series ON books.serie_id = series.id
+      LEFT JOIN collections ON books.collection_id = collections.id
       WHERE books.serie_id = ?
       ORDER BY books.publishDate ASC
     `;
@@ -109,6 +112,44 @@ exports.getBooksBySerieId = async (req, res) => {
   }
 };
 
+exports.getBooksByCollectionId = async (req, res) => {
+  const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
+  let { collection_id } = req.params;
+  console.log('The collection id:', collection_id);
+
+  try {
+    // Fetch books by collection_id and join with authors and collections to get their names
+    let query = `
+      SELECT books.*, authors.authorName AS author_name, authors.nickname, series.serieName AS serie_name, collections.collectionName AS collection_name
+      FROM books
+      LEFT JOIN authors ON books.author_id = authors.id
+      LEFT JOIN series ON books.serie_id = series.id
+      LEFT JOIN collections ON books.collection_id = collections.id
+      WHERE books.collection_id = ?
+      ORDER BY books.publishDate ASC
+    `;
+    let countQuery = `
+      SELECT COUNT(*) AS totalCount 
+      FROM books 
+      WHERE collection_id = ?
+    `;
+    const queryParams = [collection_id];
+
+    if (limit) {
+      query += ' LIMIT ?';
+      queryParams.push(limit);
+    }
+
+    const [books] = await pool.query(query, queryParams);
+    const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
+
+    res.json({ books: books, totalCount: totalCount });
+  } catch (error) {
+    console.error('Error fetching books by collections:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 exports.getBooksByAuthorId = async (req, res) => {
   const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
   let { author_id } = req.params;
@@ -116,10 +157,11 @@ exports.getBooksByAuthorId = async (req, res) => {
   try {
     // Fetch books by author_id and join with authors and series to get their names
     let query = `
-      SELECT books.*, authors.nickname, authors.authorName AS author_name, series.serieName AS serie_name
+      SELECT books.*, authors.authorName AS author_name, authors.nickname, series.serieName AS serie_name, collections.collectionName AS collection_name
       FROM books
       LEFT JOIN authors ON books.author_id = authors.id
       LEFT JOIN series ON books.serie_id = series.id
+      LEFT JOIN collections ON books.collection_id = collections.id
       WHERE books.author_id = ?
       ORDER BY books.publishDate ASC
     `;

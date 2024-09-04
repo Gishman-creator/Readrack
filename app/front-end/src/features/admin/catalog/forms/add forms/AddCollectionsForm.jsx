@@ -5,9 +5,9 @@ import toast from 'react-hot-toast';
 import { downloadImage } from '../../../../../utils/imageUtils';
 import { useSelector } from 'react-redux';
 
-function AddSeriesForm({ onClose }) {
+function AddCollectionsForm({ onClose }) {
   const authorDetailsAuthorName = useSelector((state) => state.catalog.authorName);
-  const [seriesImageURL, setSeriesImageURL] = useState('');
+  const [collectionsImageURL, setCollectionsImageURL] = useState('');
   const [imageFile, setImageFile] = useState(null);
 
   const [authorSearch, setAuthorSearch] = useState(authorDetailsAuthorName || '');
@@ -44,19 +44,19 @@ function AddSeriesForm({ onClose }) {
   };
 
   const handleImageChange = (url) => {
-    setSeriesImageURL(url);
+    setCollectionsImageURL(url);
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
 
-    const seriesName = formData.get('serieName') || '';
+    const collectionsName = formData.get('collectionName') || '';
 
-    if (seriesImageURL) {
-      const file = await downloadImage(seriesImageURL, seriesName);
+    if (collectionsImageURL) {
+      const file = await downloadImage(collectionsImageURL, collectionsName);
       if (file) {
-        formData.append('seriesImage', file); // Append the file directly
+        formData.append('collectionsImage', file); // Append the file directly
       } else {
         console.error('Image file not available');
       }
@@ -73,7 +73,7 @@ function AddSeriesForm({ onClose }) {
 
     // Process form data (e.g., send to server)
     try {
-      const response = await axiosUtils('/api/addSeries', 'POST', formData, {
+      const response = await axiosUtils('/api/addCollections', 'POST', formData, {
         'Content-Type': 'multipart/form-data',
       });
 
@@ -93,15 +93,15 @@ function AddSeriesForm({ onClose }) {
 
   return (
     <div className=''>
-      <h2 className="text-lg font-semibold">Add Series</h2>
+      <h2 className="text-lg font-semibold">Add Collections</h2>
       <form onSubmit={handleSubmit} className="flex flex-col md:flex-row max-h-custom2 md:max-h-fit overflow-y-auto md:overflow-hidden">
         <ImagePreview onImageChange={handleImageChange} />
         <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[15rem] md:overflow-y-auto">
           <div className="mb-2">
-            <label className="block text-sm font-medium">Series Name:</label>
+            <label className="block text-sm font-medium">Collections Name:</label>
             <input
               type="text"
-              name="serieName"
+              name="collectionName"
               className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
@@ -140,7 +140,7 @@ function AddSeriesForm({ onClose }) {
             </div>
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium">Series Link:</label>
+            <label className="block text-sm font-medium">Collections Link:</label>
             <input
               type="text"
               name="link"
@@ -151,7 +151,7 @@ function AddSeriesForm({ onClose }) {
             type="submit"
             className="bg-green-700 text-white px-4 py-2 rounded on-click-amzn"
           >
-            Save Series
+            Save Collections
           </button>
         </div>
       </form>
@@ -159,4 +159,4 @@ function AddSeriesForm({ onClose }) {
   );
 }
 
-export default AddSeriesForm;
+export default AddCollectionsForm;

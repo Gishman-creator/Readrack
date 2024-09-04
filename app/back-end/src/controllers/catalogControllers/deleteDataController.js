@@ -9,12 +9,13 @@ const pool = require('../../config/db'); // Adjust path as necessary
  */
 exports.deleteData = async (req, res) => {
     const { type, ids } = req.body;
+    console.log('The delete type is:', type);
 
     if (!type || !ids || !Array.isArray(ids)) {
         return res.status(400).json({ error: "Invalid request. 'type' and 'ids' must be provided." });
     }
 
-    const validTypes = ['authors', 'series', 'books'];
+    const validTypes = ['authors', 'series', 'collections', 'books'];
     if (!validTypes.includes(type)) {
         return res.status(400).json({ error: "Invalid type. Valid types are 'authors', 'series', or 'books'." });
     }

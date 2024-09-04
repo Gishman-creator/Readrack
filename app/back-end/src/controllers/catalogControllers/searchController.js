@@ -18,6 +18,8 @@ exports.search = async (req, res) => {
   const type = req.query.type;
   const seriePageLimitStart = validatePagination(parseInt(req.query.seriePageLimitStart, 10));
   const seriePageLimitEnd = validatePagination(parseInt(req.query.seriePageLimitEnd, 10));
+  const collectionPageLimitStart = validatePagination(parseInt(req.query.collectionPageLimitStart, 10));
+  const collectionPageLimitEnd = validatePagination(parseInt(req.query.collectionPageLimitEnd, 10));
   const authorPageLimitStart = validatePagination(parseInt(req.query.authorPageLimitStart, 10));
   const authorPageLimitEnd = validatePagination(parseInt(req.query.authorPageLimitEnd, 10));
   const bookPageLimitStart = validatePagination(parseInt(req.query.bookPageLimitStart, 10));
@@ -29,13 +31,16 @@ exports.search = async (req, res) => {
   try {
     // Initialize queries
     let seriesQuery = 'SELECT series.*, authors.nickname, authors.authorName AS author_name FROM series LEFT JOIN authors ON series.author_id = authors.id';
+    let collectionsQuery = 'SELECT collections.*, authors.nickname, authors.authorName AS author_name FROM collections LEFT JOIN authors ON collections.author_id = authors.id';
     let authorsQuery = 'SELECT * FROM authors';
     let booksQuery = 'SELECT * FROM books';
     let seriesCountQuery = 'SELECT COUNT(*) AS totalCount FROM series';
+    let collectionsCountQuery = 'SELECT COUNT(*) AS totalCount FROM collections';
     let authorsCountQuery = 'SELECT COUNT(*) AS totalCount FROM authors';
     let booksCountQuery = 'SELECT COUNT(*) AS totalCount FROM books';
     
     let seriesQueryParams = [];
+    let collectionsQueryParams = [];
     let authorsQueryParams = [];
     let booksQueryParams = [];
     let countQueryParams = [];
@@ -43,21 +48,25 @@ exports.search = async (req, res) => {
     // Apply query filter if available (for any order search)
     if (query) {
       const { conditions: seriesConditions, queryParams: seriesParams } = buildAnyOrderQuery(query, 'serieName');
+      const { conditions: collectionsConditions, queryParams: collectionsParams } = buildAnyOrderQuery(query, 'collectionName');
       const { conditions: authorsConditions, queryParams: authorsParams } = buildAnyOrderQuery(query, 'authorName');
       const { conditions: authorsNicknameConditions, queryParams: authorsNicknameParams } = buildAnyOrderQuery(query, 'nickname');
       const { conditions: booksConditions, queryParams: booksParams } = buildAnyOrderQuery(query, 'bookName');
       
       // Append WHERE clauses
       seriesQuery += ` WHERE ${seriesConditions}`;
+      collectionsQuery += ` WHERE ${collectionsConditions}`;
       authorsQuery += ` WHERE ${authorsConditions} OR ${authorsNicknameConditions}`;
       booksQuery += ` WHERE ${booksConditions}`;
       
       seriesCountQuery += ` WHERE ${seriesConditions}`;
+      collectionsCountQuery += ` WHERE ${collectionsConditions}`;
       authorsCountQuery += ` WHERE ${authorsConditions} OR ${authorsNicknameConditions}`;
       booksCountQuery += ` WHERE ${booksConditions}`;
       
       // Append params
       seriesQueryParams.push(...seriesParams);
+      collectionsQueryParams.push(...collectionsParams);
       authorsQueryParams.push(...authorsParams, ...authorsNicknameParams); // for nickname search
       booksQueryParams.push(...booksParams);
 
@@ -68,6 +77,10 @@ exports.search = async (req, res) => {
     if (typeof seriePageLimitStart === 'number' && typeof seriePageLimitEnd === 'number') {
       seriesQuery += ' LIMIT ?, ?';
       seriesQueryParams.push(seriePageLimitStart, seriePageLimitEnd - seriePageLimitStart);
+    }
+    if (typeof collectionPageLimitStart === 'number' && typeof collectionPageLimitEnd === 'number') {
+      collectionsQuery += ' LIMIT ?, ?';
+      collectionsQueryParams.push(collectionPageLimitStart, collectionPageLimitEnd - collectionPageLimitStart);
     }
     if (typeof authorPageLimitStart === 'number' && typeof authorPageLimitEnd === 'number') {
       authorsQuery += ' LIMIT ?, ?';
@@ -80,21 +93,25 @@ exports.search = async (req, res) => {
 
     // Execute queries
     const [seriesRows] = await pool.query(seriesQuery, seriesQueryParams);
+    const [collectionsRows] = await pool.query(collectionsQuery, collectionsQueryParams);
     const [authorsRows] = await pool.query(authorsQuery, authorsQueryParams);
     const [booksRows] = await pool.query(booksQuery, booksQueryParams);
 
     // Log queries for debugging
     console.log(seriesQuery, seriesQueryParams);
+    console.log(collectionsQuery, collectionsQueryParams);
     console.log(authorsQuery, authorsQueryParams);
     console.log(booksQuery, booksQueryParams);
 
     // Execute count queries
     const [[{ totalCount: totalSeries }]] = await pool.query(seriesCountQuery, countQueryParams);
+    const [[{ totalCount: totalCollections }]] = await pool.query(collectionsCountQuery, countQueryParams);
     const [[{ totalCount: totalAuthors }]] = await pool.query(authorsCountQuery, countQueryParams);
     const [[{ totalCount: totalBooks }]] = await pool.query(booksCountQuery, countQueryParams);
 
     // Log the total counts before sending the response
     console.log('Total series count:', totalSeries);
+    console.log('Total collections count:', totalCollections);
     console.log('Total authors count:', totalAuthors);
     console.log('Total books count:', totalBooks);
 
@@ -103,10 +120,13 @@ exports.search = async (req, res) => {
     if (type === 'all') {
       results = [
         ...seriesRows.map((series) => ({ ...series, type: 'serie' })),
+        ...collectionsRows.map((collections) => ({ ...collections, type: 'collection' })),
         ...authorsRows.map((author) => ({ ...author, type: 'author' })),
       ];
     } else if (type === 'series') {
       results = seriesRows.map((series) => ({ ...series, type: 'serie' }));
+    } else if (type === 'collections') {
+      results = collectionsRows.map((collections) => ({ ...collections, type: 'collection' }));
     } else if (type === 'author' || type === 'authors') {
       results = authorsRows.map((author) => ({ ...author, type: 'author' }));
     } else if (type === 'book' || type === 'books') {
@@ -117,6 +137,7 @@ exports.search = async (req, res) => {
     res.json({
       results,
       totalSeriesCount: totalSeries,
+      totalCollectionsCount: totalCollections,
       totalAuthorsCount: totalAuthors,
       totalBooksCount: totalBooks,
     });

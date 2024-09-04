@@ -7,15 +7,18 @@ import { downloadImage } from '../../../../../utils/imageUtils';
 
 function AddBooksForm({ onClose }) {
   const [authorImageURL, setAuthorImageURL] = useState('');
-  const [imageFile, setImageFile] = useState(null);
   const detailsSerieName = useSelector((state) => state.catalog.serieName);
+  const detailsCollectionName = useSelector((state) => state.catalog.collectionName);
   const serieDetailsAuthorName = useSelector((state) => state.catalog.authorName);
   const [authorSearch, setAuthorSearch] = useState(serieDetailsAuthorName || '');
   const [serieSearch, setSerieSearch] = useState(detailsSerieName || '');
+  const [collectionSearch, setCollectionSearch] = useState(detailsCollectionName || '');
   const [authorOptions, setAuthorOptions] = useState([]);
   const [serieOptions, setSerieOptions] = useState([]);
+  const [collectionOptions, setCollectionOptions] = useState([]);
   const [selectedAuthor, setSelectedAuthor] = useState(serieDetailsAuthorName || '');
   const [selectedSerie, setSelectedSerie] = useState(detailsSerieName || '');
+  const [selectedCollection, setSelectedCollection] = useState(detailsCollectionName || '');
 
   useEffect(() => {
     if (authorSearch) {
@@ -55,13 +58,24 @@ function AddBooksForm({ onClose }) {
     }
   }, [serieSearch]);
 
-  const handleAuthorChange = (e) => {
-    setAuthorSearch(e.target.value);
-  };
-
-  const handleSerieChange = (e) => {
-    setSerieSearch(e.target.value);
-  };
+  useEffect(() => {
+    if (collectionSearch) {
+      const fetchCollections = async () => {
+        try {
+          const response = await axiosUtils(`/api/search?query=${collectionSearch}&type=collections`, 'GET');
+          setCollectionOptions(response.data.results.map(collection => ({
+            id: collection.id,
+            collectionName: collection.collectionName
+          })));
+        } catch (error) {
+          console.error('Error fetching collections:', error);
+        }
+      };
+      fetchCollections();
+    } else {
+      setCollectionOptions([]);
+    }
+  }, [collectionSearch]);
 
   const handleAuthorSelect = (author) => {
     setSelectedAuthor(author.id);
@@ -73,6 +87,12 @@ function AddBooksForm({ onClose }) {
     setSelectedSerie(serie.id);
     setSerieSearch(serie.serieName);
     setSerieOptions([]);
+  };
+
+  const handleCollectionSelect = (collection) => {
+    setSelectedCollection(collection.id);
+    setCollectionSearch(collection.collectionName);
+    setCollectionOptions([]);
   };
 
   const handleImageChange = (url) => {
@@ -98,6 +118,7 @@ function AddBooksForm({ onClose }) {
 
     formData.append('author_id', selectedAuthor);
     formData.append('serie_id', selectedSerie);
+    formData.append('collection_id', selectedCollection);
 
     try {
       const response = await axiosUtils('/api/addBook', 'POST', formData, {
@@ -105,8 +126,6 @@ function AddBooksForm({ onClose }) {
       });
 
       if (response.status !== 201) throw new Error('Failed to submit form');
-      // console.log('Form submitted successfully');
-      // console.log(response);
 
       if (onClose) {
         onClose(); // Call the onClose function to close the modal
@@ -138,7 +157,7 @@ function AddBooksForm({ onClose }) {
             <input
               type="text"
               value={authorSearch}
-              onChange={handleAuthorChange}
+              onChange={(e) => setAuthorSearch(e.target.value)}
               className="w-full border border-gray-300 rounded px-2 py-1"
               placeholder="Search author..."
             />
@@ -161,7 +180,7 @@ function AddBooksForm({ onClose }) {
             <input
               type="text"
               value={serieSearch}
-              onChange={handleSerieChange}
+              onChange={(e) => setSerieSearch(e.target.value)}
               className="w-full border border-gray-300 rounded px-2 py-1"
               placeholder="Search series..."
             />
@@ -174,6 +193,29 @@ function AddBooksForm({ onClose }) {
                     className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                   >
                     {serie.serieName}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div className="mb-4 relative">
+            <label className="block text-sm font-medium">Collection name:</label>
+            <input
+              type="text"
+              value={collectionSearch}
+              onChange={(e) => setCollectionSearch(e.target.value)}
+              className="w-full border border-gray-300 rounded px-2 py-1"
+              placeholder="Search collections..."
+            />
+            {collectionOptions.length > 0 && (
+              <ul className="border border-gray-300 rounded mt-2 max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
+                {collectionOptions.map((collection) => (
+                  <li
+                    key={collection.id}
+                    onClick={() => handleCollectionSelect(collection)}
+                    className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                  >
+                    {collection.collectionName}
                   </li>
                 ))}
               </ul>
@@ -200,7 +242,7 @@ function AddBooksForm({ onClose }) {
           </div>
           <button
             type="submit"
-            className="bg-green-700 text-white px-4 py-2 rounded on-click-amzn"
+            className="bg-green-700 text-white px-4 py-2 rounded"
           >
             Save Book
           </button>

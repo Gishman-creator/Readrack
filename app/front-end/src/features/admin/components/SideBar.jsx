@@ -14,7 +14,7 @@ const SideBar = () => {
         const handleResize = () => {
             if (window.innerWidth >= 768) {
                 dispatch(setVisibility(true));
-                dispatch(setExpansion(true));
+                dispatch(setExpansion(false));
             } else {
                 dispatch(setVisibility(false));
                 dispatch(setExpansion(true));
@@ -42,11 +42,11 @@ const SideBar = () => {
                 >
                     <div className="flex max-w-fit items-center justify-between">
                         <Bars3Icon
-                            className='w-10 h-10 rounded-full p-2 cursor-pointer on-click-sidebar block md:hidden'
+                            className='w-10 h-10 rounded-lg p-2 cursor-pointer on-click-sidebar block md:hidden'
                             onClick={() => dispatch(toggleVisibility())}
                         />
                         <Bars3Icon
-                            className='w-10 h-10 rounded-full p-2 cursor-pointer on-click-sidebar hidden md:block'
+                            className='w-10 h-10 rounded-lg p-2 cursor-pointer on-click-sidebar hidden md:block'
                             onClick={() => dispatch(toggleExpansion())}
                         />
                     </div>
@@ -56,7 +56,7 @@ const SideBar = () => {
                                 <Link
                                     to="/admin/dashboard"
                                     title={isExpanded ? null : 'Dashboard'}
-                                    className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} ${location.pathname === '/admin/dashboard' ? 'bg-primary text-white hover:bg-primary' : ''
+                                    className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-lg'} ${location.pathname === '/admin/dashboard' ? 'bg-primary text-white hover:bg-primary' : ''
                                         }`}
                                     onClick={() => dispatch(toggleVisibility())}
                                 >
@@ -70,7 +70,7 @@ const SideBar = () => {
                                 <Link
                                     to="/admin/catalog?tab=series"
                                     title={isExpanded ? null : 'Catalog'}
-                                    className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} ${isCatalogRoute ? 'bg-primary text-white hover:bg-primary' : ''
+                                    className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-lg'} ${isCatalogRoute ? 'bg-primary text-white hover:bg-primary' : ''
                                         }`}
                                     onClick={() => dispatch(toggleVisibility())}
                                 >
@@ -84,7 +84,7 @@ const SideBar = () => {
                                 <Link
                                     to="/admin/editor"
                                     title={isExpanded ? null : 'Ui elements'}
-                                    className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} ${location.pathname === '/admin/editor' ? 'bg-primary text-white hover:bg-primary' : ''
+                                    className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-lg'} ${location.pathname === '/admin/editor' ? 'bg-primary text-white hover:bg-primary' : ''
                                         }`}
                                     onClick={() => dispatch(toggleVisibility())}
                                 >
@@ -98,7 +98,7 @@ const SideBar = () => {
                         <ul>
                             <li
                                 title={isExpanded ? null : 'Logout'}
-                                className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-full'} cursor-pointer`}
+                                className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-lg'} cursor-pointer`}
                                 onClick={() => {
                                     // Perform any additional actions if needed before navigation
                                     navigate('/auth/logout');

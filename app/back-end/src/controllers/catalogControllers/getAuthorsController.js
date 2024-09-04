@@ -16,7 +16,7 @@ exports.getAuthors = async (req, res) => {
 
   try {
     // Base queries for fetching authors and counting total
-    let dataQuery = 'SELECT * FROM authors order by searchCount desc';
+    let dataQuery = 'SELECT * FROM authors';
     let countQuery = 'SELECT COUNT(*) AS totalCount FROM authors';
     let queryParams = [];
 
@@ -26,6 +26,9 @@ exports.getAuthors = async (req, res) => {
       countQuery += ' WHERE genres LIKE ?';
       queryParams.push(`%${genre}%`);
     }
+
+    // Now add the ORDER BY clause after the WHERE clause
+    dataQuery += ' order by searchCount desc';
 
     // Add limit clause to the data query
     if (typeof limitStart === 'number' && typeof limitEnd === 'number') {

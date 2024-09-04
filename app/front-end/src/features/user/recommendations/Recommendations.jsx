@@ -7,10 +7,10 @@ import Card from '../components/Card';
 import { useSelector } from 'react-redux';
 import { bufferToBlobURL } from '../../../utils/imageUtils';
 
-function Recommendations({ data }) {
+function Recommendations({ data, tab }) {
     const [cardData, setCardData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const activeTab = useSelector((state) => state.user.activeTab);
+    const activeTab = useSelector((state) => state.user.activeTab) || tab;
     const navigate = useNavigate();
     const scrollContainerRef = useRef(null);
 
@@ -21,11 +21,15 @@ function Recommendations({ data }) {
 
             try {
                 let response;
+                const requestBody = { data };
+
                 if (activeTab === 'Series') {
-                    response = await axiosUtils(`/api/recommendSeries?data=${data}`, 'GET');
+                    response = await axiosUtils(`/api/recommendSeries`, 'POST', requestBody);
                 } else {
-                    response = await axiosUtils(`/api/recommendAuthors?data=${data}`, 'GET');
+                    response = await axiosUtils(`/api/recommendAuthors`, 'POST', requestBody);
                 }
+
+                // console.log('The recommended are:', response)
 
                 const dataWithBlobs = response.data.map((item) => ({
                     ...item,

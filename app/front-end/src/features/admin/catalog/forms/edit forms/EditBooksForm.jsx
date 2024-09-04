@@ -14,10 +14,13 @@ function EditBooksForm({ onClose }) {
   const [imageFile, setImageFile] = useState(null);
   const [authorSearch, setAuthorSearch] = useState('');
   const [serieSearch, setSerieSearch] = useState('');
+  const [collectionSearch, setCollectionSearch] = useState('');
   const [authorOptions, setAuthorOptions] = useState([]);
   const [serieOptions, setSerieOptions] = useState([]);
+  const [collectionOptions, setCollectionOptions] = useState([]);
   const [selectedAuthor, setSelectedAuthor] = useState('');
   const [selectedSerie, setSelectedSerie] = useState('');
+  const [selectedCollection, setSelectedCollection] = useState('');
 
   const dispatch = useDispatch();
 
@@ -43,6 +46,8 @@ function EditBooksForm({ onClose }) {
           setAuthorSearch(response.data.author_name || '');
           setSelectedSerie(response.data.serie_id || '');
           setSerieSearch(response.data.serie_name || '');
+          setSelectedCollection(response.data.collection_id || '');
+          setCollectionSearch(response.data.collection_name || '');
         } catch (error) {
           console.error('Error fetching book details:', error);
         }
@@ -91,12 +96,35 @@ function EditBooksForm({ onClose }) {
     }
   }, [serieSearch]);
 
+  useEffect(() => {
+    if (collectionSearch) {
+      const fetchCollections = async () => {
+        try {
+          const response = await axiosUtils(`/api/search?query=${collectionSearch}&type=collections`, 'GET');
+          setCollectionOptions(response.data.results.map(collection => ({
+            id: collection.id,
+            collectionName: collection.collectionName
+          })));
+        } catch (error) {
+          console.error('Error fetching collections:', error);
+        }
+      };
+      fetchCollections();
+    } else {
+      setCollectionOptions([]);
+    }
+  }, [collectionSearch]);
+
   const handleAuthorChange = (e) => {
     setAuthorSearch(e.target.value);
   };
 
   const handleSerieChange = (e) => {
     setSerieSearch(e.target.value);
+  };
+
+  const handleCollectionChange = (e) => {
+    setCollectionSearch(e.target.value);
   };
 
   const handleAuthorSelect = (author) => {
@@ -109,6 +137,12 @@ function EditBooksForm({ onClose }) {
     setSelectedSerie(serie.id);
     setSerieSearch(serie.serieName);
     setSerieOptions([]);
+  };
+
+  const handleCollectionSelect = (collection) => {
+    setSelectedCollection(collection.id);
+    setCollectionSearch(collection.collectionName);
+    setCollectionOptions([]);
   };
 
   const handleImageChange = (url) => {
@@ -127,7 +161,7 @@ function EditBooksForm({ onClose }) {
 
     // Log form data entries
     for (let [key, value] of formData.entries()) {
-      // console.log(`${key}: ${value}`);
+      console.log(`${key}: ${value}`);
     }
 
     const bookName = formData.get('bookName') || '';
@@ -144,6 +178,7 @@ function EditBooksForm({ onClose }) {
 
     formData.append('author_id', selectedAuthor);
     formData.append('serie_id', selectedSerie);
+    formData.append('collection_id', selectedCollection);
 
     // Log form data entries
     for (let [key, value] of formData.entries()) {
@@ -229,6 +264,29 @@ function EditBooksForm({ onClose }) {
                     className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                   >
                     {serie.serieName}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div className="mb-4 relative">
+            <label className="block text-sm font-medium">Collection name:</label>
+            <input
+              type="text"
+              value={collectionSearch}
+              onChange={handleCollectionChange}
+              className="w-full border border-gray-300 rounded px-2 py-1"
+              placeholder="Search collections..."
+            />
+            {collectionOptions.length > 0 && (
+              <ul className="border border-gray-300 rounded mt-2 max-h-60 overflow-auto bg-white absolute w-full top-12 z-10">
+                {collectionOptions.map((collection) => (
+                  <li
+                    key={collection.id}
+                    onClick={() => handleCollectionSelect(collection)}
+                    className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                  >
+                    {collection.collectionName}
                   </li>
                 ))}
               </ul>

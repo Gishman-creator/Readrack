@@ -16,6 +16,7 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
 
     useEffect(() => {
         const handleClickOutside = (event) => {
+            setIsInputFocused(false);
             if (
                 searchBarRef.current &&
                 !searchBarRef.current.contains(event.target) &&
@@ -64,7 +65,7 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
         try {
             const response = await axiosUtils('/api/search', 'GET', {}, {}, { query: term, type: 'all' });
             const results = response.data.results || []; // Ensure results is an array
-            // console.log('The total count is:', response.data)
+            console.log('The results are:', response.data)
             setSearchResults(results.slice(0, 5));
         } catch (error) {
             console.error('Error searching:', error);
@@ -124,12 +125,12 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
                         {isLoading ? (
                             searchTerm ?
                                 <div className=" w-7 h-7 rounded-full border-t-2 border-green-700 animate-spin"></div>
-                            :
-                            <MagnifyingGlassIcon
-                                type='submit'
-                                onClick={handleSearchSubmit} // Ensure this triggers form submission
-                                className='on-click w-7 h-7 p-1 cursor-pointer font-bold rounded-lg text-[#000]'
-                            />
+                                :
+                                <MagnifyingGlassIcon
+                                    type='submit'
+                                    onClick={handleSearchSubmit} // Ensure this triggers form submission
+                                    className='on-click w-7 h-7 p-1 cursor-pointer font-bold rounded-lg text-[#000]'
+                                />
                         ) : (
                             searchTerm ?
                                 <XMarkIcon
@@ -163,7 +164,9 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
                                 className='p-2 cursor-pointer on-click rounded text-sm font-poppins font-medium'
                                 onClick={() => handleSelectResult(result)} // Make sure this is correctly bound
                             >
-                                {result.serieName ? capitalize(result.serieName) : (result.nickname ? capitalize(result.nickname) : capitalize(result.authorName))}
+                                {result.type === 'serie' && capitalize(result.serieName)}
+                                {result.type === 'author' && capitalize(result.nickname || result.authorName)}
+                                {result.type === 'collection' && capitalize(result.collectionName)}
                                 <span className='font-arima text-green-700'>({capitalize(result.type)})</span>
                             </div>
                         ))}

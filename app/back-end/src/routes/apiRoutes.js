@@ -12,13 +12,16 @@ const tokenValidationController = require('../controllers/authtentication/tokenV
 const { addAuthor } = require('../controllers/catalogControllers/addAuthorController');
 const { addBook } = require('../controllers/catalogControllers/addBookController');
 const { addSeries } = require('../controllers/catalogControllers/addSeriesController');
+const { addCollections } = require('../controllers/catalogControllers/addCollectionsController');
 const searchController = require('../controllers/catalogControllers/searchController');
 const getSeriesController = require('../controllers/catalogControllers/getSeriesController');
+const getCollectionsController = require('../controllers/catalogControllers/getCollectionsController');
 const getBooksController = require('../controllers/catalogControllers/getBooksController');
 const getAuthorsController = require('../controllers/catalogControllers/getAuthorsController');
 const updateAuthorController = require('../controllers/catalogControllers/updateAuthorController');
 const updateBookController = require('../controllers/catalogControllers/updateBookController');
 const updateSerieController = require('../controllers/catalogControllers/updateSerieController');
+const updateCollectionController = require('../controllers/catalogControllers/updateCollectionController');
 const deleteDataController = require('../controllers/catalogControllers/deleteDataController');
 const recommendationController = require('../controllers/otherControllers/recommendationController');
 const getGenresController = require('../controllers/otherControllers/getGenresController');
@@ -47,6 +50,7 @@ router.post('/auth/validate-tokens', tokenValidationController.validateTokens);
 router.post('/addAuthor', upload.single('authorImage'), addAuthor);
 router.post('/addBook', upload.single('bookImage'), addBook);
 router.post('/addSeries', upload.single('seriesImage'), addSeries);
+router.post('/addCollections', upload.single('collectionsImage'), addCollections);
 router.post('/incrementSearchCount', searchCountController.incrementSearchCount);
 
 router.post('/log-visit', logVisitsController.logVisit);
@@ -54,6 +58,7 @@ router.post('/log-visit', logVisitsController.logVisit);
 router.put('/updateAuthor/:id', upload.single('authorImage'), updateAuthorController.updateAuthor);
 router.put('/updateBook/:id', upload.single('bookImage'), updateBookController.updateBook);
 router.put('/updateSerie/:id', upload.single('seriesImage'), updateSerieController.updateSerie);
+router.put('/updateCollection/:id', upload.single('collectionsImage'), updateCollectionController.updateCollection);
 
 router.delete('/deleteData', deleteDataController.deleteData);
 
@@ -64,24 +69,29 @@ router.get('/get-visits-data', logVisitsController.getVisitsData);
 router.get('/getCount', getCountController.getCount);
 
 router.get('/getSeries', getSeriesController.getSeries);
+router.get('/getCollections', getCollectionsController.getCollections);
 router.get('/getBooks', getBooksController.getBooks);
 router.get('/getAuthors', getAuthorsController.getAuthors);
 
 router.get('/getAuthorById/:id', getAuthorsController.getAuthorById);
 router.get('/getSerieById/:id', getSeriesController.getSerieById);
+router.get('/getCollectionById/:id', getCollectionsController.getCollectionById);
 router.get('/getBookById/:id', getBooksController.getBookById);
 
 router.get('/getBooksBySerieId/:serie_id', getBooksController.getBooksBySerieId);
+router.get('/getBooksByCollectionId/:collection_id', getBooksController.getBooksByCollectionId);
 router.get('/getBooksByAuthorId/:author_id', getBooksController.getBooksByAuthorId);
 router.get('/getSeriesByAuthorId/:author_id', getSeriesController.getSeriesByAuthorId)
+router.get('/getCollectionsByAuthorId/:author_id', getCollectionsController.getCollectionsByAuthorId)
 
 router.get('/getAuthorsCount', getAuthorsController.getAuthorsCount);
 router.get('/getSeriesCount', getSeriesController.getSeriesCount);
 
 // Other routes
 router.get('/getGenres', getGenresController.getGenresController);
-router.get('/recommendAuthors', recommendationController.recommendAuthors)
-router.get('/recommendSeries', recommendationController.recommendSeries)
+
+router.post('/recommendAuthors', recommendationController.recommendAuthors)
+router.post('/recommendSeries', recommendationController.recommendSeries)
 
 // Data generation Routes
 router.get('/generateRandomData', generateDataController.generateDataArrays)

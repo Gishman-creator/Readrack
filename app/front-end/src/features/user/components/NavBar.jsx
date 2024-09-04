@@ -49,7 +49,7 @@ const NavBar = () => {
     }
 
     return (
-        <div className={`sticky top-0 flex w-full h-16 justify-between items-center px-[2%] sm:px-[12%] bg-white z-20`}>
+        <div className={`fixed top-0 flex min-w-full h-16 justify-between items-center px-[2%] sm:px-[12%] bg-white z-20`}>
             <div className={`z-24 sm:flex items-center ${isSearchOpen ? 'hidden' : 'flex'}`}>
                 {/* Hamburger Menu for Small Screens */}
                 <div className={`${isSearchOpen ? 'block' : 'sm:hidden'} lg:hidden mr-`}>

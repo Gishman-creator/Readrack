@@ -6,11 +6,11 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 const axiosUtils = (url, method, data = {}, headers = {}, params = {}) => {
     const fullUrl = `${BASE_URL}${url}`;
 
-    // console.log(`Request URL: ${fullUrl}`);
-    // console.log(`Request Method: ${method}`);
-    // console.log(`Request Data:`, data);
-    // console.log(`Request Headers:`, headers);
-    // console.log(`Request Params:`, params);
+    console.log(`Request URL: ${fullUrl}`);
+    console.log(`Request Method: ${method}`);
+    console.log(`Request Data:`, data);
+    console.log(`Request Headers:`, headers);
+    console.log(`Request Params:`, params);
 
     return axios({
         url: fullUrl,

@@ -4,7 +4,8 @@ const updateBook = async (req, res) => {
   const { id } = req.params;
   console.log('Body', req.body);
   console.log('File', req.file); // Log file information
-  const { bookName, serie_id, author_id, publishDate, genres, link } = req.body;
+  console.log('The request body is:', req.body);
+  const { bookName, serie_id, collection_id, author_id, publishDate, genres, link } = req.body;
 
   // Access the file from req.file
   let image = req.file ? req.file.buffer : null; // Use buffer for memory storage
@@ -18,8 +19,8 @@ const updateBook = async (req, res) => {
   try {
     // Update the book in the database
     const [updateResult] = await pool.query(
-      'UPDATE books SET bookName = ?, serie_id = ?, author_id = ?, publishDate = ?, genres = ?, link = ?, image = ? WHERE id = ?',
-      [bookName, serie_id || null, author_id, publishDate, genres, link, image, id]
+      'UPDATE books SET bookName = ?, serie_id = ?, collection_id = ?, author_id = ?, publishDate = ?, genres = ?, link = ?, image = ? WHERE id = ?',
+      [bookName, serie_id || null, collection_id || null, author_id, publishDate, genres, link, image, id]
     );
 
     if (updateResult.affectedRows === 0) {
@@ -28,10 +29,11 @@ const updateBook = async (req, res) => {
 
     // Fetch the updated book data
     const [bookRows] = await pool.query(`
-      SELECT books.*, authors.nickname, authors.authorName AS author_name, series.serieName AS serie_name
+      SELECT books.*, authors.authorName AS author_name, authors.nickname, series.serieName AS serie_name, collections.collectionName AS collection_name
       FROM books
       LEFT JOIN authors ON books.author_id = authors.id
       LEFT JOIN series ON books.serie_id = series.id
+      LEFT JOIN collections ON books.collection_id = collections.id
       WHERE books.id = ?
       `, [id]
     );

@@ -6,7 +6,7 @@ const pool = require('../../config/db');
  * @returns {Array} - An array of recommended authors sorted by searchCount.
  */
 exports.recommendAuthors = async (req, res) => {
-    const { data } = req.query;
+    const data = req.body.data;
     const genres = data.genres;
     const excludeId = data.id;
 
@@ -19,7 +19,7 @@ exports.recommendAuthors = async (req, res) => {
 
         const query = `
             SELECT * FROM authors 
-            WHERE ${userGenres.map(() => `genres LIKE ?`).join(' OR ')}
+            WHERE (${userGenres.map(() => `genres LIKE ?`).join(' OR ')})
             AND id != ?
             ORDER BY searchCount DESC 
             LIMIT 10;
@@ -38,7 +38,7 @@ exports.recommendAuthors = async (req, res) => {
 }
 
 exports.recommendSeries = async (req, res) => {
-    const { data } = req.query;
+    const { data } = req.body;
     const genres = data.genres;
     const excludeId = data.id;
 
@@ -53,7 +53,7 @@ exports.recommendSeries = async (req, res) => {
             SELECT series.*, authors.nickname, authors.authorName AS author_name
             FROM series
             LEFT JOIN authors ON series.author_id = authors.id
-            WHERE ${userGenres.map(() => `series.genres LIKE ?`).join(' OR ')}
+            WHERE (${userGenres.map(() => `series.genres LIKE ?`).join(' OR ')})
             AND series.id != ?
             ORDER BY series.searchCount DESC
             LIMIT 10;

@@ -30,7 +30,7 @@ function NavBar() {
             <div className='flex flex-row justify-center items-center'>
                 <div className='block md:hidden'>
                     <Bars3Icon
-                        className='block md:hidden w-10 h-10 rounded-full mr-2 p-2 cursor-pointer on-click'
+                        className='block md:hidden w-10 h-10 rounded-lg mr-2 p-2 cursor-pointer on-click'
                         onClick={() => dispatch(toggleVisibility())}
                     />
                 </div>
@@ -39,7 +39,7 @@ function NavBar() {
                     <h1 className='inline font-semibold text-green-700'>rack</h1>
                 </div>
             </div>
-            <img src={profile} alt="profile picture" className='bg-slate-200 hover:bg-slate-300 w-10 h-10 rounded-full' />
+            <img src={profile} alt="profile picture" className='bg-slate-200 hover:bg-slate-300 w-10 h-10 rounded-lg' />
         </div>
     )
 }

@@ -19,13 +19,16 @@ function AuthorDetails() {
   const { authorId, authorName } = useParams();
   const [authorData, setAuthorData] = useState({});
   const [series, setSeries] = useState([]);
+  const [collections, setCollections] = useState([]);
   const [books, setBooks] = useState([]);
   const [IsLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   const [seriesLimit, setSeriesLimit] = useState();
+  const [collectionsLimit, setCollectionsLimit] = useState();
   const [booksLimit, setBooksLimit] = useState();
   const [seriesCount, SetSeriesCount] = useState();
+  const [collectionsCount, SetCollectionsCount] = useState();
   const [booksCount, SetBooksCount] = useState();
 
   const dispatch = useDispatch();
@@ -33,13 +36,16 @@ function AuthorDetails() {
   const socket = useSocket();
 
   useEffect(() => {
+    
     const updatePageLimitAndInterval = () => {
       const width = window.innerWidth;
       if (width >= 1024) {
         setSeriesLimit(4);
+        setCollectionsLimit(4);
         setBooksLimit(6);
       } else {
         setSeriesLimit(3);
+        setCollectionsLimit(3);
         setBooksLimit(5);
       }
     };
@@ -86,6 +92,19 @@ function AuthorDetails() {
         setSeries(seriesWithBlobs);
         SetSeriesCount(seriesResponse.data.totalCount);
 
+        // Fetching collections by the author
+        const collectionsResponse = await axiosUtils(`/api/getCollectionsByAuthorId/${authorResponse.data.id}?limit=${collectionsLimit}`, 'GET');
+        // console.log('Collections response:', collectionsResponse.data); // Debugging
+
+        const collectionsWithBlobs = collectionsResponse.data.collections.map((collection) => {
+          return {
+            ...collection,
+            image: bufferToBlobURL(collection.image) // Convert buffer to Blob URL
+          };
+        });
+        setCollections(collectionsWithBlobs);
+        SetCollectionsCount(collectionsResponse.data.totalCount);
+
         // Fetching books by the author
         const booksResponse = await axiosUtils(`/api/getBooksByAuthorId/${authorResponse.data.id}?limit=${booksLimit}`, 'GET');
         // console.log('Books response:', booksResponse.data); // Debugging
@@ -112,8 +131,8 @@ function AuthorDetails() {
     fetchBooksData();
 
     if (!socket) {
-        console.error("Socket is not initialized");
-        return;
+      console.error("Socket is not initialized");
+      return;
     }
 
     socket.on('authorsUpdated', (updatedAuthors) => {
@@ -143,6 +162,24 @@ function AuthorDetails() {
               image: bufferToBlobURL(updatedSeries.image), // Convert buffer to Blob URL
             }
             : series
+        );
+
+        // Sort the updatedData by date in ascending order (oldest first)
+        return updatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+      });
+    });
+
+    // Listen for collections updates via socket
+    socket.on('collectionsUpdated', (updatedCollections) => {
+      // console.log("Collections updated via socket:", updatedCollections);
+      setCollections((prevData) => {
+        const updatedData = prevData.map((collections) =>
+          collections.id === updatedCollections.id
+            ? {
+              ...updatedCollections,
+              image: bufferToBlobURL(updatedCollections.image), // Convert buffer to Blob URL
+            }
+            : collections
         );
 
         // Sort the updatedData by date in ascending order (oldest first)
@@ -182,6 +219,20 @@ function AuthorDetails() {
       }
     });
 
+    // New event listener for collectionAdded
+    socket.on('collectionAdded', (collectionData) => {
+      // console.log('New collection added via socket:', collectionData);
+      if (collectionData.author_name === authorName) {
+        collectionData.image = bufferToBlobURL(collectionData.image); // Convert buffer to Blob URL
+        setCollections((prevData) => {
+          const updatedData = [...prevData, collectionData];
+
+          // Sort the updatedData by date in ascending order (oldest first)
+          return updatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        });
+      }
+    });
+
     // Event listener for bookAdded
     socket.on('bookAdded', (bookData) => {
       // console.log('Books added via socket:', bookData);
@@ -209,20 +260,29 @@ function AuthorDetails() {
     return () => {
       socket.off('authorsUpdated');
       socket.off('seriesUpdated');
+      socket.off('collectionsUpdated');
       socket.off('booksUpdated');
       socket.off('serieAdded');
+      socket.off('collectionAdded');
       socket.off('bookAdded');
       socket.off('dataDeleted');
     };
 
-  }, [authorId, authorName, navigate, seriesLimit, booksLimit, socket]);
+  }, [authorId, authorName, navigate, seriesLimit, collectionsLimit, booksLimit, socket]);
 
   const handleSetLimit = (type) => {
     if (type == 'series') {
       if (window.innerWidth >= 1024) {
-        setSeriesLimit(seriesLimit === 4 ? booksCount : 4);
+        setSeriesLimit(seriesLimit === 4 ? seriesCount : 4);
       } else {
-        setSeriesLimit(seriesLimit === 3 ? booksCount : 3);
+        setSeriesLimit(seriesLimit === 3 ? seriesCount : 3);
+      }
+      // console.log('Series limit set to:', seriesLimit);
+    } else if (type == 'collections') {
+      if (window.innerWidth >= 1024) {
+        setCollectionsLimit(collectionsLimit === 4 ? collectionsCount : 4);
+      } else {
+        setCollectionsLimit(collectionsLimit === 3 ? collectionsCount : 3);
       }
       // console.log('Series limit set to:', seriesLimit);
     } else {
@@ -334,7 +394,7 @@ function AuthorDetails() {
                     <img
                       src={item.image || blank_image} // Fallback image if Blob URL is null
                       alt='book image'
-                      className='h-[9rem] w-[6rem] rounded-lg object-cover'
+                      className='min-h-[9rem] w-[6rem] rounded-lg object-cover'
                     />
                     <div className='min-h-full w-full flex flex-col justify-between'>
                       <div
@@ -368,7 +428,67 @@ function AuthorDetails() {
                   onClick={() => handleSetLimit('series')}
                   className='text-sm max-w-fit mt-2 hover:underline text-green-700 font-semibold font-arima cursor-pointer'
                 >
-                  {seriesLimit < booksCount ? 'Show more' : 'Show less'}
+                  {seriesLimit < seriesCount ? 'Show more' : 'Show less'}
+                </span>
+              )}
+            </>
+          )}
+
+          {/* Author series */}
+          {collections.length > 0 && (
+            <>
+              <div className='flex justify-between items-center mt-8 md:mt-6'>
+                <p className='font-poppins font-semibold text-lg 2xl:text-center'>
+                  Other {authorData.nickname ? capitalize(authorData.nickname) : capitalize(authorData.authorName)} book Collections:
+                </p>
+              </div>
+              <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
+                {collections.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className='flex space-x-2 mt-4 pb-3 border-b-2 border-gray-300 cursor-pointer'
+                    onClick={() => {
+                      navigate(`/collections/${item.id}/${encodeURIComponent(item.collectionName)}`);
+                    }}
+                  >
+                    <img
+                      src={item.image || blank_image} // Fallback image if Blob URL is null
+                      alt='book image'
+                      className='min-h-[9rem] w-[6rem] rounded-lg object-cover'
+                    />
+                    <div className='min-h-full w-full flex flex-col justify-between'>
+                      <div
+                        className='flex justify-between items-center'
+                      // onClick={(e) => e.stopPropagation()}
+                      >
+                        <p className='font-semibold m-0 leading-5 text-lg'>
+                          {capitalize(item.collectionName)}
+                        </p>
+                      </div>
+                      <p className='font-arima text-sm'>by {capitalize(item.nickname ? item.nickname : item.author_name)}</p>
+                      <p className='font-arima text-gray-400 text-sm mt-1'>
+                        #{index + 1}, {item.first_book_year && item.last_book_year ? `from ${item.first_book_year} to ${item.last_book_year}` : 'Coming soon'}
+                      </p>
+                      {item.link &&
+                        <a
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className='bg-primary block w-full text-center text-white text-sm font-semibold font-poppins p-3 rounded-lg mt-auto on-click-amzn'
+                        >
+                          Find on Amazon
+                        </a>
+                      }
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {(collectionsCount > collectionsLimit || collectionsLimit > 4) && (
+                <span
+                  onClick={() => handleSetLimit('collections')}
+                  className='text-sm max-w-fit mt-2 hover:underline text-green-700 font-semibold font-arima cursor-pointer'
+                >
+                  {collectionsLimit < collectionsCount ? 'Show more' : 'Show less'}
                 </span>
               )}
             </>
@@ -386,7 +506,7 @@ function AuthorDetails() {
                 <img
                   src={item.image || blank_image} // Fallback image if Blob URL is null
                   alt='book image'
-                  className='h-[9rem] w-[6rem] rounded-lg object-cover'
+                  className='min-h-[9rem] w-[6rem] rounded-lg object-cover'
                 />
                 <div className='min-h-full w-full flex flex-col justify-between'>
                   <div className='flex justify-between items-center'>

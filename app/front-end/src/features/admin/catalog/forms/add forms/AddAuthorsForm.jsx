@@ -80,7 +80,6 @@ function AddAuthorsForm({ onClose }) {
               type="text"
               name="nickname"
               className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
-              required
             />
           </div>
           {/* Other form fields */}

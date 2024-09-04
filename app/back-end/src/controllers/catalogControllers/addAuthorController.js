@@ -10,6 +10,7 @@ const addAuthor = async (req, res) => {
   try {
     const {
       authorName,
+      nickname,
       numSeries,
       numBooks,
       dob,
@@ -46,14 +47,14 @@ const addAuthor = async (req, res) => {
     const insertQuery = `
       INSERT INTO authors (
         id, image, authorName, nickname, numSeries, numBooks, dob, nationality, biography, x, facebook, instagram, website, genres, awards
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const insertValues = [
       uniqueId,
       authorImageBlob,
       authorName,
-      nickname,
+      nickname || null,
       numSeries || 0,
       numBooks || 0,
       dob || null,

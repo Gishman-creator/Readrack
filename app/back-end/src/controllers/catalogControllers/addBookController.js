@@ -15,10 +15,13 @@ const addBook = async (req, res) => {
       bookName,
       author_id,
       serie_id,
+      collection_id,
       publishDate,
       genres,
       link,
     } = req.body;
+
+    console.log('The added book info:', req.body);
 
     // Check if the file is attached and read the buffer
     const bookImageBlob = req.file ? req.file.buffer : null;
@@ -38,11 +41,16 @@ const addBook = async (req, res) => {
       }
     }
 
+    // Convert empty strings to null for foreign key fields
+    const serieId = serie_id === '' ? null : serie_id;
+    const collectionId = collection_id === '' ? null : collection_id;
+    
+
     // Insert book data into the database with the unique ID
     const query = `
       INSERT INTO books (
-        id, image, bookName, author_id, serie_id, genres, publishDate, link
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        id, image, bookName, author_id, serie_id, collection_id, genres, publishDate, link
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -50,19 +58,23 @@ const addBook = async (req, res) => {
       bookImageBlob,
       bookName,
       author_id || null,
-      serie_id || null,
+      serieId,
+      collectionId,
       genres || null,
       publishDate || null,
       link || null,
     ];
 
+    console.log('The values are:', values)
+
     await pool.execute(query, values);
 
     const [bookData] = await pool.query(`
-      SELECT books.*, authors.authorName AS author_name, series.serieName AS serie_name
+      SELECT books.*, authors.authorName AS author_name, series.serieName AS serie_name, collections.collectionName AS collection_name
       FROM books
       LEFT JOIN authors ON books.author_id = authors.id
       LEFT JOIN series ON books.serie_id = series.id
+      LEFT JOIN collections ON books.collection_id = collections.id
       WHERE books.id = ?
       `, [uniqueId]
     );

@@ -10,11 +10,11 @@ import blank_image from '../../../assets/brand_blank_image.png';
 import DeatailsPageSkeleton from '../components/skeletons/DeatailsPageSkeleton';
 import { useSocket } from '../../../context/SocketContext';
 
-function SerieDetails() {
+function CollectionDetails() {
 
   const activeTab = useSelector((state) => state.user.activeTab);
-  const { serieId, serieName } = useParams();
-  const [serieData, setSerieData] = useState({});
+  const { collectionId, collectionName } = useParams();
+  const [collectionData, setCollectionData] = useState({});
   const [books, setBooks] = useState([]);
   const [IsLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -41,26 +41,26 @@ function SerieDetails() {
     return () => {
       window.removeEventListener('resize', updatePageLimitAndInterval);
     };
-  }, [serieId]);
+  }, [collectionId]);
 
   useEffect(() => {
-    const fetchSeriesData = async () => {
+    const fetchCollectionsData = async () => {
       if (!booksLimit) return;
       try {
-        const serieResponse = await axiosUtils(`/api/getSerieById/${serieId}`, 'GET');
-        setSerieData(serieResponse.data);
+        const collectionResponse = await axiosUtils(`/api/getCollectionById/${collectionId}`, 'GET');
+        setCollectionData(collectionResponse.data);
 
-        // Convert series image
-        if (serieResponse.data.image) {
-          serieResponse.data.image = bufferToBlobURL(serieResponse.data.image);
+        // Convert collections image
+        if (collectionResponse.data.image) {
+          collectionResponse.data.image = bufferToBlobURL(collectionResponse.data.image);
         }
 
-        // If serieName is not in the URL, update it
-        if (!serieName || serieName !== serieResponse.data.serieName) {
-          navigate(`/series/${serieId}/${encodeURIComponent(serieResponse.data.serieName)}`, { replace: true });
+        // If collectionName is not in the URL, update it
+        if (!collectionName || collectionName !== collectionResponse.data.collectionName) {
+          navigate(`/collections/${collectionId}/${encodeURIComponent(collectionResponse.data.collectionName)}`, { replace: true });
         }
 
-        const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}?limit=${booksLimit}`, 'GET');
+        const booksResponse = await axiosUtils(`/api/getBooksByCollectionId/${collectionResponse.data.id}?limit=${booksLimit}`, 'GET');
         // console.log('Books response:', booksResponse.data); // Debugging
 
         const booksWithBlobs = booksResponse.data.books.map((book) => {
@@ -76,7 +76,7 @@ function SerieDetails() {
 
         setIsLoading(false);
       } catch (error) {
-        console.error('Error fetching series data:', error);
+        console.error('Error fetching collections data:', error);
         if (error.response && error.response.status === 404) {
           setNotFound(true);
         }
@@ -84,26 +84,26 @@ function SerieDetails() {
       }
     };
 
-    fetchSeriesData();
+    fetchCollectionsData();
 
     if (!socket) {
       console.error("Socket is not initialized");
       return;
     }
 
-    socket.on('seriesUpdated', (updatedSeries) => {
-      setSerieData((prevSerieData) => {
+    socket.on('collectionsUpdated', (updatedCollections) => {
+      setCollectionData((prevCollectionData) => {
         // Only update if the IDs match
-        if (prevSerieData.id === updatedSeries.id) {
+        if (prevCollectionData.id === updatedCollections.id) {
           // console.log("The ids are equal...............")
           return {
-            ...prevSerieData,
-            ...updatedSeries,
-            image: bufferToBlobURL(updatedSeries.image), // Convert updated series image to Blob URL
+            ...prevCollectionData,
+            ...updatedCollections,
+            image: bufferToBlobURL(updatedCollections.image), // Convert updated collections image to Blob URL
           };
         }
 
-        return prevSerieData; // Return the previous state if IDs don't match
+        return prevCollectionData; // Return the previous state if IDs don't match
       });
     });
 
@@ -127,7 +127,7 @@ function SerieDetails() {
 
     // Event listener for bookAdded
     socket.on('bookAdded', (bookData) => {
-      if (bookData.serie_name === serieName) {
+      if (bookData.collection_name === collectionName) {
         bookData.image = bufferToBlobURL(bookData.image); // Convert buffer to Blob URL
         setBooks((prevData) => {
           const updatedData = [...prevData, bookData];
@@ -140,12 +140,12 @@ function SerieDetails() {
 
 
     return () => {
-      socket.off('seriesUpdated');
+      socket.off('collectionsUpdated');
       socket.off('booksUpdated');
       socket.off('bookAdded');
     };
 
-  }, [serieId, serieName, navigate, booksLimit, socket]);
+  }, [collectionId, collectionName, navigate, booksLimit, socket]);
 
   const handleSetLimit = () => {
     if (window.innerWidth >= 1024) {
@@ -159,7 +159,7 @@ function SerieDetails() {
   if (IsLoading) {
     return <DeatailsPageSkeleton activeTab={activeTab} />;
   } else if (notFound) {
-    return <NotFoundPage type='serie' />
+    return <NotFoundPage type='collection' />
   }
 
   return (
@@ -167,33 +167,33 @@ function SerieDetails() {
       <div className='md:flex md:flex-row pt-2 md:space-x-6 xl:space-x-8 pb-10'>
         <div className='w-full pt-2 md:w-[22rem] md:h-full md:sticky md:top-20 lg:top-[4.5rem] overflow-hidden'>
           <div className=' max-w-[13rem] mx-auto'>
-            <img src={serieData.image || blank_image} alt="serie image" className='h-[16rem] w-full bg-[#edf4e6] rounded-lg mx-auto object-cover' />
+            <img src={collectionData.image || blank_image} alt="collection image" className='h-[16rem] w-full bg-[#edf4e6] rounded-lg mx-auto object-cover' />
             <div className='w-full mx-auto'>
               <p
-                title={capitalize(serieData.serieName)}
+                title={capitalize(collectionData.collectionName)}
                 className='font-poppins font-medium text-lg text-center md:text-left mt-2 overflow-hidden whitespace-nowrap text-ellipsis cursor-default'
               >
-                {capitalize(serieData.serieName)}
+                {capitalize(collectionData.collectionName)}
               </p>
               <p
                 className='font-arima text-center md:text-left hover:underline cursor-pointer'
                 onClick={() => {
-                  navigate(`/authors/${serieData.author_id}/${encodeURIComponent(serieData.author_name)}`);
+                  navigate(`/authors/${collectionData.author_id}/${encodeURIComponent(collectionData.author_name)}`);
                 }}
               >
-                by {serieData.nickname ? capitalize(serieData.nickname) : capitalize(serieData.author_name)}
+                by {collectionData.nickname ? capitalize(collectionData.nickname) : capitalize(collectionData.author_name)}
               </p>
               <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
                 <p className='md:inline font-medium font-poppins text-center md:text-left text-sm'>Genres:</p>
                 <div className='md:inline flex flex-wrap gap-x-2 md:ml-1 text-sm text-center md:text-left font-arima items-center justify-center md:justify-start w-[90%] mx-auto'>
-                  {serieData.genres}
+                  {collectionData.genres}
                 </div>
               </div>
             </div>
           </div>
-          {serieData.link &&
+          {collectionData.link &&
             <a
-              href={serieData.link}
+              href={collectionData.link}
               target="_blank"
               rel="noopener noreferrer"
               className='bg-[#37643B] block w-[60%] md:w-full text-center text-white text-sm font-semibold font-poppins p-3 rounded-lg mx-auto mt-6 on-click-amzn'>
@@ -204,7 +204,7 @@ function SerieDetails() {
         <div className='w-full '>
           <div className='flex justify-between items-center mt-8 md:mt-0'>
             <p className='font-poppins font-semibold text-xl 2xl:text-center'>
-              {capitalize(serieData.serieName)} Books:
+              {capitalize(collectionData.collectionName)} Books:
             </p>
           </div>
           <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
@@ -221,7 +221,7 @@ function SerieDetails() {
                       {capitalize(item.bookName)}
                     </p>
                   </div>
-                  <p className='font-arima text-sm'>by {item.nickname ? capitalize(item.nickname) : capitalize(item.author_name)}</p>
+                  <p className='font-arima text-sm'>by {item.nickname ? capitalize(item.nickname) : capitalize(item.authorName)}</p>
                   <p className='font-arima text-slate-400 text-sm mt-1'>
                     #{index + 1}, published {formatDate(item.publishDate)}
                   </p>
@@ -247,9 +247,9 @@ function SerieDetails() {
           )}
         </div>
       </div>
-      <Recommendations data={serieData} />
+      <Recommendations data={collectionData} tab='Series' />
     </div>
   );
 }
 
-export default SerieDetails
+export default CollectionDetails

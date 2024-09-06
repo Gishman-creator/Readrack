@@ -50,21 +50,27 @@ function CollectionDetails() {
     const fetchCollectionsData = async () => {
       if (!booksLimit) return;
       try {
-        const collectionResponse = await axiosUtils(`/api/getCollectionById/${collectionId}`, 'GET');
-        setCollectionData(collectionResponse.data);
-        console.log('Fetched collection data:', collectionResponse.data);
+        const collectionResponse = await axiosUtils(`/api/getCollectionById?ids=${collectionId}`, 'GET');
+
+        // Handle case where collectionResponse.data.collections is an array with one item
+        const fetchedCollection = Array.isArray(collectionResponse.data.collections)
+          ? collectionResponse.data.collections[0]
+          : collectionResponse.data.collections;
+
+        setCollectionData(fetchedCollection);
+        console.log('Fetched collection data:', fetchedCollection);
 
         // Convert collections image
-        if (collectionResponse.data.image) {
-          collectionResponse.data.image = bufferToBlobURL(collectionResponse.data.image);
+        if (fetchedCollection.image) {
+          fetchedCollection.image = bufferToBlobURL(fetchedCollection.image);
         }
 
         // If collectionName is not in the URL, update it
-        if (!collectionName || collectionName !== collectionResponse.data.collectionName) {
-          navigate(`/admin/catalog/collections/${collectionId}/${encodeURIComponent(collectionResponse.data.collectionName)}`, { replace: true });
+        if (!collectionName || collectionName !== fetchedCollection.collectionName) {
+          navigate(`/admin/catalog/collections/${collectionId}/${encodeURIComponent(fetchedCollection.collectionName)}`, { replace: true });
         }
 
-        const booksResponse = await axiosUtils(`/api/getBooksByCollectionId/${collectionResponse.data.id}?limit=${booksLimit}`, 'GET');
+        const booksResponse = await axiosUtils(`/api/getBooksByCollectionId/${fetchedCollection.id}?limit=${booksLimit}`, 'GET');
         console.log('Books response:', booksResponse.data); // Debugging
 
         const booksWithBlobs = booksResponse.data.books.map((book) => {
@@ -186,16 +192,18 @@ function CollectionDetails() {
           <div className='w-full mx-auto'>
             <p
               title={capitalize(collectionData.collectionName)}
-              className='font-poppins font-medium text-lg text-center md:text-left mt-2 overflow-hidden whitespace-nowrap text-ellipsis cursor-default'
+              className='font-poppins font-medium text-lg text-center md:text-left mt-2 md:overflow-hidden md:whitespace-nowrap md:text-ellipsis cursor-default'
             >
               {capitalize(collectionData.collectionName)}
             </p>
-            <p
-              className='font-arima text-center md:text-left hover:underline cursor-pointer'
-              onClick={() => navigate(`/admin/catalog/authors/${collectionData.author_id}/${encodeURIComponent(collectionData.author_name)}`)}
-            >
-              by {capitalize(collectionData.author_name)}
-            </p>
+            {collectionData.author_name && (
+              <p
+                className='font-arima text-center md:text-left hover:underline cursor-pointer'
+                onClick={() => navigate(`/admin/catalog/authors/${collectionData.author_id}/${encodeURIComponent(collectionData.author_name)}`)}
+              >
+                by {capitalize(collectionData.author_name)}
+              </p>
+            )}
             <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
               <p className='md:inline font-medium font-poppins text-center md:text-left text-sm'>Genres:</p>
               <div className='md:inline flex flex-wrap gap-x-2 md:ml-1 text-sm text-center md:text-left font-arima items-center justify-center md:justify-start w-[90%] mx-auto'>
@@ -245,7 +253,9 @@ function CollectionDetails() {
                     onClick={() => handleEditClick(item)}  // Handle click to open modal
                   />
                 </div>
-                <p className='font-arima text-sm'>by {capitalize(item.author_name)}</p>
+                {item.author_name && (
+                  <p className='font-arima text-sm'>by {capitalize(item.author_name)}</p>
+                )}
                 <p className='font-arima text-slate-400 text-sm mt-1'>
                   #{index + 1}, published {formatDate(item.publishDate)}
                 </p>

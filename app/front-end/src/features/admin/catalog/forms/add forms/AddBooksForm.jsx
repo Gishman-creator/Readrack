@@ -148,7 +148,7 @@ function AddBooksForm({ onClose }) {
             <input
               type="text"
               name="bookName"
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
@@ -157,12 +157,12 @@ function AddBooksForm({ onClose }) {
             <input
               type="text"
               value={authorSearch}
-              onChange={(e) => setAuthorSearch(e.target.value)}
-              className="w-full border border-gray-300 rounded px-2 py-1"
+              onChange={(e) => {setAuthorSearch(e.target.value); if(!e.target.value) {setSelectedAuthor(e.target.value)}}}
+              className="w-full border border-gray-300 rounded-lg px-2 py-1"
               placeholder="Search author..."
             />
             {authorOptions.length > 0 && (
-              <ul className="border border-gray-300 rounded max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
+              <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
                 {authorOptions.map((author) => (
                   <li
                     key={author.id}
@@ -181,11 +181,11 @@ function AddBooksForm({ onClose }) {
               type="text"
               value={serieSearch}
               onChange={(e) => setSerieSearch(e.target.value)}
-              className="w-full border border-gray-300 rounded px-2 py-1"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1"
               placeholder="Search series..."
             />
             {serieOptions.length > 0 && (
-              <ul className="border border-gray-300 rounded mt-2 max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
+              <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
                 {serieOptions.map((serie) => (
                   <li
                     key={serie.id}
@@ -204,11 +204,11 @@ function AddBooksForm({ onClose }) {
               type="text"
               value={collectionSearch}
               onChange={(e) => setCollectionSearch(e.target.value)}
-              className="w-full border border-gray-300 rounded px-2 py-1"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1"
               placeholder="Search collections..."
             />
             {collectionOptions.length > 0 && (
-              <ul className="border border-gray-300 rounded mt-2 max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
+              <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
                 {collectionOptions.map((collection) => (
                   <li
                     key={collection.id}
@@ -224,11 +224,11 @@ function AddBooksForm({ onClose }) {
           <div className="mb-2 flex space-x-2">
             <div>
               <label className="block text-sm font-medium">Publish date:</label>
-              <input type="date" name="publishDate" className="w-full border border-gray-300 rounded px-2 py-1" />
+              <input type="date" name="publishDate" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
             <div>
               <label className="block text-sm font-medium">Genres:</label>
-              <input type="text" name="genres" className="w-full border border-gray-300 rounded px-2 py-1" />
+              <input type="text" name="genres" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
           </div>
           <div className="mb-4">
@@ -236,13 +236,13 @@ function AddBooksForm({ onClose }) {
             <input
               type="text"
               name="link"
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
           <button
             type="submit"
-            className="bg-green-700 text-white px-4 py-2 rounded"
+            className="bg-green-700 text-white text-sm font-semibold font-poppins on-click-amzn px-4 py-2 rounded-lg"
           >
             Save Book
           </button>

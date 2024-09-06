@@ -11,8 +11,6 @@ const addAuthor = async (req, res) => {
     const {
       authorName,
       nickname,
-      numSeries,
-      numBooks,
       dob,
       nationality,
       biography,
@@ -46,8 +44,8 @@ const addAuthor = async (req, res) => {
     // Insert author data into the database with the unique ID
     const insertQuery = `
       INSERT INTO authors (
-        id, image, authorName, nickname, numSeries, numBooks, dob, nationality, biography, x, facebook, instagram, website, genres, awards
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, image, authorName, nickname, dob, nationality, biography, x, facebook, instagram, website, genres, awards
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const insertValues = [
@@ -55,8 +53,6 @@ const addAuthor = async (req, res) => {
       authorImageBlob,
       authorName,
       nickname || null,
-      numSeries || 0,
-      numBooks || 0,
       dob || null,
       nationality || null,
       biography || null,
@@ -73,7 +69,14 @@ const addAuthor = async (req, res) => {
 
     // Fetch the newly added author data
     const fetchQuery = `
-      SELECT * FROM authors WHERE id = ?
+      SELECT a.*, 
+        COUNT(DISTINCT s.id) AS numSeries, 
+        COUNT(DISTINCT b.id) AS numBooks
+      FROM authors a
+      LEFT JOIN series s ON a.id = s.author_id
+      LEFT JOIN books b ON a.id = b.author_id
+      WHERE a.id = ?
+      GROUP BY a.id
     `;
     const [authorData] = await pool.execute(fetchQuery, [uniqueId]);
 

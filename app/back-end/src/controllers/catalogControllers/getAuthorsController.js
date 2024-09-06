@@ -16,7 +16,15 @@ exports.getAuthors = async (req, res) => {
 
   try {
     // Base queries for fetching authors and counting total
-    let dataQuery = 'SELECT * FROM authors';
+    let dataQuery = `
+      SELECT a.*, 
+        COUNT(DISTINCT s.id) AS numSeries, 
+        COUNT(DISTINCT b.id) AS numBooks
+      FROM authors a
+      LEFT JOIN series s ON a.id = s.author_id
+      LEFT JOIN books b ON a.id = b.author_id
+      GROUP BY a.id
+    `;
     let countQuery = 'SELECT COUNT(*) AS totalCount FROM authors';
     let queryParams = [];
 
@@ -54,9 +62,14 @@ exports.getAuthorById = async (req, res) => {
 
   try {
     const [rows] = await pool.query(`
-      SELECT * 
-      FROM authors 
-      WHERE id = ? 
+      SELECT a.*, 
+        COUNT(DISTINCT s.id) AS numSeries, 
+        COUNT(DISTINCT b.id) AS numBooks
+      FROM authors a
+      LEFT JOIN series s ON a.id = s.author_id
+      LEFT JOIN books b ON a.id = b.author_id
+      WHERE a.id = ?
+      GROUP BY a.id
       LIMIT ?
     `, [id, limit]);
 

@@ -5,8 +5,8 @@ const updateAuthor = async (req, res) => {
     console.log('Body', req.body);
     console.log('File', req.file); // Log file information
 
-    const { authorName, nickname, numSeries, numBooks, dob, nationality, biography, awards, x, instagram, facebook, website, genres } = req.body;
-    console.log(authorName, nickname, numSeries, numBooks, dob, nationality, biography, awards, x, instagram, facebook, website, genres)
+    const { authorName, nickname, dob, nationality, biography, awards, x, instagram, facebook, website, genres } = req.body;
+    console.log(authorName, nickname, dob, nationality, biography, awards, x, instagram, facebook, website, genres)
 
     // Access the file from req.file
     let image = req.file ? req.file.buffer : null; // Use buffer for memory storage
@@ -19,23 +19,30 @@ const updateAuthor = async (req, res) => {
 
     try {
         const [result] = await pool.query(
-            'UPDATE authors SET authorName = ?, nickname = ?, numSeries = ?, numBooks = ?, dob = ?, nationality = ?, biography = ?, awards = ?, x = ?, instagram = ?, facebook = ?, website = ?, genres = ?, image = ? WHERE id = ?',
-            [authorName, nickname || null, numSeries || 0, numBooks || 0, dob, nationality, biography, awards, x, instagram, facebook, website, genres, image, id]
+            'UPDATE authors SET authorName = ?, nickname = ?, dob = ?, nationality = ?, biography = ?, awards = ?, x = ?, instagram = ?, facebook = ?, website = ?, genres = ?, image = ? WHERE id = ?',
+            [authorName, nickname || null, dob, nationality, biography, awards, x, instagram, facebook, website, genres, image, id]
         );
 
         // Fetch the updated author data
-        const [authorRows] = await pool.query(
-          'SELECT * FROM authors WHERE id = ?',
-          [id]
+        const [authorRows] = await pool.query(`
+            SELECT a.*, 
+              COUNT(DISTINCT s.id) AS numSeries, 
+              COUNT(DISTINCT b.id) AS numBooks
+            FROM authors a
+            LEFT JOIN series s ON a.id = s.author_id
+            LEFT JOIN books b ON a.id = b.author_id
+            WHERE a.id = ?
+            GROUP BY a.id
+        `, [id]
         );
-    
+
         if (authorRows.length === 0) {
-          return res.status(404).json({ message: 'Author not found after update' });
+            return res.status(404).json({ message: 'Author not found after update' });
         }
 
         const updatedAuthors = authorRows[0];
 
-        if(req.io) {
+        if (req.io) {
             req.io.emit('authorsUpdated', updatedAuthors);
             console.log('Emitting updated authors:', updatedAuthors);
         } else {

@@ -186,7 +186,7 @@ function SerieDetails() {
           <div className='w-full mx-auto'>
             <p
               title={capitalize(serieData.serieName)}
-              className='font-poppins font-medium text-lg text-center md:text-left mt-2 overflow-hidden whitespace-nowrap text-ellipsis cursor-default'
+              className='font-poppins font-medium text-lg text-center md:text-left mt-2 md:overflow-hidden md:whitespace-nowrap md:text-ellipsis cursor-default'
             >
               {capitalize(serieData.serieName)}
             </p>

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setActiveGenre } from '../slices/userSlice';
 import { incrementSearchCount } from '../../../utils/searchCountUtils';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 function Card({ card, activeTab, fixedWidth }) {
     const navigate = useNavigate();
@@ -33,12 +34,19 @@ function Card({ card, activeTab, fixedWidth }) {
             className={`${fixedWidth ? 'min-w-[10rem]' : 'w-full'} md:max-w-[10rem] group hover:border-[#e1e1e1] rounded-md cursor-pointer mb-7`}
             onClick={() => navigateToDetails(card.id)}
         >
-            <div className="overflow-hidden rounded-lg duration-300 group-hover:shadow-custom3">
+            <div className="relative overflow-hidden rounded-lg duration-300 group-hover:shadow-custom3">
                 <img
                     src={card.image || blank_image}
                     alt={`${activeTab === 'Series' ? 'Serie' : 'Author'} image`}
                     className="h-48 w-full transform transition-transform duration-300 group-hover:scale-105 object-cover"
                 />
+                <div
+                 title={`Searched by ${card.searchCount} people`}
+                 className='absolute bg-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.3)] text-white flex justify-between items-center top-1 right-1 z-10 rounded-lg py-[2px] px-[6px] space-x-1'
+                >
+                    <p className='font-poppins font-semibold text-xs'>{card.searchCount}</p>
+                    <MagnifyingGlassIcon className='w-3 h-3' />
+                </div>
             </div>
             <div className="flex-col justify-center items-center py-1">
                 <p
@@ -70,7 +78,7 @@ function Card({ card, activeTab, fixedWidth }) {
                     <>
                         <p className="font-arima text-sm leading-4">{capitalize(card.nationality)}</p>
                         <p className="font-arima font-bold text-xs text-green-700 mt-2">
-                            {card.numBooks} books
+                           about {card.numBooks} books
                         </p>
                     </>
                 )}

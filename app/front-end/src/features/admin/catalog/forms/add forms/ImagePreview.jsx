@@ -12,7 +12,7 @@ function ImagePreview({ onImageChange }) {
 
   return (
     <div className="mb-4 flex flex-col justify-between md:w-[13rem]">
-      <div className="h-[10rem] w-full bg-slate-200 flex justify-center items-center rounded-md">
+      <div className="h-[10rem] w-full bg-slate-200 flex justify-center items-center rounded-lg">
         {imageURL ? (
           <img
             src={imageURL}
@@ -31,7 +31,7 @@ function ImagePreview({ onImageChange }) {
           placeholder="Enter image link"
           value={imageURL}
           onChange={handleURLChange}
-          className="w-full border border-gray-300 rounded px-2 py-1 focus:border-[#37643B] focus:ring-[#37643B]"
+          className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-[#37643B] focus:ring-[#37643B]"
         />
       </div>
     </div>

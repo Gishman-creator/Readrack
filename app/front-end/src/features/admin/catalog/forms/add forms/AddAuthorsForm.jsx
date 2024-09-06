@@ -70,7 +70,7 @@ function AddAuthorsForm({ onClose }) {
             <input
               type="text"
               name="authorName"
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
@@ -79,67 +79,57 @@ function AddAuthorsForm({ onClose }) {
             <input
               type="text"
               name="nickname"
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
             />
           </div>
           {/* Other form fields */}
           <div className="mb-2 flex space-x-2">
             <div>
-              <label className="block text-sm font-medium">Number of series:</label>
-              <input type="number" name="numSeries" className="w-full border border-gray-300 rounded px-2 py-1" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Number of books:</label>
-              <input type="number" name="numBooks" className="w-full border border-gray-300 rounded px-2 py-1" />
-            </div>
-          </div>
-          <div className="mb-2 flex space-x-2">
-            <div>
               <label className="block text-sm font-medium">Date of birth:</label>
-              <input type="date" name="dob" className="w-full border border-gray-300 rounded px-2 py-1" />
+              <input type="date" name="dob" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
             <div>
               <label className="block text-sm font-medium">Nationality:</label>
-              <input type="text" name="nationality" className="w-full border border-gray-300 rounded px-2 py-1" />
+              <input type="text" name="nationality" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
           </div>
           <div className="mb-2 flex space-x-2">
             <div>
               <label className="block text-sm font-medium">Biography:</label>
-              <textarea name="biography" className="w-full border border-gray-300 rounded px-2 py-1" />
+              <textarea name="biography" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
             <div>
               <label className="block text-sm font-medium">Awards:</label>
-              <textarea name="awards" className="w-full border border-gray-300 rounded px-2 py-1" />
+              <textarea name="awards" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
           </div>
           <div className="mb-2 flex space-x-2">
             <div>
               <label className="block text-sm font-medium">X:</label>
-              <input type="text" name="x" className="w-full border border-gray-300 rounded px-2 py-1" />
+              <input type="text" name="x" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
             <div>
               <label className="block text-sm font-medium">Instagram:</label>
-              <input type="text" name="instagram" className="w-full border border-gray-300 rounded px-2 py-1" />
+              <input type="text" name="instagram" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
             <div>
               <label className="block text-sm font-medium">Facebook:</label>
-              <input type="text" name="facebook" className="w-full border border-gray-300 rounded px-2 py-1" />
+              <input type="text" name="facebook" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
           </div>
           <div className="mb-4 flex space-x-2">
             <div>
               <label className="block text-sm font-medium">Website:</label>
-              <input type="text" name="website" className="w-full border border-gray-300 rounded px-2 py-1" />
+              <input type="text" name="website" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
             <div>
               <label className="block text-sm font-medium">Genres:</label>
-              <input type="text" name="genres" className="w-full border border-gray-300 rounded px-2 py-1" />
+              <input type="text" name="genres" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
           </div>
           <button
             type="submit"
-            className="bg-green-700 text-white px-4 py-2 rounded on-click-amzn"
+            className="bg-green-700 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn"
           >
             Save Author
           </button>

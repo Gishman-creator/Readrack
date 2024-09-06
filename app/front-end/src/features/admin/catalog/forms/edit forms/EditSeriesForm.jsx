@@ -15,15 +15,21 @@ function EditSeriesForm({ onClose }) {
   const [authorOptions, setAuthorOptions] = useState([]);
   const [selectedAuthor, setSelectedAuthor] = useState('');
 
+  const [collectionSearch, setCollectionSearch] = useState('');
+  const [collectionOptions, setCollectionOptions] = useState([]);
+  const [selectedCollections, setSelectedCollections] = useState([]); // Stores selected collection names
+  const [selectedCollectionIds, setSelectedCollectionIds] = useState([]); // Stores collection IDs
+
   const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchSeriesData = async () => {
       try {
         const response = await axiosUtils(`/api/getSerieById/${seriesId}`, 'GET');
+        console.log('The serie data are:', response.data);
         const data = response.data;
         setSeriesData(data);
-        
+
         if (data.image && data.image.data) {
           setSeriesImageURL(bufferToBlobURL(data.image));
         } else {
@@ -32,6 +38,20 @@ function EditSeriesForm({ onClose }) {
 
         setSelectedAuthor(data.author_id || '');
         setAuthorSearch(data.author_name || '');
+
+        // Fetch related collections
+        if (data.related_collections) {
+          const collectionIds = data.related_collections.split(',');
+          const collectionNames = await Promise.all(
+            collectionIds.map(async (id) => {
+              const res = await axiosUtils(`/api/getCollectionById/${id}`, 'GET');
+              return res.data.collectionName;
+            })
+          );
+          setSelectedCollections(collectionNames);
+          setSelectedCollectionIds(collectionIds.map(Number));
+        }
+
       } catch (error) {
         console.error('Error fetching series data:', error);
       }
@@ -59,6 +79,26 @@ function EditSeriesForm({ onClose }) {
     }
   }, [authorSearch]);
 
+  useEffect(() => {
+    if (collectionSearch) {
+      const fetchCollections = async () => {
+        try {
+          const response = await axiosUtils(`/api/search?query=${collectionSearch}&type=collections`, 'GET');
+          console.log('The found collections are:', response)
+          setCollectionOptions(response.data.results.map(collection => ({
+            id: collection.id,
+            collectionName: collection.collectionName
+          })));
+        } catch (error) {
+          console.error('Error fetching collections:', error);
+        }
+      };
+      fetchCollections();
+    } else {
+      setCollectionOptions([]);
+    }
+  }, [collectionSearch]);
+
   const handleAuthorChange = (e) => {
     setAuthorSearch(e.target.value);
   };
@@ -69,6 +109,25 @@ function EditSeriesForm({ onClose }) {
     setAuthorOptions([]);
   };
 
+  const handleCollectionSelect = (collection) => {
+    // Prevent duplicate entries
+    if (!selectedCollectionIds.includes(collection.id)) {
+      setSelectedCollections([...selectedCollections, collection.collectionName]);
+      setSelectedCollectionIds([...selectedCollectionIds, collection.id]);
+    }
+    setCollectionSearch(''); // Clear the search input after selection
+    setCollectionOptions([]);
+  };
+
+  const handleCollectionRemove = (index) => {
+    const updatedCollections = [...selectedCollections];
+    const updatedCollectionIds = [...selectedCollectionIds];
+    updatedCollections.splice(index, 1);
+    updatedCollectionIds.splice(index, 1);
+    setSelectedCollections(updatedCollections);
+    setSelectedCollectionIds(updatedCollectionIds);
+  };
+
   const handleImageChange = (url) => {
     setSeriesImageURL(url);
   };
@@ -76,6 +135,8 @@ function EditSeriesForm({ onClose }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
+
+    formData.append('related_collections', selectedCollectionIds);
 
     if (seriesImageURL && seriesImageURL !== seriesData.imageURL) {
       const file = await downloadImage(seriesImageURL, formData.get('serieName') || '');
@@ -112,7 +173,7 @@ function EditSeriesForm({ onClose }) {
               type="text"
               name="serieName"
               defaultValue={seriesData.serieName || ''}
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
@@ -122,11 +183,11 @@ function EditSeriesForm({ onClose }) {
               type="text"
               value={authorSearch}
               onChange={handleAuthorChange}
-              className="w-full border border-gray-300 rounded px-2 py-1"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1"
               placeholder="Search author..."
             />
             {authorOptions.length > 0 && (
-              <ul className="border border-gray-300 rounded mt-2 max-h-60 overflow-auto bg-white absolute w-full z-10">
+              <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full z-10">
                 {authorOptions.map((author) => (
                   <li
                     key={author.id}
@@ -139,6 +200,44 @@ function EditSeriesForm({ onClose }) {
               </ul>
             )}
           </div>
+          <div className="mb-4 relative">
+            <label className="block text-sm font-medium">Search Collections:</label>
+            <input
+              type="text"
+              value={collectionSearch}
+              onChange={(e) => setCollectionSearch(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-2 py-1"
+              placeholder="Search collections..."
+            />
+            {collectionOptions.length > 0 && (
+              <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full z-10">
+                {collectionOptions.map((collection) => (
+                  <li
+                    key={collection.id}
+                    onClick={() => handleCollectionSelect(collection)}
+                    className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                  >
+                    {collection.collectionName}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          {selectedCollections.length > 0 && (
+            <div className="bg-green-700 rounded-lg mt-2 flex flex-wrap gap-2 p-2">
+              {selectedCollections.map((collection, index) => (
+                <span key={index} className="bg-[rgba(255,255,255,0.3)] flex items-center max-w-fit max-h-fit text-white font-poppins font-semibold px-2 py-1 rounded-lg text-sm space-x-1">
+                  <span>{collection}</span>
+                  <span
+                    className='text-xl cursor-pointer'
+                    onClick={() => handleCollectionRemove(index)}
+                  >
+                    &times;
+                  </span>
+                </span>
+              ))}
+            </div>
+          )}
           <div className="mb-2 flex space-x-2">
             <div>
               <label className="block text-sm font-medium">Number of Books:</label>
@@ -146,7 +245,7 @@ function EditSeriesForm({ onClose }) {
                 type="number"
                 name="numBooks"
                 defaultValue={seriesData.numBooks || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
             <div>
@@ -155,7 +254,7 @@ function EditSeriesForm({ onClose }) {
                 type="text"
                 name="genres"
                 defaultValue={seriesData.genres || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
           </div>
@@ -165,12 +264,12 @@ function EditSeriesForm({ onClose }) {
               type="text"
               name="link"
               defaultValue={seriesData.link || ''}
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
             />
           </div>
           <button
             type="submit"
-            className="bg-green-700 text-white px-4 py-2 rounded"
+            className="bg-green-700 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn"
           >
             Save Changes
           </button>

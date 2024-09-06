@@ -20,7 +20,7 @@ const updateBook = async (req, res) => {
     // Update the book in the database
     const [updateResult] = await pool.query(
       'UPDATE books SET bookName = ?, serie_id = ?, collection_id = ?, author_id = ?, publishDate = ?, genres = ?, link = ?, image = ? WHERE id = ?',
-      [bookName, serie_id || null, collection_id || null, author_id, publishDate, genres, link, image, id]
+      [bookName, serie_id || null, collection_id || null, author_id || null, publishDate, genres, link, image, id]
     );
 
     if (updateResult.affectedRows === 0) {

@@ -117,6 +117,9 @@ function EditBooksForm({ onClose }) {
 
   const handleAuthorChange = (e) => {
     setAuthorSearch(e.target.value);
+    if (!e.target.value) {
+      setSelectedAuthor(e.target.value)
+    }
   };
 
   const handleSerieChange = (e) => {
@@ -219,7 +222,7 @@ function EditBooksForm({ onClose }) {
               type="text"
               name="bookName"
               defaultValue={bookDetails.bookName || ''}
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
@@ -229,11 +232,11 @@ function EditBooksForm({ onClose }) {
               type="text"
               value={authorSearch}
               onChange={handleAuthorChange}
-              className="w-full border border-gray-300 rounded px-2 py-1"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1"
               placeholder="Search author..."
             />
             {authorOptions.length > 0 && (
-              <ul className="border border-gray-300 rounded max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
+              <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
                 {authorOptions.map((author) => (
                   <li
                     key={author.id}
@@ -252,11 +255,11 @@ function EditBooksForm({ onClose }) {
               type="text"
               value={serieSearch}
               onChange={handleSerieChange}
-              className="w-full border border-gray-300 rounded px-2 py-1"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1"
               placeholder="Search series..."
             />
             {serieOptions.length > 0 && (
-              <ul className="border border-gray-300 rounded mt-2 max-h-60 overflow-auto bg-white absolute w-full top-12 z-10">
+              <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full top-12 z-10">
                 {serieOptions.map((serie) => (
                   <li
                     key={serie.id}
@@ -275,11 +278,11 @@ function EditBooksForm({ onClose }) {
               type="text"
               value={collectionSearch}
               onChange={handleCollectionChange}
-              className="w-full border border-gray-300 rounded px-2 py-1"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1"
               placeholder="Search collections..."
             />
             {collectionOptions.length > 0 && (
-              <ul className="border border-gray-300 rounded mt-2 max-h-60 overflow-auto bg-white absolute w-full top-12 z-10">
+              <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full top-12 z-10">
                 {collectionOptions.map((collection) => (
                   <li
                     key={collection.id}
@@ -299,7 +302,7 @@ function EditBooksForm({ onClose }) {
                 type="date"
                 name="publishDate"
                 defaultValue={bookDetails.publishDate?.split('T')[0] || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
             <div>
@@ -308,7 +311,7 @@ function EditBooksForm({ onClose }) {
                 type="text"
                 name="genres"
                 defaultValue={bookDetails.genres || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
           </div>
@@ -318,15 +321,15 @@ function EditBooksForm({ onClose }) {
               type="text"
               name="link"
               defaultValue={bookDetails.link || ''}
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
           <button
             type="submit"
-            className="bg-green-700 text-white px-4 py-2 rounded on-click-amzn"
+            className="bg-green-700 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn"
           >
-            Update Book
+            Save Changes
           </button>
         </div>
       </form>

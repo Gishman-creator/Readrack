@@ -61,6 +61,9 @@ function EditCollectionsForm({ onClose }) {
 
   const handleAuthorChange = (e) => {
     setAuthorSearch(e.target.value);
+    if(!e.target.value){
+      setSelectedAuthor(e.target.value);
+    }
   };
 
   const handleAuthorSelect = (author) => {
@@ -112,7 +115,7 @@ function EditCollectionsForm({ onClose }) {
               type="text"
               name="collectionName"
               defaultValue={collectionsData.collectionName || ''}
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
@@ -122,11 +125,11 @@ function EditCollectionsForm({ onClose }) {
               type="text"
               value={authorSearch}
               onChange={handleAuthorChange}
-              className="w-full border border-gray-300 rounded px-2 py-1"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1"
               placeholder="Search author..."
             />
             {authorOptions.length > 0 && (
-              <ul className="border border-gray-300 rounded mt-2 max-h-60 overflow-auto bg-white absolute w-full z-10">
+              <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full z-10">
                 {authorOptions.map((author) => (
                   <li
                     key={author.id}
@@ -146,7 +149,7 @@ function EditCollectionsForm({ onClose }) {
                 type="number"
                 name="numBooks"
                 defaultValue={collectionsData.numBooks || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
             <div>
@@ -155,7 +158,7 @@ function EditCollectionsForm({ onClose }) {
                 type="text"
                 name="genres"
                 defaultValue={collectionsData.genres || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
           </div>
@@ -165,12 +168,12 @@ function EditCollectionsForm({ onClose }) {
               type="text"
               name="link"
               defaultValue={collectionsData.link || ''}
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
             />
           </div>
           <button
             type="submit"
-            className="bg-green-700 text-white px-4 py-2 rounded"
+            className="bg-green-700 text-white text-sm font-semibold font-poppins on-click-amzn px-4 py-2 rounded-lg"
           >
             Save Changes
           </button>

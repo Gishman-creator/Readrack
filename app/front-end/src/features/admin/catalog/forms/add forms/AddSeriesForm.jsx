@@ -102,7 +102,7 @@ function AddSeriesForm({ onClose }) {
             <input
               type="text"
               name="serieName"
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
@@ -112,11 +112,11 @@ function AddSeriesForm({ onClose }) {
               type="text"
               value={authorSearch}
               onChange={handleAuthorChange}
-              className="w-full border border-gray-300 rounded px-2 py-1"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1"
               placeholder="Search author..."
             />
             {authorOptions.length > 0 && (
-              <ul className="border border-gray-300 rounded mt-2 max-h-60 overflow-auto bg-white absolute w-full z-10">
+              <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full z-10">
                 {authorOptions.map((author) => (
                   <li
                     key={author.id}
@@ -132,11 +132,11 @@ function AddSeriesForm({ onClose }) {
           <div className="mb-2 flex space-x-2">
             <div>
               <label className="block text-sm font-medium">Number of Books:</label>
-              <input type="number" name="numBooks" className="w-full border border-gray-300 rounded px-2 py-1" />
+              <input type="number" name="numBooks" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
             <div>
               <label className="block text-sm font-medium">Genres:</label>
-              <input type="text" name="genres" className="w-full border border-gray-300 rounded px-2 py-1" />
+              <input type="text" name="genres" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
           </div>
           <div className="mb-4">
@@ -144,14 +144,14 @@ function AddSeriesForm({ onClose }) {
             <input
               type="text"
               name="link"
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
             />
           </div>
           <button
             type="submit"
-            className="bg-green-700 text-white px-4 py-2 rounded on-click-amzn"
+            className="bg-green-700 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn"
           >
-            Save Series
+            Save Serie
           </button>
         </div>
       </form>

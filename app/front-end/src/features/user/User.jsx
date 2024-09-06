@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import Home from './home/Home';
 import SideBar from './components/SideBar';
@@ -10,7 +10,7 @@ import SearchResults from './search/SearchResults';
 import NotFoundPage from '../../pages/NotFoundPage';
 import axiosUtils from '../../utils/axiosUtils';
 import AboutUs from './about us/AboutUs';
-import SerieDetails from './detailsPages/SerieDetails'
+import SerieDetails from './detailsPages/SerieDetails';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 import Footer from './components/Footer';
 import CollectionDetails from './detailsPages/CollectionDetails';
@@ -20,6 +20,10 @@ function User() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // State to manage the visibility of the div
+  const [isDivVisible, setIsDivVisible] = useState(false);
+  const divRef = useRef(null); // Reference to the div
 
   useEffect(() => {
     const logVisit = async () => {
@@ -52,6 +56,23 @@ function User() {
     }
   }, [location, dispatch]);
 
+  const toggleDivVisibility = () => {
+    setIsDivVisible(!isDivVisible);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (divRef.current && !divRef.current.contains(event.target)) {
+        setIsDivVisible(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [divRef]);
+
   return (
     <div className='block min-h-screen bg-white'>
       <NavBar />
@@ -68,19 +89,48 @@ function User() {
             <Route path='/about-us' element={<AboutUs />} />
             <Route path='*' element={<NotFoundPage />} />
           </Routes>
-          <a
-            href='https://insigh.to/b/readrack-recommend-book-series-or-authors-or-report-an-issue'
-            target="_blank"
-            rel="noopener noreferrer"
-            className='group flex bg-primary text-white fixed bottom-0 right-0 mt-auto mb-4 mx-4 max-w-fit max-h-fit p-2 rounded-lg z-20 cursor-pointer on-click-amzn'
+          <div
+            ref={divRef} // Attach the ref to this div
+            className={`${isDivVisible ? ' bg-[#f3f3f3] pb-4' : ' bg-primary'} group flex text-black shadow-2xl fixed bottom-0 right-0 mt-auto mb-4 mx-4 max-w-fit max-h-fit p-2 rounded-lg z-20 cursor-pointer`}
           >
-            <span className='hidden group-hover:inline font-poppins font-semibold text-xs text-white px-4 py-2 opacity-0 transform transition-opacity transition-transform duration-1000 group-hover:opacity-100 group-hover:scale-100'>
-              Make recommendations or report an issue
-            </span>
-            <p className='text-4xl font-arima font-bold group-hover:opacity-0 group-hover:scale-0 transform transition-transform duration-300'>
-              <QuestionMarkCircleIcon className='w-6 h-6 ml-auto' />
+            <div
+              className={`${isDivVisible ? 'block' : 'hidden'
+                } text-sm font-poppins px-4 py-2 rounded-lg transform transition-opacity duration-300`}
+            >
+              <div className='flex justify-between items-center mb-4'>
+                <p className='font-poppins'>Feedback</p>
+                <span
+                  className='text-xl cursor-pointer'
+                  onClick={toggleDivVisibility}
+                >
+                  &times;
+                </span>
+              </div>
+              <div>
+                <p className='mb-2 font-bold'>We're always looking to improve your experience on readrack. Please let us know your thoughts by:</p>
+                <ul className='mb-4'>
+                  <li>Suggesting new series or authors.</li>
+                  <li>Reporting any issues.</li>
+                </ul>
+                <p className='mb-3 text-xs'>Leave any feedback about our website on our Insighto board</p>
+                <a
+                  href='https://insigh.to/b/readrack-recommend-book-series-or-authors-or-report-an-issue'
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className='bg-primary text-white text-xs font-semibold py-2 px-4 rounded-lg on-click-amzn'
+                  onClick={toggleDivVisibility}
+                >
+                  Leave feedback
+                </a>
+              </div>
+            </div>
+            <p
+              className={`${isDivVisible ? 'hidden' : 'block'} text-4xl font-arima font-bold transform transition-transform duration-300`}
+              onClick={toggleDivVisibility}
+            >
+              <QuestionMarkCircleIcon className='w-6 h-6 ml-auto text-white hover:scale-125' />
             </p>
-          </a>
+          </div>
         </div>
         <Footer />
       </div>

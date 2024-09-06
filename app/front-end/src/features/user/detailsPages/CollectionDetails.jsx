@@ -171,18 +171,20 @@ function CollectionDetails() {
             <div className='w-full mx-auto'>
               <p
                 title={capitalize(collectionData.collectionName)}
-                className='font-poppins font-medium text-lg text-center md:text-left mt-2 overflow-hidden whitespace-nowrap text-ellipsis cursor-default'
+                className='font-poppins font-medium text-lg text-center md:text-left mt-2 md:overflow-hidden md:whitespace-nowrap md:text-ellipsis cursor-default'
               >
                 {capitalize(collectionData.collectionName)}
               </p>
-              <p
-                className='font-arima text-center md:text-left hover:underline cursor-pointer'
-                onClick={() => {
-                  navigate(`/authors/${collectionData.author_id}/${encodeURIComponent(collectionData.author_name)}`);
-                }}
-              >
-                by {collectionData.nickname ? capitalize(collectionData.nickname) : capitalize(collectionData.author_name)}
-              </p>
+              {collectionData.author_name && (
+                <p
+                  className='font-arima text-center md:text-left hover:underline cursor-pointer'
+                  onClick={() => {
+                    navigate(`/authors/${collectionData.author_id}/${encodeURIComponent(collectionData.author_name)}`);
+                  }}
+                >
+                  by {collectionData.nickname ? capitalize(collectionData.nickname) : capitalize(collectionData.author_name)}
+                </p>
+              )}
               <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
                 <p className='md:inline font-medium font-poppins text-center md:text-left text-sm'>Genres:</p>
                 <div className='md:inline flex flex-wrap gap-x-2 md:ml-1 text-sm text-center md:text-left font-arima items-center justify-center md:justify-start w-[90%] mx-auto'>
@@ -215,13 +217,15 @@ function CollectionDetails() {
                   alt='book image'
                   className='min-h-[9rem] w-[6rem] rounded-lg object-cover'
                 />
-                <div className='min-h-full w-full flex flex-col justify-between'>
+                <div className='min-h-full w-full flex flex-col'>
                   <div className='flex justify-between items-center'>
                     <p className='font-semibold m-0 leading-5 text-lg'>
                       {capitalize(item.bookName)}
                     </p>
                   </div>
-                  <p className='font-arima text-sm'>by {item.nickname ? capitalize(item.nickname) : capitalize(item.authorName)}</p>
+                  {item.authorName && (
+                    <p className='font-arima text-sm'>by {item.nickname ? capitalize(item.nickname) : capitalize(item.authorName)}</p>
+                  )}
                   <p className='font-arima text-slate-400 text-sm mt-1'>
                     #{index + 1}, published {formatDate(item.publishDate)}
                   </p>

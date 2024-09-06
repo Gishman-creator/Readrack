@@ -171,7 +171,7 @@ function SerieDetails() {
             <div className='w-full mx-auto'>
               <p
                 title={capitalize(serieData.serieName)}
-                className='font-poppins font-medium text-lg text-center md:text-left mt-2 overflow-hidden whitespace-nowrap text-ellipsis cursor-default'
+                className='font-poppins font-medium text-lg text-center md:text-left mt-2 md:overflow-hidden md:whitespace-nowrap md:text-ellipsis cursor-default'
               >
                 {capitalize(serieData.serieName)}
               </p>
@@ -215,7 +215,7 @@ function SerieDetails() {
                   alt='book image'
                   className='min-h-[9rem] w-[6rem] rounded-lg object-cover'
                 />
-                <div className='min-h-full w-full flex flex-col justify-between'>
+                <div className='min-h-full w-full flex flex-col'>
                   <div className='flex justify-between items-center'>
                     <p className='font-semibold m-0 leading-5 text-lg'>
                       {capitalize(item.bookName)}

@@ -163,12 +163,16 @@ exports.getBooksByAuthorId = async (req, res) => {
       LEFT JOIN series ON books.serie_id = series.id
       LEFT JOIN collections ON books.collection_id = collections.id
       WHERE books.author_id = ?
+      AND books.serie_id is null
+      AND books.collection_id is null
       ORDER BY books.publishDate ASC
     `;
     let countQuery = `
       SELECT COUNT(*) AS totalCount 
       FROM books 
       WHERE author_id = ?
+      AND books.serie_id is null
+      AND books.collection_id is null
     `;
     const queryParams = [author_id];
 

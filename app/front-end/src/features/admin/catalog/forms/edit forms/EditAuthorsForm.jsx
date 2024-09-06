@@ -97,7 +97,7 @@ function EditAuthorForm({ onClose }) {
               type="text"
               name="authorName"
               defaultValue={authorData.authorName || ''}
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
           </div>
@@ -107,28 +107,8 @@ function EditAuthorForm({ onClose }) {
               type="text"
               name="nickname"
               defaultValue={authorData.nickname || ''}
-              className="w-full border border-gray-300 rounded px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
             />
-          </div>
-          <div className="mb-2 flex space-x-2">
-            <div>
-              <label className="block text-sm font-medium">Number of series:</label>
-              <input
-                type="number"
-                name="numSeries"
-                defaultValue={authorData.numSeries || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Number of books:</label>
-              <input
-                type="number"
-                name="numBooks"
-                defaultValue={authorData.numBooks || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
-              />
-            </div>
           </div>
           <div className="mb-2 flex space-x-2">
             <div>
@@ -137,7 +117,7 @@ function EditAuthorForm({ onClose }) {
                 type="date"
                 name="dob"
                 defaultValue={authorData.dob?.split('T')[0] || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
             <div>
@@ -146,7 +126,7 @@ function EditAuthorForm({ onClose }) {
                 type="text"
                 name="nationality"
                 defaultValue={authorData.nationality || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
           </div>
@@ -156,7 +136,7 @@ function EditAuthorForm({ onClose }) {
               <textarea
                 name="biography"
                 defaultValue={authorData.biography || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
             <div>
@@ -164,7 +144,7 @@ function EditAuthorForm({ onClose }) {
               <textarea
                 name="awards"
                 defaultValue={authorData.awards || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
           </div>
@@ -175,7 +155,7 @@ function EditAuthorForm({ onClose }) {
                 type="text"
                 name="x"
                 defaultValue={authorData.x || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
             <div>
@@ -184,7 +164,7 @@ function EditAuthorForm({ onClose }) {
                 type="text"
                 name="instagram"
                 defaultValue={authorData.instagram || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
             <div>
@@ -193,7 +173,7 @@ function EditAuthorForm({ onClose }) {
                 type="text"
                 name="facebook"
                 defaultValue={authorData.facebook || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
           </div>
@@ -204,7 +184,7 @@ function EditAuthorForm({ onClose }) {
                 type="text"
                 name="website"
                 defaultValue={authorData.website || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
             <div>
@@ -213,13 +193,13 @@ function EditAuthorForm({ onClose }) {
                 type="text"
                 name="genres"
                 defaultValue={authorData.genres || ''}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
           </div>
           <button
             type="submit"
-            className="bg-green-700 text-white px-4 py-2 rounded on-click-amzn"
+            className="bg-green-700 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn"
           >
             Save Changes
           </button>

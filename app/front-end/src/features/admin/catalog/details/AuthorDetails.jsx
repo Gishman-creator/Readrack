@@ -340,7 +340,7 @@ function AuthorDetails() {
           <div className='w-full mx-auto'>
             <p
               title={capitalize(authorData.authorName)}
-              className='font-poppins font-medium text-lg text-center md:text-left mt-2 overflow-hidden whitespace-nowrap text-ellipsis cursor-default'
+              className='font-poppins font-medium text-lg text-center md:text-left mt-2 md:overflow-hidden md:whitespace-nowrap md:text-ellipsis cursor-default'
             >
               {capitalize(authorData.authorName)}
             </p>
@@ -545,7 +545,7 @@ function AuthorDetails() {
         {/* Author Books */}
         <div className='flex justify-between items-center mt-8 md:mt-6'>
           <p className='font-poppins font-semibold text-lg 2xl:text-center'>
-            {capitalize(authorData.authorName)} Books:
+            Other {capitalize(authorData.authorName)} Books:
           </p>
           <div
             className='bg-green-700 flex items-center space-x-2 text-center text-white text-sm font-semibold font-poppins px-3 p-2 rounded cursor-pointer on-click-amzn'

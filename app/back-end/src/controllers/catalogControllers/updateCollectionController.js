@@ -3,6 +3,7 @@ const pool = require('../../config/db');
 const updateCollection = async (req, res) => {
   const { id } = req.params;
   const { collectionName, numBooks, genres, link, author_id } = req.body;
+  console.log('The update collection update body is:', req.body);
 
   let image = req.file ? req.file.buffer : null;
   console.log('The image is:', image);
@@ -11,7 +12,7 @@ const updateCollection = async (req, res) => {
   try {
     const [result] = await pool.query(
       'UPDATE collections SET collectionName = ?, numBooks = ?, genres = ?, link = ?, author_id = ?, image = ? WHERE id = ?',
-      [collectionName, numBooks, genres, link, author_id, image, id]
+      [collectionName, numBooks, genres, link, author_id || null, image, id]
     );
 
     console.log('Collection updated successfully1 for:', id);

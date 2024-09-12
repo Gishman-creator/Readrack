@@ -8,11 +8,12 @@ import { useSelector } from 'react-redux';
 function AddSeriesForm({ onClose }) {
   const authorDetailsAuthorName = useSelector((state) => state.catalog.authorName);
   const [seriesImageURL, setSeriesImageURL] = useState('');
-  const [imageFile, setImageFile] = useState(null);
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
 
   const [authorSearch, setAuthorSearch] = useState(authorDetailsAuthorName || '');
   const [authorOptions, setAuthorOptions] = useState([]);
   const [selectedAuthor, setSelectedAuthor] = useState(authorDetailsAuthorName || '');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (authorSearch) {
@@ -47,21 +48,26 @@ function AddSeriesForm({ onClose }) {
     setSeriesImageURL(url);
   };
 
+  const handleImageUpload = (file) => {
+    setSelectedImageFile(file); // Track the uploaded file
+  };
+
   const handleSubmit = async (event) => {
+    setIsLoading(true);
     event.preventDefault();
     const formData = new FormData(event.target);
 
     const seriesName = formData.get('serieName') || '';
 
-    if (seriesImageURL) {
+    if (selectedImageFile) {
+      formData.append('seriesImage', selectedImageFile); // Add the uploaded image file to form data
+    } else if (seriesImageURL && seriesImageURL !== seriesData.imageURL) {
       const file = await downloadImage(seriesImageURL, seriesName);
       if (file) {
-        formData.append('seriesImage', file); // Append the file directly
+        formData.append('seriesImage', file);
       } else {
-        console.error('Image file not available');
+        return console.error('Image file not available');
       }
-    } else {
-      console.error('No image URL provided');
     }
 
     formData.append('author_id', selectedAuthor);
@@ -81,13 +87,16 @@ function AddSeriesForm({ onClose }) {
       console.log('Form submitted successfully');
       console.log(response);
 
+      setIsLoading(false);
       if (onClose) {
         onClose(); // Call the onClose function to close the modal
       }
       toast.success(response.data.message);
 
     } catch (error) {
+      setIsLoading(false);
       console.error('Error submitting form:', error);
+      toast.error('Error updating the book');
     }
   };
 
@@ -95,7 +104,7 @@ function AddSeriesForm({ onClose }) {
     <div className=''>
       <h2 className="text-lg font-semibold">Add Series</h2>
       <form onSubmit={handleSubmit} className="flex flex-col md:flex-row max-h-custom2 md:max-h-fit overflow-y-auto md:overflow-hidden">
-        <ImagePreview onImageChange={handleImageChange} />
+        <ImagePreview onImageChange={handleImageChange} onImageUpload={handleImageUpload} />
         <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[15rem] md:overflow-y-auto">
           <div className="mb-2">
             <label className="block text-sm font-medium">Series Name:</label>
@@ -149,9 +158,17 @@ function AddSeriesForm({ onClose }) {
           </div>
           <button
             type="submit"
-            className="bg-green-700 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn"
+            className={`bg-green-700 flex items-center space-x-2 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isLoading}
           >
-            Save Serie
+            {isLoading ? (
+              <>
+                <span className='white-loader'></span>
+                <span>Saving...</span>
+              </>
+            ) :
+              'Save Changes'
+            }
           </button>
         </div>
       </form>

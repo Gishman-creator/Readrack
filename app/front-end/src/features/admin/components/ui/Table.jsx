@@ -277,10 +277,21 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
             );
         }
 
+        if (isLoading) {
+            return (
+                <tr className="space-x-2">
+                    <span className="black-loader"></span>
+                    <td colSpan={7} className="text-center py-4">
+                        No results found for "{searchTerm}".
+                    </td>
+                </tr>
+            );
+        }
+
         return tableData.map((item) => (
             <tr
                 key={item.id} // Use unique item ID as key
-                className={`cursor-pointer border-b border-slate-200 ${selectedRowIds.includes(item.id) ? "bg-blue-100" : ""}`}
+                className={`cursor-pointer border-b border-slate-200 hover:bg-gray-100 ${selectedRowIds.includes(item.id) ? "bg-blue-100 hover:bg-blue-100" : ""}`}
                 onClick={() => handleRowClick(item.id, item)} // Pass the item data
             >
                 <td
@@ -352,7 +363,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                         </td>
                         <td className="px-4 py-2">
                             <a href={item.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-                            Website
+                                Website
                             </a>
                         </td>
                         <td className="px-4 py-2">{item.searchCount}</td>
@@ -362,32 +373,9 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
         ));
     };
 
-    const renderSkeletonRows = () => {
-        let columnCount = 0;
-
-        if (activeTab === "Series") {
-            columnCount = 7; // Checkbox + 5 data columns
-        } else if (activeTab === "Books") {
-            columnCount = 6; // Checkbox + 4 data columns
-        } else if (activeTab === "Authors") {
-            columnCount = 7; // Checkbox + 5 data columns
-        }
-
-        return Array.from({ length: 10 }).map((_, rowIndex) => (
-            <tr key={rowIndex} className="animate-pulse border-b border-slate-200">
-                {/* Render columns based on activeTab */}
-                {Array.from({ length: columnCount }).map((_, colIndex) => (
-                    <td key={colIndex} className="px-4 py-2">
-                        <div className="w-full h-4 bg-gray-300 rounded"></div>
-                    </td>
-                ))}
-            </tr>
-        ));
-    };
-
 
     return (
-        <div className="rounded max-h-custom overflow-hidden custom-drop-shadow2">
+        <div className="rounded-lg max-h-custom overflow-hidden custom-drop-shadow2">
             <TableHeader
                 hasShadow={hasShadow}
                 openEditAuthorModal={openEditAuthorModal}
@@ -409,7 +397,16 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                             {renderTableHeaders()}
                         </tr>
                     </thead>
-                    {isLoading ? renderSkeletonRows() : renderTableRows()}
+                    {isLoading ? (
+                        <tr className="">
+                            <td colSpan={7} className="space-x-2 text-center py-4">
+                                <span className="black-loader"></span>
+                                <span>loading {activeTab}...</span>
+                            </td>
+                        </tr>
+                    ) :
+                        renderTableRows()
+                    }
                 </table>
             </div>
         </div>

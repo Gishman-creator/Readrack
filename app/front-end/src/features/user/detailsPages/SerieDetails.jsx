@@ -9,6 +9,7 @@ import NotFoundPage from '../../../pages/NotFoundPage';
 import blank_image from '../../../assets/brand_blank_image.png';
 import DeatailsPageSkeleton from '../components/skeletons/DeatailsPageSkeleton';
 import { useSocket } from '../../../context/SocketContext';
+import RelatedCollections from '../related_collections/RelatedCollections';
 
 function SerieDetails() {
 
@@ -22,6 +23,8 @@ function SerieDetails() {
   const [booksLimit, setBooksLimit] = useState();
   const [booksCount, SetBooksCount] = useState();
   const socket = useSocket();
+
+  const [relatedCollections, setRelatedCollections] = useState([]);
 
   const navigate = useNavigate();
 
@@ -45,32 +48,37 @@ function SerieDetails() {
 
   useEffect(() => {
     const fetchSeriesData = async () => {
+      setIsLoading(true);
       if (!booksLimit) return;
+        setRelatedCollections([]);
       try {
         const serieResponse = await axiosUtils(`/api/getSerieById/${serieId}`, 'GET');
         setSerieData(serieResponse.data);
-
-        // Convert series image
-        if (serieResponse.data.image) {
-          serieResponse.data.image = bufferToBlobURL(serieResponse.data.image);
-        }
+        // console.log('The serie data are:', serieResponse.data);
 
         // If serieName is not in the URL, update it
         if (!serieName || serieName !== serieResponse.data.serieName) {
           navigate(`/series/${serieId}/${encodeURIComponent(serieResponse.data.serieName)}`, { replace: true });
         }
 
+        // Fetch related collections and convert images to Blob URLs
+        if (serieResponse.data.related_collections) {
+          const collectionIds = serieResponse.data.related_collections.split(',');
+          const fetchedRelatedCollections = await Promise.all(
+            collectionIds.map(async (id) => {
+              const res = await axiosUtils(`/api/getCollectionById/${id}`, 'GET');
+              const collectionData = res.data;
+              
+              return collectionData;
+            })
+          );
+          setRelatedCollections(fetchedRelatedCollections);
+        }
+
         const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}?limit=${booksLimit}`, 'GET');
         // console.log('Books response:', booksResponse.data); // Debugging
 
-        const booksWithBlobs = booksResponse.data.books.map((book) => {
-          // console.log('Book data:', book); // Debugging
-          return {
-            ...book,
-            image: bufferToBlobURL(book.image) // Convert buffer to Blob URL
-          };
-        });
-        setBooks(booksWithBlobs);
+        setBooks(booksResponse.data.books);
         SetBooksCount(booksResponse.data.totalCount);
         // console.log('The total count is:', booksResponse.data.totalCount);
 
@@ -99,7 +107,6 @@ function SerieDetails() {
           return {
             ...prevSerieData,
             ...updatedSeries,
-            image: bufferToBlobURL(updatedSeries.image), // Convert updated series image to Blob URL
           };
         }
 
@@ -112,12 +119,7 @@ function SerieDetails() {
       // console.log('Books updated via socket:', updatedBooks);
       setBooks((prevData) => {
         const updatedData = prevData.map((book) =>
-          book.id === updatedBooks.id
-            ? {
-              ...updatedBooks,
-              image: bufferToBlobURL(updatedBooks.image), // Convert buffer to Blob URL
-            }
-            : book
+          book.id === updatedBooks.id ? updatedBooks : book
         );
 
         // Sort the updatedData by date in ascending order (oldest first)
@@ -128,7 +130,6 @@ function SerieDetails() {
     // Event listener for bookAdded
     socket.on('bookAdded', (bookData) => {
       if (bookData.serie_name === serieName) {
-        bookData.image = bufferToBlobURL(bookData.image); // Convert buffer to Blob URL
         setBooks((prevData) => {
           const updatedData = [...prevData, bookData];
 
@@ -167,7 +168,7 @@ function SerieDetails() {
       <div className='md:flex md:flex-row pt-2 md:space-x-6 xl:space-x-8 pb-10'>
         <div className='w-full pt-2 md:w-[22rem] md:h-full md:sticky md:top-20 lg:top-[4.5rem] overflow-hidden'>
           <div className=' max-w-[13rem] mx-auto'>
-            <img src={serieData.image || blank_image} alt="serie image" className='h-[16rem] w-full bg-[#edf4e6] rounded-lg mx-auto object-cover' />
+            <img src={serieData.imageURL || blank_image} alt="serie image" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' />
             <div className='w-full mx-auto'>
               <p
                 title={capitalize(serieData.serieName)}
@@ -202,7 +203,7 @@ function SerieDetails() {
           }
         </div>
         <div className='w-full '>
-          <div className='flex justify-between items-center mt-8 md:mt-0'>
+          <div className='flex justify-between items-center mt-12 md:mt-0'>
             <p className='font-poppins font-semibold text-xl 2xl:text-center'>
               {capitalize(serieData.serieName)} Books:
             </p>
@@ -211,9 +212,9 @@ function SerieDetails() {
             {books.map((item, index) => (
               <div key={item.id} className='flex space-x-2 mt-4 pb-3 border-b-2 border-gray-100 cursor-default'>
                 <img
-                  src={item.image || blank_image} // Fallback image if Blob URL is null
+                  src={item.imageURL || blank_image} // Fallback image if Blob URL is null
                   alt='book image'
-                  className='min-h-[9rem] w-[6rem] rounded-lg object-cover'
+                  className='bg-[rgba(3,149,60,0.08)] min-h-[9rem] w-[6rem] rounded-lg object-cover'
                 />
                 <div className='min-h-full w-full flex flex-col'>
                   <div className='flex justify-between items-center'>
@@ -247,6 +248,7 @@ function SerieDetails() {
           )}
         </div>
       </div>
+      {relatedCollections.length > 0 && <RelatedCollections data={relatedCollections} />}
       <Recommendations data={serieData} />
     </div>
   );

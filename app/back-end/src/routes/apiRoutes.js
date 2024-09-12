@@ -29,9 +29,9 @@ const searchCountController = require('../controllers/otherControllers/searchCou
 const logVisitsController = require('../controllers/otherControllers/logVisitsController');
 const getCountController = require('../controllers/otherControllers/getCountController');
 
-const dataController = require('../controllers/dataControllers/dataController')
-const generateDataController = require('../controllers/dataControllers/generateDataController');
-const getRandomBufferByType = require('../controllers/dataControllers/getRandomBufferByType')
+// const dataController = require('../controllers/dataControllers/dataController')
+// const generateDataController = require('../controllers/dataControllers/generateDataController');
+// const getRandomBufferByType = require('../controllers/dataControllers/getRandomBufferByType')
 
 // Middleware to handle file uploads
 const storage = multer.memoryStorage(); // Use memory storage for BLOBs
@@ -94,9 +94,9 @@ router.post('/recommendAuthors', recommendationController.recommendAuthors)
 router.post('/recommendSeries', recommendationController.recommendSeries)
 
 // Data generation Routes
-router.get('/generateRandomData', generateDataController.generateDataArrays)
-router.get('/generateData', dataController.generateRandomDataWithBlobs)
-router.post('/getRandomBufferByType/:type', getRandomBufferByType.getRandomBufferByType)
+// router.get('/generateRandomData', generateDataController.generateDataArrays)
+// router.get('/generateData', dataController.generateRandomDataWithBlobs)
+// router.post('/getRandomBufferByType/:type', getRandomBufferByType.getRandomBufferByType)
 
 
 module.exports = router;

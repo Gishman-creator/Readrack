@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import blank_image from '../assets/brand_blank_image.png'; // Adjust the path according to your project structure
 
 export function bufferToBlobURL(image) {
@@ -39,6 +40,7 @@ export async function downloadImage(url, seriesName) {
     return file; // Return the created file
   } catch (error) {
     console.error('Error downloading image:', error);
+    toast.error('Error downloading the iamge');
     return null; // Return null in case of an error
   }
 };

@@ -60,6 +60,7 @@ export default function Home() {
     useEffect(() => {
         const fetchData = async () => {
             setIsLoading(true);
+            console.log('The active tab is:', activeTab);
             if (!activeTab) return; // Wait until activeTab is set
 
             try {
@@ -72,14 +73,9 @@ export default function Home() {
 
                 const { data, totalCount } = response.data;
 
-                const dataWithBlobs = data.map((item) => ({
-                    ...item,
-                    image: bufferToBlobURL(item.image),
-                }));
-
                 setTotalItems(totalCount);
                 // console.log('Data fetched', dataWithBlobs);
-                setCardData(dataWithBlobs);
+                setCardData(data);
                 setIsLoading(false);
             } catch (error) {
                 setIsLoading(false);
@@ -103,9 +99,9 @@ export default function Home() {
     }
 
     return (
-        <div className='bg-white px-[4%] sm:px-[12%] pb-10'>
+        <div className='bg-white pb-10'>
             <GenreList />
-            <div className={`mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-6 ${activeTab === 'Series' ? 'gap-6 md:gap-0' : 'gap-5 md:gap-0'}`}>
+            <div className={`mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-6 px-[4%] sm:px-[12%] ${activeTab === 'Series' ? 'gap-6 md:gap-0' : 'gap-5 md:gap-0'}`}>
                 {isLoading ? (
                     [...Array(pageLimitEnd)].map((_, index) => (
                         <SkeletonCard key={index} />

@@ -8,11 +8,12 @@ import { useSelector } from 'react-redux';
 function AddCollectionsForm({ onClose }) {
   const authorDetailsAuthorName = useSelector((state) => state.catalog.authorName);
   const [collectionsImageURL, setCollectionsImageURL] = useState('');
-  const [imageFile, setImageFile] = useState(null);
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
 
   const [authorSearch, setAuthorSearch] = useState(authorDetailsAuthorName || '');
   const [authorOptions, setAuthorOptions] = useState([]);
   const [selectedAuthor, setSelectedAuthor] = useState(authorDetailsAuthorName || '');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (authorSearch) {
@@ -50,21 +51,26 @@ function AddCollectionsForm({ onClose }) {
     setCollectionsImageURL(url);
   };
 
+  const handleImageUpload = (file) => {
+    setSelectedImageFile(file); // Track the uploaded file
+  };
+
   const handleSubmit = async (event) => {
+    setIsLoading(true);
     event.preventDefault();
     const formData = new FormData(event.target);
 
     const collectionsName = formData.get('collectionName') || '';
 
-    if (collectionsImageURL) {
+    if (selectedImageFile) {
+      formData.append('collectionsImage', selectedImageFile); // Add the uploaded image file to form data
+    } else if (collectionsImageURL) {
       const file = await downloadImage(collectionsImageURL, collectionsName);
       if (file) {
-        formData.append('collectionsImage', file); // Append the file directly
+        formData.append('collectionsImage', file);
       } else {
-        console.error('Image file not available');
+        return console.error('Image file not available');
       }
-    } else {
-      console.error('No image URL provided');
     }
 
     formData.append('author_id', selectedAuthor);
@@ -84,13 +90,16 @@ function AddCollectionsForm({ onClose }) {
       console.log('Form submitted successfully');
       console.log(response);
 
+      setIsLoading(false);
       if (onClose) {
         onClose(); // Call the onClose function to close the modal
       }
       toast.success(response.data.message);
 
     } catch (error) {
+      setIsLoading(false);
       console.error('Error submitting form:', error);
+      toast.error('Error updating the collection');
     }
   };
 
@@ -98,7 +107,7 @@ function AddCollectionsForm({ onClose }) {
     <div className=''>
       <h2 className="text-lg font-semibold">Add Collections</h2>
       <form onSubmit={handleSubmit} className="flex flex-col md:flex-row max-h-custom2 md:max-h-fit overflow-y-auto md:overflow-hidden">
-        <ImagePreview onImageChange={handleImageChange} />
+        <ImagePreview onImageChange={handleImageChange} onImageUpload={handleImageUpload} />
         <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[15rem] md:overflow-y-auto">
           <div className="mb-2">
             <label className="block text-sm font-medium">Collections Name:</label>
@@ -152,9 +161,17 @@ function AddCollectionsForm({ onClose }) {
           </div>
           <button
             type="submit"
-            className="bg-green-700 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn"
+            className={`bg-green-700 flex items-center space-x-2 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isLoading}
           >
-            Save Collection
+            {isLoading ? (
+              <>
+                <span className='white-loader'></span>
+                <span>Saving...</span>
+              </>
+            ) :
+              'Save Changes'
+            }
           </button>
         </div>
       </form>

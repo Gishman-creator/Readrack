@@ -1,0 +1,22 @@
+**copying changes to the ubuntu local folder:
+
+sudo rsync -avz --exclude 'node_modules' --exclude '.git' . ~/projects/readrack
+
+**copying changes to the aws ec2 instance:
+
+~/projects/readrack$ rsync -avz -e "ssh -i ./rwanda-mig.pem" . ubuntu@ec2-3-88-21-240.compute-1.amazonaws.com:~/app
+
+**Accessing the aws ec2 instance:
+
+migisha@DESKTOP-9SM1JON:/mnt/c/Users/MIGISHA Ivan$ cd ~
+migisha@DESKTOP-9SM1JON:~$ cd ~/projects/readrack
+migisha@DESKTOP-9SM1JON:~/projects/readrack$ ssh -i "rwanda-mig.pem" ubuntu@ec2-3-88-21-240.compute-1.amazonaws.com
+
+**How to restart the server:
+
+sudo systemctl status myapp.service
+
+directories:
+
+/etc/systemd/system/myapp
+/etc/app.env

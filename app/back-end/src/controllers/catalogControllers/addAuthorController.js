@@ -1,6 +1,7 @@
 // src/controllers/addAuthorController.js
 
 const pool = require('../../config/db');
+const { putImage, getImageURL } = require('../../utils/imageUtils');
 
 const generateRandomId = () => {
   return Math.floor(100000 + Math.random() * 900000); // Generate a random 6-digit integer
@@ -21,10 +22,9 @@ const addAuthor = async (req, res) => {
       website,
       genres,
     } = req.body;
-
-    // Check if the file is attached and read the buffer
-    const authorImageBlob = req.file ? req.file.buffer : null;
-    console.log("The image is:", authorImageBlob);
+    
+    const image = req.file ? await putImage('', req.file, 'authors') : null; // Await the function to resolve the promise
+    console.log('The image key for Amazon is:', image);
 
     let uniqueId;
     let isUnique = false;
@@ -79,6 +79,12 @@ const addAuthor = async (req, res) => {
       GROUP BY a.id
     `;
     const [authorData] = await pool.execute(fetchQuery, [uniqueId]);
+
+    let url = null;
+    if (authorData[0].image) {
+      url = await getImageURL(authorData[0].image);
+    }
+    authorData[0].imageURL = url;
 
     // Emit the newly added author data if Socket.IO is initialized
     if (req.io) {

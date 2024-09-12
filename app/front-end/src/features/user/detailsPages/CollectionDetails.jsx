@@ -45,15 +45,11 @@ function CollectionDetails() {
 
   useEffect(() => {
     const fetchCollectionsData = async () => {
+      setIsLoading(true);
       if (!booksLimit) return;
       try {
         const collectionResponse = await axiosUtils(`/api/getCollectionById/${collectionId}`, 'GET');
         setCollectionData(collectionResponse.data);
-
-        // Convert collections image
-        if (collectionResponse.data.image) {
-          collectionResponse.data.image = bufferToBlobURL(collectionResponse.data.image);
-        }
 
         // If collectionName is not in the URL, update it
         if (!collectionName || collectionName !== collectionResponse.data.collectionName) {
@@ -63,14 +59,7 @@ function CollectionDetails() {
         const booksResponse = await axiosUtils(`/api/getBooksByCollectionId/${collectionResponse.data.id}?limit=${booksLimit}`, 'GET');
         // console.log('Books response:', booksResponse.data); // Debugging
 
-        const booksWithBlobs = booksResponse.data.books.map((book) => {
-          // console.log('Book data:', book); // Debugging
-          return {
-            ...book,
-            image: bufferToBlobURL(book.image) // Convert buffer to Blob URL
-          };
-        });
-        setBooks(booksWithBlobs);
+        setBooks(booksResponse.data.books);
         SetBooksCount(booksResponse.data.totalCount);
         // console.log('The total count is:', booksResponse.data.totalCount);
 
@@ -99,7 +88,6 @@ function CollectionDetails() {
           return {
             ...prevCollectionData,
             ...updatedCollections,
-            image: bufferToBlobURL(updatedCollections.image), // Convert updated collections image to Blob URL
           };
         }
 
@@ -112,12 +100,7 @@ function CollectionDetails() {
       // console.log('Books updated via socket:', updatedBooks);
       setBooks((prevData) => {
         const updatedData = prevData.map((book) =>
-          book.id === updatedBooks.id
-            ? {
-              ...updatedBooks,
-              image: bufferToBlobURL(updatedBooks.image), // Convert buffer to Blob URL
-            }
-            : book
+          book.id === updatedBooks.id ? updatedBooks : book
         );
 
         // Sort the updatedData by date in ascending order (oldest first)
@@ -128,7 +111,6 @@ function CollectionDetails() {
     // Event listener for bookAdded
     socket.on('bookAdded', (bookData) => {
       if (bookData.collection_name === collectionName) {
-        bookData.image = bufferToBlobURL(bookData.image); // Convert buffer to Blob URL
         setBooks((prevData) => {
           const updatedData = [...prevData, bookData];
 
@@ -167,7 +149,7 @@ function CollectionDetails() {
       <div className='md:flex md:flex-row pt-2 md:space-x-6 xl:space-x-8 pb-10'>
         <div className='w-full pt-2 md:w-[22rem] md:h-full md:sticky md:top-20 lg:top-[4.5rem] overflow-hidden'>
           <div className=' max-w-[13rem] mx-auto'>
-            <img src={collectionData.image || blank_image} alt="collection image" className='h-[16rem] w-full bg-[#edf4e6] rounded-lg mx-auto object-cover' />
+            <img src={collectionData.imageURL || blank_image} alt="collection image" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' />
             <div className='w-full mx-auto'>
               <p
                 title={capitalize(collectionData.collectionName)}
@@ -213,9 +195,9 @@ function CollectionDetails() {
             {books.map((item, index) => (
               <div key={item.id} className='flex space-x-2 mt-4 pb-3 border-b-2 border-gray-100 cursor-default'>
                 <img
-                  src={item.image || blank_image} // Fallback image if Blob URL is null
+                  src={item.imageURL || blank_image} // Fallback image if Blob URL is null
                   alt='book image'
-                  className='min-h-[9rem] w-[6rem] rounded-lg object-cover'
+                  className='bg-[rgba(3,149,60,0.08)] min-h-[9rem] w-[6rem] rounded-lg object-cover'
                 />
                 <div className='min-h-full w-full flex flex-col'>
                   <div className='flex justify-between items-center'>

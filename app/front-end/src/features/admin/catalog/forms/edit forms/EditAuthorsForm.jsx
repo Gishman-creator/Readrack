@@ -10,7 +10,8 @@ function EditAuthorForm({ onClose }) {
   const [authorId, setAuthorId] = useState(initialAuthorId);
   const [authorData, setAuthorData] = useState({});
   const [authorImageURL, setAuthorImageURL] = useState('');
-  const [imageFile, setImageFile] = useState(null);
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -19,15 +20,13 @@ function EditAuthorForm({ onClose }) {
     const fetchAuthorData = async () => {
       try {
         const response = await axiosUtils(`/api/getAuthorById/${authorId}`, 'GET');
-        // console.log('Author data fetched:', response.data); // Log the entire response data
+        console.log('Author data fetched:', response.data); // Log the entire response data
 
         setAuthorData(response.data);
         // console.log('Author data:', response.data);
 
-        if (response.data.image && response.data.image.data) {
-          // Convert Buffer to Blob URL
-          const imageBlobURL = bufferToBlobURL(response.data.image);
-          setAuthorImageURL(imageBlobURL);
+        if (response.data.image) {
+          setAuthorImageURL(response.data.imageURL);
         } else {
           setAuthorImageURL(response.data.imageURL || ''); // Fallback if image data is not available
         }
@@ -45,7 +44,12 @@ function EditAuthorForm({ onClose }) {
     setAuthorImageURL(url);
   };
 
+  const handleImageUpload = (file) => {
+    setSelectedImageFile(file); // Track the uploaded file
+  };
+
   const handleSubmit = async (event) => {
+    setIsLoading(true);
     event.preventDefault();
     const formData = new FormData(event.target);
 
@@ -53,17 +57,22 @@ function EditAuthorForm({ onClose }) {
     const fullName = formData.get('authorName') || '';
     const nameParts = fullName.trim().split(' ');
     const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0];
+    let imageName = authorData.image;
 
-    // Check if the URL has changed and a file should be appended
-    if (authorImageURL && authorImageURL !== authorData.imageURL) {
+    if (selectedImageFile) {
+      formData.append('authorsImage', selectedImageFile); // Add the uploaded image file to form data
+    } else if (authorImageURL && authorImageURL !== authorData.imageURL) {
       const file = await downloadImage(authorImageURL, lastName);
-      // console.log('File:', file);
       if (file) {
-        formData.append('authorImage', file); // Ensure this is appending correctly
+        formData.append('authorsImage', file);
       } else {
-        console.error('Image file not available');
+        return console.error('Image file not available');
       }
+    } else if (!authorImageURL) {
+      imageName = null;
     }
+
+    formData.append('imageName', imageName);
 
     // Log form data entries
     for (let [key, value] of formData.entries()) {
@@ -76,12 +85,14 @@ function EditAuthorForm({ onClose }) {
       });
       if (response.status !== 200) throw new Error('Failed to update author');
       // console.log('Author updated successfully');
+      setIsLoading(false);
       if (onClose) onClose();
       toast.success(response.data.message);
 
     } catch (error) {
+      setIsLoading(false);
       console.error('Error updating author:', error.response ? error.response.data : error.message);
-      if (onClose) onClose();
+      toast.error('Error updating the author');
     }
   };
 
@@ -89,7 +100,7 @@ function EditAuthorForm({ onClose }) {
     <div className=''>
       <h2 className="text-lg font-semibold">Edit Author</h2>
       <form onSubmit={handleSubmit} className="flex flex-col md:flex-row max-h-custom2 md:max-h-fit overflow-y-auto md:overflow-hidden">
-        <ImagePreview imageURL={authorImageURL} onImageChange={handleImageChange} />
+        <ImagePreview imageURL={authorImageURL} onImageChange={handleImageChange} onImageUpload={handleImageUpload} />
         <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[15rem] md:overflow-y-auto">
           <div className="mb-2">
             <label className="block text-sm font-medium">Author name:</label>
@@ -199,9 +210,17 @@ function EditAuthorForm({ onClose }) {
           </div>
           <button
             type="submit"
-            className="bg-green-700 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn"
+            className={`bg-green-700 flex items-center space-x-2 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isLoading}
           >
-            Save Changes
+            {isLoading ? (
+              <>
+                <span className='white-loader'></span>
+                <span>Saving...</span>
+              </>
+            ) :
+              'Save Changes'
+            }
           </button>
         </div>
       </form>

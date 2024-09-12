@@ -3,7 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const userSlice = createSlice({
     name: 'user',
     initialState: {
-        activeTab: 'Series',
+        activeTab: null,
         activeGenre: null,
         pageLimitStart: null,
         pageLimitEnd: null,

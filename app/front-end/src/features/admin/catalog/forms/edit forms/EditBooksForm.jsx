@@ -11,7 +11,7 @@ function EditBooksForm({ onClose }) {
   const [bookId, setBookId] = useState(serieBookId || selectedRowBookId);
   const [bookDetails, setBookDetails] = useState({});
   const [bookImageURL, setBookImageURL] = useState('');
-  const [imageFile, setImageFile] = useState(null);
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [authorSearch, setAuthorSearch] = useState('');
   const [serieSearch, setSerieSearch] = useState('');
   const [collectionSearch, setCollectionSearch] = useState('');
@@ -21,6 +21,7 @@ function EditBooksForm({ onClose }) {
   const [selectedAuthor, setSelectedAuthor] = useState('');
   const [selectedSerie, setSelectedSerie] = useState('');
   const [selectedCollection, setSelectedCollection] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -34,9 +35,8 @@ function EditBooksForm({ onClose }) {
           setBookDetails(response.data);
           // console.log('Book Details:', response.data);
 
-          if (response.data.image && response.data.image.data) {
-            const imageBlobURL = bufferToBlobURL(response.data.image);
-            setBookImageURL(imageBlobURL);
+          if (response.data.image) {
+            setBookImageURL(response.data.imageURL);
           } else {
             setBookImageURL(response.data.imageURL || '');
           }
@@ -152,7 +152,12 @@ function EditBooksForm({ onClose }) {
     setBookImageURL(url);
   };
 
+  const handleImageUpload = (file) => {
+    setSelectedImageFile(file); // Track the uploaded file
+  };
+
   const handleSubmit = async (event) => {
+    setIsLoading(true);
     event.preventDefault();
 
     if (!bookId) {
@@ -168,16 +173,22 @@ function EditBooksForm({ onClose }) {
     }
 
     const bookName = formData.get('bookName') || '';
+    let imageName = bookDetails.image;
 
-    if (bookImageURL) {
+    if (selectedImageFile) {
+      formData.append('bookImage', selectedImageFile); // Add the uploaded image file to form data
+    } else if (bookImageURL && bookImageURL !== bookDetails.imageURL) {
       const file = await downloadImage(bookImageURL, bookName);
-      // console.log('File:', file);
       if (file) {
         formData.append('bookImage', file);
       } else {
-        console.error('Image file not available');
+        return console.error('Image file not available');
       }
+    } else if (!bookImageURL) {
+      imageName = null;
     }
+
+    formData.append('imageName', imageName);
 
     formData.append('author_id', selectedAuthor);
     formData.append('serie_id', selectedSerie);
@@ -197,13 +208,16 @@ function EditBooksForm({ onClose }) {
       // console.log('Book updated successfully');
       // console.log(response);
 
+      setIsLoading(false);
       if (onClose) {
         onClose(); // Call the onClose function to close the modal
       }
       toast.success(response.data.message);
 
     } catch (error) {
+      setIsLoading(false);
       console.error('Error updating book:', error);
+      toast.error('Error updating the book');
     }
   };
 
@@ -214,6 +228,7 @@ function EditBooksForm({ onClose }) {
         <ImagePreview
           onImageChange={handleImageChange}
           imageURL={bookImageURL} // Pass existing image URL to the ImagePreview component
+          onImageUpload={handleImageUpload}
         />
         <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[15rem] md:overflow-y-auto">
           <div className="mb-4">
@@ -327,9 +342,17 @@ function EditBooksForm({ onClose }) {
           </div>
           <button
             type="submit"
-            className="bg-green-700 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn"
+            className={`bg-green-700 flex items-center space-x-2 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isLoading}
           >
-            Save Changes
+            {isLoading ? (
+              <>
+                <span className='white-loader'></span>
+                <span>Saving...</span>
+              </>
+            ) :
+              'Save Changes'
+            }
           </button>
         </div>
       </form>

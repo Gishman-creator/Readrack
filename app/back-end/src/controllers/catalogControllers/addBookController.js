@@ -3,6 +3,7 @@
 const pool = require('../../config/db');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() }); // Use memory storage for image blob
+const { putImage, getImageURL } = require('../../utils/imageUtils');
 
 // Function to generate a random ID
 const generateRandomId = () => {
@@ -22,9 +23,9 @@ const addBook = async (req, res) => {
     } = req.body;
 
     console.log('The added book info:', req.body);
-
-    // Check if the file is attached and read the buffer
-    const bookImageBlob = req.file ? req.file.buffer : null;
+    
+    const image = req.file ? await putImage('', req.file, 'books') : null; // Await the function to resolve the promise
+    console.log('The image key for Amazon is:', image);
 
     let uniqueId;
     let isUnique = false;
@@ -78,6 +79,12 @@ const addBook = async (req, res) => {
       WHERE books.id = ?
       `, [uniqueId]
     );
+
+    let url = null;
+    if (bookData[0].image) {
+      url = await getImageURL(bookData[0].image);
+    }
+    bookData[0].imageURL = url;
 
     // Emit the newly added book data if Socket.IO is initialized
     if (req.io) {

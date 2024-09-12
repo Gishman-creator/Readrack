@@ -71,11 +71,6 @@ function AuthorDetails() {
         // console.log(authorResponse.data);
         setAuthorData(authorResponse.data);
 
-        // Convert books image
-        if (authorResponse.data.image) {
-          authorResponse.data.image = bufferToBlobURL(authorResponse.data.image);
-        }
-
         // console.log('The author name is:', authorName);
 
         // If authorName is not in the URL, update it
@@ -87,39 +82,21 @@ function AuthorDetails() {
         const seriesResponse = await axiosUtils(`/api/getSeriesByAuthorId/${authorResponse.data.id}?limit=${seriesLimit}`, 'GET');
         // console.log('Series response:', seriesResponse.data); // Debugging
 
-        const seriesWithBlobs = seriesResponse.data.series.map((serie) => {
-          return {
-            ...serie,
-            image: bufferToBlobURL(serie.image) // Convert buffer to Blob URL
-          };
-        });
-        setSeries(seriesWithBlobs);
+        setSeries(seriesResponse.data.series);
         SetSeriesCount(seriesResponse.data.totalCount);
 
         // Fetching collections by the author
         const collectionsResponse = await axiosUtils(`/api/getCollectionsByAuthorId/${authorResponse.data.id}?limit=${collectionsLimit}`, 'GET');
         // console.log('Collections response:', collectionsResponse.data); // Debugging
 
-        const collectionsWithBlobs = collectionsResponse.data.collections.map((collection) => {
-          return {
-            ...collection,
-            image: bufferToBlobURL(collection.image) // Convert buffer to Blob URL
-          };
-        });
-        setCollections(collectionsWithBlobs);
+        setCollections(collectionsResponse.data.collections);
         SetCollectionsCount(collectionsResponse.data.totalCount);
 
         // Fetching books by the author
         const booksResponse = await axiosUtils(`/api/getBooksByAuthorId/${authorResponse.data.id}?limit=${booksLimit}`, 'GET');
         // console.log('Books response:', booksResponse.data); // Debugging
 
-        const booksWithBlobs = booksResponse.data.books.map((book) => {
-          return {
-            ...book,
-            image: bufferToBlobURL(book.image) // Convert buffer to Blob URL
-          };
-        });
-        setBooks(booksWithBlobs);
+        setBooks(booksResponse.data.books);
         SetBooksCount(booksResponse.data.totalCount);
 
         setIsLoading(false);
@@ -144,7 +121,6 @@ function AuthorDetails() {
           return {
             ...prevAuthorData,
             ...updatedAuthors,
-            image: bufferToBlobURL(updatedAuthors.image), // Convert updated series image to Blob URL
           };
         }
 
@@ -157,12 +133,7 @@ function AuthorDetails() {
       // console.log("Series updated via socket:", updatedSeries);
       setSeries((prevData) => {
         const updatedData = prevData.map((series) =>
-          series.id === updatedSeries.id
-            ? {
-              ...updatedSeries,
-              image: bufferToBlobURL(updatedSeries.image), // Convert buffer to Blob URL
-            }
-            : series
+          series.id === updatedSeries.id ? updatedSeries : series
         );
 
         // Sort the updatedData by date in ascending order (oldest first)
@@ -175,12 +146,7 @@ function AuthorDetails() {
       // console.log("Collections updated via socket:", updatedCollections);
       setCollections((prevData) => {
         const updatedData = prevData.map((collections) =>
-          collections.id === updatedCollections.id
-            ? {
-              ...updatedCollections,
-              image: bufferToBlobURL(updatedCollections.image), // Convert buffer to Blob URL
-            }
-            : collections
+          collections.id === updatedCollections.id ? updatedCollections : collections
         );
 
         // Sort the updatedData by date in ascending order (oldest first)
@@ -193,12 +159,7 @@ function AuthorDetails() {
       // console.log('Books updated via socket:', updatedBooks);
       setBooks((prevData) => {
         const updatedData = prevData.map((book) =>
-          book.id === updatedBooks.id
-            ? {
-              ...updatedBooks,
-              image: bufferToBlobURL(updatedBooks.image), // Convert buffer to Blob URL
-            }
-            : book
+          book.id === updatedBooks.id ? updatedBooks : book
         );
 
         // Sort the updatedData by date in ascending order (oldest first)
@@ -210,7 +171,6 @@ function AuthorDetails() {
     socket.on('serieAdded', (serieData) => {
       // console.log('New serie added via socket:', serieData);
       if (serieData.author_name === authorName) {
-        serieData.image = bufferToBlobURL(serieData.image); // Convert buffer to Blob URL
         setSeries((prevData) => {
           const updatedData = [...prevData, serieData];
 
@@ -224,7 +184,6 @@ function AuthorDetails() {
     socket.on('collectionAdded', (collectionData) => {
       // console.log('New collection added via socket:', collectionData);
       if (collectionData.author_name === authorName) {
-        collectionData.image = bufferToBlobURL(collectionData.image); // Convert buffer to Blob URL
         setCollections((prevData) => {
           const updatedData = [...prevData, collectionData];
 
@@ -238,7 +197,6 @@ function AuthorDetails() {
     socket.on('bookAdded', (bookData) => {
       // console.log('Books added via socket:', bookData);
       if (bookData.author_name === authorName) {
-        bookData.image = bufferToBlobURL(bookData.image); // Convert buffer to Blob URL
         setBooks((prevData) => {
           const updatedData = [...prevData, bookData];
 
@@ -252,6 +210,8 @@ function AuthorDetails() {
       // console.log('Data deleted via socket:', { ids, type });
       if (type = 'series') {
         setSeries((prevData) => prevData.filter((item) => !ids.includes(item.id)));
+      } else if (type = 'collections') {
+        setCollections((prevData) => prevData.filter((item) => !ids.includes(item.id)));
       } else {
         setBooks((prevData) => prevData.filter((item) => !ids.includes(item.id)));
       }
@@ -336,7 +296,7 @@ function AuthorDetails() {
     <div className='md:flex md:flex-row md:space-x-6 xl:space-x-8'>
       <div className='w-full pt-2 md:w-[22rem] md:h-full md:sticky md:top-20 lg:top-[4.5rem] overflow-auto'>
         <div className=' max-w-[13rem] mx-auto'>
-          <img src={authorData.image || blank_image} alt="author image" className='h-[16rem] w-full bg-[#edf4e6] rounded-lg mx-auto object-cover' />
+          <img src={authorData.imageURL || blank_image} alt="author image" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' />
           <div className='w-full mx-auto'>
             <p
               title={capitalize(authorData.authorName)}
@@ -427,9 +387,9 @@ function AuthorDetails() {
                   onClick={() => navigate(`/admin/catalog/series/${item.id}/${encodeURIComponent(item.serieName)}`)}
                 >
                   <img
-                    src={item.image || blank_image} // Fallback image if Blob URL is null
+                    src={item.imageURL || blank_image} // Fallback image if Blob URL is null
                     alt='book image'
-                    className='h-[9rem] w-[6rem] rounded-lg object-cover'
+                    className='bg-[rgba(3,149,60,0.08)] h-[9rem] w-[6rem] rounded-lg object-cover'
                   />
                   <div className='min-h-full w-full flex flex-col'>
                     <div
@@ -496,9 +456,9 @@ function AuthorDetails() {
                   onClick={() => navigate(`/admin/catalog/collections/${item.id}/${encodeURIComponent(item.collectionName)}`)}
                 >
                   <img
-                    src={item.image || blank_image} // Fallback image if Blob URL is null
+                    src={item.imageURL || blank_image} // Fallback image if Blob URL is null
                     alt='book image'
-                    className='h-[9rem] w-[6rem] rounded-lg object-cover'
+                    className='bg-[rgba(3,149,60,0.08)] h-[9rem] w-[6rem] rounded-lg object-cover'
                   />
                   <div className='min-h-full w-full flex flex-col'>
                     <div
@@ -559,9 +519,9 @@ function AuthorDetails() {
           {books.map((item, index) => (
             <div key={item.id} className='flex space-x-2 mt-4 pb-3 border-b-2 border-slate-300 cursor-default'>
               <img
-                src={item.image || blank_image} // Fallback image if Blob URL is null
+                src={item.imageURL || blank_image} // Fallback image if Blob URL is null
                 alt='book image'
-                className='h-[9rem] w-[6rem] rounded-lg object-cover'
+                className='bg-[rgba(3,149,60,0.08)] h-[9rem] w-[6rem] rounded-lg object-cover'
               />
               <div className='min-h-full w-full flex flex-col justify-between'>
                 <div className='flex justify-between items-center'>

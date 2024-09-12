@@ -3,7 +3,7 @@ import React from 'react'
 function AboutUs() {
     return (
         <div className='px-[4%] sm:px-[12%] space-y-4 mb-10'>
-            <h2 className='font-poppins font-semibold text-xl py-4'>About readrack</h2>
+            <h2 className='font-poppins font-semibold text-xl pt-4 leading-3'>About readrack</h2>
             <p className='font-arima'>Welcome to readrack, your ultimate destination for discovering the reading order of your favorite book series and the complete works of your favorite authors.
                 Whether you're a seasoned reader or just getting started, we help you navigate the literary world with ease by providing organized and up-to-date information.
             </p>

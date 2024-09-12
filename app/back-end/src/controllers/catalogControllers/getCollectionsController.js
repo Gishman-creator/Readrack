@@ -1,4 +1,5 @@
-const pool = require('../../config/db'); // Ensure your database connection pool is correctly imported
+const pool = require('../../config/db'); 
+const { getImageURL } = require('../../utils/imageUtils');
 
 exports.getCollections = async (req, res) => {
 
@@ -38,6 +39,15 @@ exports.getCollections = async (req, res) => {
     const [dataRows] = await pool.query(dataQuery, queryParams);
     const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
 
+    let url = null;
+    for (const dataRow of dataRows) {
+      url = null;
+      if (dataRow.image) {
+        url = await getImageURL(dataRow.image);
+      }
+      dataRow.imageURL = url;
+    }
+
     // Send both data and total count in the response
     res.json({ data: dataRows, totalCount: totalCount });
   } catch (error) {
@@ -63,6 +73,12 @@ exports.getCollectionById = async (req, res) => {
     if (collectionsRows.length === 0) {
       return res.status(404).json({ message: 'Collection not found' });
     }
+
+    let url = null;
+    if (collectionsRows[0].image) {
+      url = await getImageURL(collectionsRows[0].image);
+    }
+    collectionsRows[0].imageURL = url;
 
     res.json(collectionsRows[0]);
   } catch (error) {
@@ -101,6 +117,15 @@ exports.getCollectionsByAuthorId = async (req, res) => {
     // Execute the collections query
     const [collections] = await pool.query(collectionsQuery, queryParams);
     const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
+
+    let url = null;
+    for (const collection of collections) {
+      url = null;
+      if (collection.image) {
+        url = await getImageURL(collection.image);
+      }
+      collection.imageURL = url;
+    }
 
     res.json({ collections: collections, totalCount: totalCount });
   } catch (error) {

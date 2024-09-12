@@ -11,9 +11,11 @@ function EditCollectionsForm({ onClose }) {
   const [collectionsId, setCollectionsId] = useState(collectionId || initialCollectionsId);
   const [collectionsData, setCollectionsData] = useState({});
   const [collectionsImageURL, setCollectionsImageURL] = useState('');
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [authorSearch, setAuthorSearch] = useState('');
   const [authorOptions, setAuthorOptions] = useState([]);
   const [selectedAuthor, setSelectedAuthor] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -24,8 +26,8 @@ function EditCollectionsForm({ onClose }) {
         const data = response.data;
         setCollectionsData(data);
         
-        if (data.image && data.image.data) {
-          setCollectionsImageURL(bufferToBlobURL(data.image));
+        if (data.image) {
+          setCollectionsImageURL(data.imageURL);
         } else {
           setCollectionsImageURL(data.imageURL || '');
         }
@@ -73,21 +75,36 @@ function EditCollectionsForm({ onClose }) {
   };
 
   const handleImageChange = (url) => {
+    console.log('The new image url from edit series is:', url);
     setCollectionsImageURL(url);
+    console.log('The image is:', collectionsImageURL)
+  };
+
+  const handleImageUpload = (file) => {
+    setSelectedImageFile(file); // Track the uploaded file
   };
 
   const handleSubmit = async (event) => {
+    setIsLoading(true);
     event.preventDefault();
     const formData = new FormData(event.target);
+    const collectionName = formData.get('collectionName');
+    let imageName = collectionsData.image;
 
-    if (collectionsImageURL && collectionsImageURL !== collectionsData.imageURL) {
-      const file = await downloadImage(collectionsImageURL, formData.get('collectionName') || '');
+    if (selectedImageFile) {
+      formData.append('collectionsImage', selectedImageFile); // Add the uploaded image file to form data
+    } else if (collectionsImageURL && collectionsImageURL !== collectionsData.imageURL) {
+      const file = await downloadImage(collectionsImageURL, collectionName);
       if (file) {
         formData.append('collectionsImage', file);
       } else {
-        console.error('Image file not available');
+        return console.error('Image file not available');
       }
+    } else if (!collectionsImageURL) {
+      imageName = null;
     }
+
+    formData.append('imageName', imageName);
 
     formData.append('author_id', selectedAuthor);
 
@@ -96,10 +113,13 @@ function EditCollectionsForm({ onClose }) {
         'Content-Type': 'multipart/form-data',
       });
       if (response.status !== 200) throw new Error('Failed to update collections');
+      setIsLoading(false);
       if (onClose) onClose();
       toast.success(response.data.message);
     } catch (error) {
+      setIsLoading(false);
       console.error('Error updating collections:', error);
+      toast.error('Error updating the collection');
     }
   };
 
@@ -107,7 +127,7 @@ function EditCollectionsForm({ onClose }) {
     <div>
       <h2 className="text-lg font-semibold">Edit Collections</h2>
       <form onSubmit={handleSubmit} className="flex flex-col md:flex-row max-h-custom2 md:max-h-fit overflow-y-auto md:overflow-hidden">
-        <ImagePreview imageURL={collectionsImageURL} onImageChange={handleImageChange} />
+        <ImagePreview imageURL={collectionsImageURL} onImageChange={handleImageChange} onImageUpload={handleImageUpload} />
         <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[15rem] md:overflow-y-auto">
           <div className="mb-2">
             <label className="block text-sm font-medium">Collections Name:</label>
@@ -173,9 +193,17 @@ function EditCollectionsForm({ onClose }) {
           </div>
           <button
             type="submit"
-            className="bg-green-700 text-white text-sm font-semibold font-poppins on-click-amzn px-4 py-2 rounded-lg"
+            className={`bg-green-700 flex items-center space-x-2 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isLoading}
           >
-            Save Changes
+            {isLoading ? (
+              <>
+                <span className='white-loader'></span>
+                <span>Saving...</span>
+              </>
+            ) :
+              'Save Changes'
+            }
           </button>
         </div>
       </form>

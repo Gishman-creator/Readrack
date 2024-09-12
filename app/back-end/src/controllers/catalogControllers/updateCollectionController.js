@@ -1,13 +1,14 @@
 const pool = require('../../config/db');
+const { putImage, getImageURL } = require('../../utils/imageUtils');
 
 const updateCollection = async (req, res) => {
   const { id } = req.params;
-  const { collectionName, numBooks, genres, link, author_id } = req.body;
+  const { collectionName, numBooks, genres, link, author_id, imageName } = req.body;
   console.log('The update collection update body is:', req.body);
-
-  let image = req.file ? req.file.buffer : null;
-  console.log('The image is:', image);
-  console.log('Image content type:', req.file ? req.file.mimetype : 'No file uploaded');
+  console.log('The image info is:', req.file);
+    
+  const image = req.file ? await putImage(id, req.file, 'collections') || imageName : null; // Await the function to resolve the promise
+  console.log('The image key for Amazon is:', image);
 
   try {
     const [result] = await pool.query(
@@ -32,23 +33,15 @@ const updateCollection = async (req, res) => {
       `, [id]
     );
 
-    // Fetch the first book's name and date for each collections
-    for (let i = 0; i < collectionRows.length; i++) {
-      const [firstBook] = await pool.query(`
-        SELECT bookName, publishDate
-        FROM books
-        WHERE collection_id = ?
-        ORDER BY publishDate ASC
-        LIMIT 1
-      `, [collectionRows[i].id]);
-
-      // Embed the first book's name and date into the collections result
-      collectionRows[i].firstBook = firstBook.length > 0 ? firstBook[0] : null;
-    }
-
     if (collectionRows.length === 0) {
       return res.status(404).json({ message: 'Collection not found after update' });
     }
+
+    let url = null;
+    if (collectionRows[0].image) {
+      url = await getImageURL(collectionRows[0].image);
+    }
+    collectionRows[0].imageURL = url;
 
     const updatedCollections = collectionRows[0];
 

@@ -8,6 +8,8 @@ exports.incrementSearchCount = async (req, res) => {
         let tableName;
         if (type === 'series' || type === 'serie') {
             tableName = 'series';
+        } else if (type === 'collections' || type === 'collection') {
+            tableName = 'collections';
         } else if (type === 'authors' || type === 'author') {
             tableName = 'authors';
         } else {

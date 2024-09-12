@@ -49,17 +49,17 @@ const NavBar = () => {
     }
 
     return (
-        <div className={`fixed top-0 flex min-w-full h-16 justify-between items-center px-[2%] sm:px-[12%] bg-white z-20`}>
-            <div className={`z-24 sm:flex items-center ${isSearchOpen ? 'hidden' : 'flex'}`}>
+        <div className={`fixed top-0 flex min-w-full max-w-full h-16 justify-between items-center px-[2%] sm:px-[12%] bg-white z-20`}>
+            <div className={`z-24 sm:flex items-center ${isSearchOpen ? 'hidden' : 'flex'}`} onClick={navigateToHome}>
                 {/* Hamburger Menu for Small Screens */}
                 <div className={`${isSearchOpen ? 'block' : 'sm:hidden'} lg:hidden mr-`}>
                     <Bars3Icon className='w-10 h-10 p-2 cursor-pointer rounded-lg on-click' onClick={toggleMenu} />
                 </div>
                 {/* Logo */}
                 <div>
-                    <img src={logo} alt="Logo" className="w-8 h-8" />
+                    <img src={logo} alt="Logo" className="w-8 h-8 cursor-pointer" />
                 </div>
-                <div title='Home' className='font-arima text-2xl flex cursor-pointer' onClick={navigateToHome}>
+                <div title='Home' className='font-arima text-2xl flex cursor-pointer'>
                     <h1 className='inline'>read</h1>
                     <h1 className='inline font-bold text-primary'>rack</h1>
                 </div>

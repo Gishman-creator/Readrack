@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const { getImageURL } = require('../../utils/imageUtils');
 
 exports.getBooks = async (req, res) => {
 
@@ -31,6 +32,15 @@ exports.getBooks = async (req, res) => {
     }
 
     const [rows] = await pool.query(dataQuery, queryParams);
+
+    let url = null;
+    for (const row of rows) {
+      url = null;
+      if (row.image) {
+        url = await getImageURL(row.image);
+      }
+      row.imageURL = url;
+    }
 
     // Return both the total count and the paginated books
     res.json({ data: rows, totalCount: totalCount });
@@ -67,6 +77,12 @@ exports.getBookById = async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Book not found' });
     }
+
+    let url = null;
+    if (rows[0].image) {
+      url = await getImageURL(rows[0].image);
+    }
+    rows[0].imageURL = url;
 
     res.json(rows[0]);
   } catch (error) {
@@ -105,6 +121,15 @@ exports.getBooksBySerieId = async (req, res) => {
     const [books] = await pool.query(query, queryParams);
     const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
 
+    let url = null;
+    for (const book of books) {
+      url = null;
+      if (book.image) {
+        url = await getImageURL(book.image);
+      }
+      book.imageURL = url;
+    }
+
     res.json({ books: books, totalCount: totalCount });
   } catch (error) {
     console.error('Error fetching books by series:', error);
@@ -142,6 +167,15 @@ exports.getBooksByCollectionId = async (req, res) => {
 
     const [books] = await pool.query(query, queryParams);
     const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
+
+    let url = null;
+    for (const book of books) {
+      url = null;
+      if (book.image) {
+        url = await getImageURL(book.image);
+      }
+      book.imageURL = url;
+    }
 
     res.json({ books: books, totalCount: totalCount });
   } catch (error) {
@@ -183,6 +217,15 @@ exports.getBooksByAuthorId = async (req, res) => {
 
     const [books] = await pool.query(query, queryParams);
     const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
+
+    let url = null;
+    for (const book of books) {
+      url = null;
+      if (book.image) {
+        url = await getImageURL(book.image);
+      }
+      book.imageURL = url;
+    }
 
     res.json({ books: books, totalCount: totalCount });
   } catch (error) {

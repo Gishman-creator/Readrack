@@ -1,24 +1,34 @@
 // src/components/ImagePreview.js
 import React, { useState } from 'react';
+import blank_image from '../../../../../assets/brand_blank_image.png';
 
-function ImagePreview({ onImageChange }) {
-  const [imageURL, setImageURL] = useState('');
+function ImagePreview({ onImageChange, onImageUpload }) {
+  const [localImageURL, setLocalImageURL] = useState('');
 
   const handleURLChange = (event) => {
     const url = event.target.value;
-    setImageURL(url);
+    setLocalImageURL(url);
     onImageChange(url); // Notify parent about the URL
+  };
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setLocalImageURL(imageUrl);
+      onImageUpload(file); // Notify parent about the uploaded file
+    }
   };
 
   return (
     <div className="mb-4 flex flex-col justify-between md:w-[13rem]">
       <div className="h-[10rem] w-full bg-slate-200 flex justify-center items-center rounded-lg">
-        {imageURL ? (
+        {localImageURL ? (
           <img
-            src={imageURL}
+            src={localImageURL || blank_image}
             alt="Preview"
             className="h-full object-cover"
-            onError={() => setImageURL('')} // Handle error case if image can't load
+            onError={() => setLocalImageURL('')} // Handle error case if image can't load
           />
         ) : (
           'Preview'
@@ -29,8 +39,15 @@ function ImagePreview({ onImageChange }) {
         <input
           type="text"
           placeholder="Enter image link"
-          value={imageURL}
+          value={localImageURL}
           onChange={handleURLChange}
+          className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-[#37643B] focus:ring-[#37643B]"
+        />
+        <label className="block text-sm font-medium mt-2">Upload Image:</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileUpload}
           className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-[#37643B] focus:ring-[#37643B]"
         />
       </div>

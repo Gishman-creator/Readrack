@@ -72,20 +72,20 @@ function TableHeader({ hasShadow, openEditAuthorModal, openEditBooksModal, openE
 
   return (
     <div className={`bg-white sticky top-0 p-2 flex justify-between items-center ${hasShadow ? 'custom-drop-shadow' : ''}`}>
-      <div className={`${isSearchOpen ? 'hidden' : 'flex'} sm:flex justify-between items-center w-fit py-2`}>
+      <div className={`${isSearchOpen ? 'hidden' : 'flex'} sm:flex justify-between items-center w-fit`}>
         <p
-          className="text-sm px-2 pr-4 border-slate-300 cursor-default"
+          className={`text-sm my-2 pl-2 pr-4 border-slate-300 cursor-default ${selectedRowIds.length > 0 ? ' border-r-[1.5px]' : ''}`}
         >
           {activeTab}
         </p>
         {selectedRowIds.length > 0 && (
-          <div className="flex space-x-4 pr-2 pl-2 border-l-[1.5px]">
+          <div className="flex space-x-2 pr-2">
             <PencilSquareIcon
-              className="w-4 h-4 inline ml-2 cursor-pointer"
+              className="w-8 h-8 inline ml-2 cursor-pointer rounded-lg p-2 on-click"
               onClick={handleEditClick}
             />
             <TrashIcon
-              className="w-4 h-4 inline cursor-pointer"
+              className="w-8 h-8 inline cursor-pointer rounded-lg p-2 on-click"
               onClick={handleDeleteClick}
             />
           </div>

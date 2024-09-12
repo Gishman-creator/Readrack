@@ -1,6 +1,7 @@
 // src/controllers/catalogControllers/addSeriesController.js
 
 const pool = require('../../config/db');
+const { putImage, getImageURL } = require('../../utils/imageUtils');
 
 // Function to generate a random ID
 const generateRandomId = () => {
@@ -9,7 +10,9 @@ const generateRandomId = () => {
 
 const addSeries = async (req, res) => {
     const { serieName, author_id, numBooks, genres, link } = req.body;
-    const image = req.file ? req.file.buffer : null; // Get image from request
+
+    const image = req.file ? await putImage('', req.file, 'series') : null; // Await the function to resolve the promise
+    console.log('The image key for Amazon is:', image);
 
     try {
         let uniqueId;
@@ -34,26 +37,26 @@ const addSeries = async (req, res) => {
         );
 
         const [serieData] = await pool.query(`
-            SELECT series.*, authors.nickname, authors.authorName AS author_name
+            SELECT 
+                series.*, 
+                authors.nickname, 
+                authors.authorName AS author_name,
+                YEAR(MIN(books.publishDate)) AS first_book_year,
+                YEAR(MAX(books.publishDate)) AS last_book_year
             FROM series
             LEFT JOIN authors ON series.author_id = authors.id
+            LEFT JOIN books ON books.serie_id = series.id
             WHERE series.id = ?
+            GROUP BY series.id, authors.nickname, authors.authorName
+            ORDER BY books.publishDate ASC;
             `, [uniqueId]
         );
 
-        // Fetch the first book's name and date for each series
-        for (let i = 0; i < serieData.length; i++) {
-            const [firstBook] = await pool.query(`
-                SELECT bookName, publishDate
-                FROM books
-                WHERE serie_id = ?
-                ORDER BY publishDate ASC
-                LIMIT 1
-            `, [serieData[i].id]);
-
-            // Embed the first book's name and date into the series result
-            serieData[i].firstBook = firstBook.length > 0 ? firstBook[0] : null;
+        let url = null;
+        if (serieData[0].image) {
+          url = await getImageURL(serieData[0].image);
         }
+        serieData[0].imageURL = url;
 
         // Emit the newly added series data if Socket.IO is initialized
         if (req.io) {

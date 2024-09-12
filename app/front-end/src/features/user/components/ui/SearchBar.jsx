@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'; // Assuming you are using react-
 import axiosUtils from '../../../../utils/axiosUtils';
 import { capitalize } from '../../../../utils/stringUtils';
 import { incrementSearchCount } from '../../../../utils/searchCountUtils';
+import { delay } from 'lodash';
 
 const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     const searchBarRef = useRef(null);
@@ -16,7 +17,7 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
 
     useEffect(() => {
         const handleClickOutside = (event) => {
-            setIsInputFocused(false);
+            // setIsInputFocused(false);
             if (
                 searchBarRef.current &&
                 !searchBarRef.current.contains(event.target) &&
@@ -85,11 +86,13 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     };
 
     const handleSelectResult = (result) => {
-        // console.log('Result selected:', result);
+        console.log('Result selected:', result);
         if (result.type == 'serie') {
             navigate(`/series/${result.id}/${encodeURIComponent(result.name)}`);
-        } else {
+        } else if (result.type == 'author') {
             navigate(`/authors/${result.id}/${encodeURIComponent(result.name)}`);
+        } else if (result.type == 'collection') {
+            navigate(`/collections/${result.id}/${encodeURIComponent(result.name)}`);
         }
         setIsInputFocused(false);
         incrementSearchCount(result.type, result.id);
@@ -120,11 +123,16 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
                             value={searchTerm}
                             onChange={(e) => { setSearchTerm(e.target.value); setIsLoading(true); }}
                             onFocus={() => setIsInputFocused(true)} // Set focus state to true
+                            onBlur={() => {
+                                setTimeout(() => {
+                                    setIsInputFocused(false); // Delay setting focus state to false
+                                }, 300);
+                            }}
                             onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(e)} // Handle Enter key press
                         />
                         {isLoading ? (
                             searchTerm ?
-                                <div className=" w-7 h-7 rounded-full border-t-2 border-green-700 animate-spin"></div>
+                                <div className="mr-1 green-loader"></div>
                                 :
                                 <MagnifyingGlassIcon
                                     type='submit'
@@ -157,11 +165,11 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
             {isInputFocused && !isLoading &&
                 searchResults.length > 0 && isSearchOpen ? (
                 <div>
-                    <div className='absolute top-full right-0 min-w-[88%] sm:min-w-[17.7rem] bg-white border rounded shadow-md z-50 p-1 space-y-1'>
+                    <div className='absolute top-full right-0 min-w-[88%] sm:min-w-[17.7rem] bg-white border rounded-lg shadow-md z-50 p-1 space-y-1'>
                         {searchResults.map((result) => (
                             <div
                                 key={result.id}
-                                className='p-2 cursor-pointer on-click rounded text-sm font-poppins font-medium'
+                                className='p-2 cursor-pointer on-click rounded-lg text-sm font-poppins font-medium'
                                 onClick={() => handleSelectResult(result)} // Make sure this is correctly bound
                             >
                                 {result.type === 'serie' && capitalize(result.serieName)}

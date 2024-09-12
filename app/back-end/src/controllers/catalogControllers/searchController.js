@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const { getImageURL } = require('../../utils/imageUtils');
 
 // Function to build the SQL for any-order search
 const buildAnyOrderQuery = (query, columnName) => {
@@ -54,10 +55,10 @@ exports.search = async (req, res) => {
       const { conditions: booksConditions, queryParams: booksParams } = buildAnyOrderQuery(query, 'bookName');
       
       // Append WHERE clauses
-      seriesQuery += ` WHERE ${seriesConditions}`;
-      collectionsQuery += ` WHERE ${collectionsConditions}`;
-      authorsQuery += ` WHERE ${authorsConditions} OR ${authorsNicknameConditions}`;
-      booksQuery += ` WHERE ${booksConditions}`;
+      seriesQuery += ` WHERE ${seriesConditions} order by searchCount desc`;
+      collectionsQuery += ` WHERE ${collectionsConditions} order by searchCount desc`;
+      authorsQuery += ` WHERE ${authorsConditions} OR ${authorsNicknameConditions} order by searchCount desc`;
+      booksQuery += ` WHERE ${booksConditions} order by searchCount desc`;
       
       seriesCountQuery += ` WHERE ${seriesConditions}`;
       collectionsCountQuery += ` WHERE ${collectionsConditions}`;
@@ -131,6 +132,15 @@ exports.search = async (req, res) => {
       results = authorsRows.map((author) => ({ ...author, type: 'author' }));
     } else if (type === 'book' || type === 'books') {
       results = booksRows.map((book) => ({ ...book, type: 'book' }));
+    }
+
+    let url = null;
+    for (const result of results) {
+      url = null;
+      if (result.image) {
+        url = await getImageURL(result.image);
+      }
+      result.imageURL = url;
     }
 
     // Send results and counts

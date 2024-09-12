@@ -1,20 +1,20 @@
 const pool = require('../../config/db');
+const { putImage, getImageURL } = require('../../utils/imageUtils');
 
 const updateAuthor = async (req, res) => {
+
     const { id } = req.params;
     console.log('Body', req.body);
     console.log('File', req.file); // Log file information
 
-    const { authorName, nickname, dob, nationality, biography, awards, x, instagram, facebook, website, genres } = req.body;
-    console.log(authorName, nickname, dob, nationality, biography, awards, x, instagram, facebook, website, genres)
+    const { authorName, nickname, dob, nationality, biography, awards, x, instagram, facebook, website, genres, imageName } = req.body;
+    console.log(authorName, nickname, dob, nationality, biography, awards, x, instagram, facebook, website, genres);
 
-    // Access the file from req.file
-    let image = req.file ? req.file.buffer : null; // Use buffer for memory storage
+    const image = req.file ? await putImage(id, req.file, 'authors') || imageName : null; // Await the function to resolve the promise
+    console.log('The image key for Amazon is:', image);
 
     if (image) {
-        console.log('Image is there');
-    } else {
-        console.log('No image uploaded');
+        console.log('Image is:', image);
     }
 
     try {
@@ -39,6 +39,12 @@ const updateAuthor = async (req, res) => {
         if (authorRows.length === 0) {
             return res.status(404).json({ message: 'Author not found after update' });
         }
+
+        let url = null;
+        if (authorRows[0].image) {
+          url = await getImageURL(authorRows[0].image);
+        }
+        authorRows[0].imageURL = url;
 
         const updatedAuthors = authorRows[0];
 

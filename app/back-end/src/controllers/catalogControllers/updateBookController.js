@@ -1,14 +1,15 @@
 const pool = require('../../config/db');
+const { putImage, getImageURL } = require('../../utils/imageUtils');
 
 const updateBook = async (req, res) => {
   const { id } = req.params;
   console.log('Body', req.body);
   console.log('File', req.file); // Log file information
   console.log('The request body is:', req.body);
-  const { bookName, serie_id, collection_id, author_id, publishDate, genres, link } = req.body;
-
-  // Access the file from req.file
-  let image = req.file ? req.file.buffer : null; // Use buffer for memory storage
+  const { bookName, serie_id, collection_id, author_id, publishDate, genres, link, imageName } = req.body;
+    
+  const image = req.file ? await putImage(id, req.file, 'books') || imageName : null; // Await the function to resolve the promise
+  console.log('The image key for Amazon is:', image);
 
   if (image) {
     console.log('Image is there');
@@ -41,6 +42,12 @@ const updateBook = async (req, res) => {
     if (bookRows.length === 0) {
       return res.status(404).json({ message: 'Book not found after update' });
     }
+
+    let url = null;
+    if (bookRows[0].image) {
+      url = await getImageURL(bookRows[0].image);
+    }
+    bookRows[0].imageURL = url;
 
     const updatedBook = bookRows[0];
 

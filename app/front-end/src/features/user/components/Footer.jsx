@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom'
 
 function Footer() {
     return (
-        <div className=' px-[4%] sm:px-[12%]'>
-            <div className='flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 border-t border-gray-300 pt-4'>
+        <div className='px-[4%] sm:px-[12%]'>
+            <div className='flex flex-col sm:flex-row items-center justify-between space-y- sm:space-y-0 border-t border-gray-300 pt-4'>
                 <div className='h-full flex flex-col justify-between'>
                     <div className='flex items-center'>
                         <div>

@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const { getImageURL } = require('../../utils/imageUtils')
 
 exports.getAuthors = async (req, res) => {
 
@@ -23,17 +24,19 @@ exports.getAuthors = async (req, res) => {
       FROM authors a
       LEFT JOIN series s ON a.id = s.author_id
       LEFT JOIN books b ON a.id = b.author_id
-      GROUP BY a.id
     `;
-    let countQuery = 'SELECT COUNT(*) AS totalCount FROM authors';
+    let countQuery = 'SELECT COUNT(*) AS totalCount FROM authors a';
     let queryParams = [];
 
     // Add genre filter to the queries if genre is provided and is not null or empty
     if (genre && genre !== 'null') {
-      dataQuery += ' WHERE genres LIKE ?';
-      countQuery += ' WHERE genres LIKE ?';
+      dataQuery += ' WHERE a.genres LIKE ?';
+      countQuery += ' WHERE a.genres LIKE ?';
       queryParams.push(`%${genre}%`);
     }
+
+    // Add GROUP BY after WHERE
+    dataQuery += ' GROUP BY a.id';
 
     // Now add the ORDER BY clause after the WHERE clause
     dataQuery += ' order by searchCount desc';
@@ -47,6 +50,15 @@ exports.getAuthors = async (req, res) => {
     // Execute both queries in parallel
     const [dataRows] = await pool.query(dataQuery, queryParams);
     const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
+
+    let url = null;
+    for (const dataRow of dataRows) {
+      url = null;
+      if (dataRow.image) {
+        url = await getImageURL(dataRow.image);
+      }
+      dataRow.imageURL = url;
+    }
 
     // Send both data and total count in the response
     res.json({ data: dataRows, totalCount: totalCount });
@@ -76,6 +88,12 @@ exports.getAuthorById = async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Author not found' });
     }
+
+    let url = null;
+    if (rows[0].image) {
+      url = await getImageURL(rows[0].image);
+    }
+    rows[0].imageURL = url;
 
     res.json(rows[0]);
   } catch (error) {

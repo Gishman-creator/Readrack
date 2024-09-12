@@ -12,7 +12,8 @@ module.exports = {
         primary: '#15803d', // Set your preferred shade of blue here
       },
       boxShadow: {
-        'custom3': '0px 0px 15px rgba(0, 0, 0, 0.15)',
+        'custom3': '0px 0px 15px rgba(0, 0, 0, 0.2)',
+        'custom4': '0px 0px 15px rgba(0, 0, 0, 0.1)',
       },
     },
   },

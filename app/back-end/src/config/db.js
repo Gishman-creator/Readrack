@@ -3,10 +3,10 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const pool = mysql.createPool({
-    host: process.env.HOST,
-    user: process.env.MYSQL_USER,
-    password: process.env.MYSQL_PASSWORD,
-    database: process.env.MYSQL_DATABASE,
+    host: process.env.AWS_HOST,
+    user: process.env.MYSQL_AWS_USER,
+    password: process.env.MYSQL_AWS_PASSWORD,
+    database: process.env.MYSQL_AWS_DATABASE,
     timezone: 'Z'
 })
 

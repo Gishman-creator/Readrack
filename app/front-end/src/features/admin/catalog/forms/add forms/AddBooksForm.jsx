@@ -6,7 +6,8 @@ import toast from 'react-hot-toast';
 import { downloadImage } from '../../../../../utils/imageUtils';
 
 function AddBooksForm({ onClose }) {
-  const [authorImageURL, setAuthorImageURL] = useState('');
+  const [bookImageURL, setBookImageURL] = useState('');
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
   const detailsSerieName = useSelector((state) => state.catalog.serieName);
   const detailsCollectionName = useSelector((state) => state.catalog.collectionName);
   const serieDetailsAuthorName = useSelector((state) => state.catalog.authorName);
@@ -19,6 +20,7 @@ function AddBooksForm({ onClose }) {
   const [selectedAuthor, setSelectedAuthor] = useState(serieDetailsAuthorName || '');
   const [selectedSerie, setSelectedSerie] = useState(detailsSerieName || '');
   const [selectedCollection, setSelectedCollection] = useState(detailsCollectionName || '');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (authorSearch) {
@@ -96,24 +98,29 @@ function AddBooksForm({ onClose }) {
   };
 
   const handleImageChange = (url) => {
-    setAuthorImageURL(url);
+    setBookImageURL(url);
+  };
+
+  const handleImageUpload = (file) => {
+    setSelectedImageFile(file); // Track the uploaded file
   };
 
   const handleSubmit = async (event) => {
+    setIsLoading(true);
     event.preventDefault();
     const formData = new FormData(event.target);
 
     const bookName = formData.get('bookName') || '';
 
-    if (authorImageURL) {
-      const file = await downloadImage(authorImageURL, bookName);
+    if (selectedImageFile) {
+      formData.append('bookImage', selectedImageFile); // Add the uploaded image file to form data
+    } else if (bookImageURL) {
+      const file = await downloadImage(bookImageURL, bookName);
       if (file) {
-        formData.append('bookImage', file); // Append the file directly
+        formData.append('bookImage', file);
       } else {
-        console.error('Image file not available');
+        return console.error('Image file not available');
       }
-    } else {
-      console.error('No image URL provided');
     }
 
     formData.append('author_id', selectedAuthor);
@@ -127,13 +134,16 @@ function AddBooksForm({ onClose }) {
 
       if (response.status !== 201) throw new Error('Failed to submit form');
 
+      setIsLoading(false);
       if (onClose) {
         onClose(); // Call the onClose function to close the modal
       }
       toast.success(response.data.message);
 
     } catch (error) {
+      setIsLoading(false);
       console.error('Error submitting form:', error);
+      toast.error('Error updating the book');
     }
   };
 
@@ -141,7 +151,7 @@ function AddBooksForm({ onClose }) {
     <div className=''>
       <h2 className="text-lg font-semibold">Add Book</h2>
       <form onSubmit={handleSubmit} className="flex flex-col md:flex-row max-h-custom2 md:max-h-fit overflow-y-auto md:overflow-hidden">
-        <ImagePreview onImageChange={handleImageChange} />
+        <ImagePreview onImageChange={handleImageChange} onImageUpload={handleImageUpload} />
         <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[15rem] md:overflow-y-auto">
           <div className="mb-4">
             <label className="block text-sm font-medium">Book name:</label>
@@ -242,9 +252,17 @@ function AddBooksForm({ onClose }) {
           </div>
           <button
             type="submit"
-            className="bg-green-700 text-white text-sm font-semibold font-poppins on-click-amzn px-4 py-2 rounded-lg"
+            className={`bg-green-700 flex items-center space-x-2 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isLoading}
           >
-            Save Book
+            {isLoading ? (
+              <>
+                <span className='white-loader'></span>
+                <span>Saving...</span>
+              </>
+            ) :
+              'Save Changes'
+            }
           </button>
         </div>
       </form>

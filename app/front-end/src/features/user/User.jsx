@@ -51,8 +51,10 @@ function User() {
     dispatch(setActiveTab(''));
     if (location.pathname.startsWith('/series')) {
       dispatch(setActiveTab('Series'));
+      console.log('Active tab set to: series')
     } else if (location.pathname.startsWith('/authors')) {
       dispatch(setActiveTab('Authors'));
+      console.log('Active tab set to: authors')
     }
   }, [location, dispatch]);
 
@@ -74,7 +76,7 @@ function User() {
   }, [divRef]);
 
   return (
-    <div className='block min-h-screen bg-white'>
+    <div className='block bg-white'>
       <NavBar />
       <div className='h-screen-nonav mt-[4rem] flex flex-col justify-between'>
         <div>
@@ -91,7 +93,7 @@ function User() {
           </Routes>
           <div
             ref={divRef} // Attach the ref to this div
-            className={`${isDivVisible ? ' bg-[#f3f3f3] pb-4' : ' bg-primary'} group flex text-black shadow-2xl fixed bottom-0 right-0 mt-auto mb-4 mx-4 max-w-fit max-h-fit p-2 rounded-lg z-20 cursor-pointer`}
+            className={`${isDivVisible ? ' bg-white pb-4' : ' bg-primary'} group flex text-black shadow-custom3 fixed bottom-0 right-0 mt-auto mb-4 mx-4 max-w-fit max-h-fit p-2 rounded-lg z-20 cursor-pointer`}
           >
             <div
               className={`${isDivVisible ? 'block' : 'hidden'

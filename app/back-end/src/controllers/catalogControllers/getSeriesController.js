@@ -1,4 +1,5 @@
-const pool = require('../../config/db'); // Ensure your database connection pool is correctly imported
+const pool = require('../../config/db');
+const { getImageURL } = require('../../utils/imageUtils');
 
 exports.getSeries = async (req, res) => {
 
@@ -40,6 +41,15 @@ exports.getSeries = async (req, res) => {
     const [dataRows] = await pool.query(dataQuery, queryParams);
     const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
 
+    let url = null;
+    for (const dataRow of dataRows) {
+      url = null;
+      if (dataRow.image) {
+        url = await getImageURL(dataRow.image);
+      }
+      dataRow.imageURL = url;
+    }
+
     // Send both data and total count in the response
     res.json({ data: dataRows, totalCount: totalCount });
   } catch (error) {
@@ -65,6 +75,12 @@ exports.getSerieById = async (req, res) => {
     if (seriesRows.length === 0) {
       return res.status(404).json({ message: 'Serie not found' });
     }
+
+    let url = null;
+    if (seriesRows[0].image) {
+      url = await getImageURL(seriesRows[0].image);
+    }
+    seriesRows[0].imageURL = url;
 
     res.json(seriesRows[0]);
   } catch (error) {
@@ -103,6 +119,15 @@ exports.getSeriesByAuthorId = async (req, res) => {
     // Execute the series query
     const [series] = await pool.query(seriesQuery, queryParams);
     const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
+
+    let url = null;
+    for (const serie of series) {
+      url = null;
+      if (serie.image) {
+        url = await getImageURL(serie.image);
+      }
+      serie.imageURL = url;
+    }
 
     res.json({ series: series, totalCount: totalCount });
   } catch (error) {

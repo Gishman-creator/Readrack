@@ -30,7 +30,7 @@ const SideBar = ({ isMenuOpen, toggleMenu }) => {
                 className={`max-w-fit h-full bg-white border border-[#bcbcbc] fixed top-0 left-0 transition-transform duration-300 ease-in-out p-2 px-3 pt-0 z-50 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'
                     }`}
             >
-                <div className='z-24 flex items-center py-3 '>
+                <div className='z-50 flex items-center py-3 '>
                     {/* Hamburger Menu for Small Screens */}
                     <div className='lg:hidden mr-1'>
                         <Bars3Icon className='w-10 h-10 p-2 cursor-pointer rounded-lg on-click' onClick={toggleMenu} />
@@ -73,7 +73,8 @@ const SideBar = ({ isMenuOpen, toggleMenu }) => {
                     </li>
                     <li>
                         <Link
-                            to="/about"
+                            to="/about-us"
+                            onClick={() => { toggleMenu(); dispatch(setActiveTab('')); dispatch(setActiveGenre('')); }}
                             className={`flex items-center p-2 on-click rounded-lg ${location.pathname.startsWith('/about') ? 'bg-green-700 text-white on-click-amzn' : ''
                                 }`}
                         >

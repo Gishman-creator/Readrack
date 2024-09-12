@@ -80,7 +80,7 @@ function Recommendations({ data, tab }) {
             </div>
             <div
                 ref={scrollContainerRef}
-                className='w-full flex flex-row pt-4 space-x-4 overflow-x-scroll scrollbar-hidden'
+                className='w-full flex flex-row pt-4 space-x-4 px-3 overflow-x-scroll scrollbar-hidden'
             >
                 {isLoading ? (
                     [...Array(10)].map((_, index) => (

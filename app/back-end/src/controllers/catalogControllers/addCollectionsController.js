@@ -1,6 +1,7 @@
 // src/controllers/catalogControllers/addCollectionsController.js
 
 const pool = require('../../config/db');
+const { putImage, getImageURL } = require('../../utils/imageUtils');
 
 // Function to generate a random ID
 const generateRandomId = () => {
@@ -9,7 +10,9 @@ const generateRandomId = () => {
 
 const addCollections = async (req, res) => {
     const { collectionName, author_id, numBooks, genres, link } = req.body;
-    const image = req.file ? req.file.buffer : null; // Get image from request
+    
+    const image = req.file ? await putImage('', req.file, 'collections') : null; // Await the function to resolve the promise
+    console.log('The image key for Amazon is:', image);
 
     try {
         let uniqueId;
@@ -34,26 +37,26 @@ const addCollections = async (req, res) => {
         );
 
         const [collectionData] = await pool.query(`
-            SELECT collections.*, authors.nickname, authors.authorName AS author_name
+            SELECT 
+                collections.*, 
+                authors.nickname, 
+                authors.authorName AS author_name,
+                YEAR(MIN(books.publishDate)) AS first_book_year,
+                YEAR(MAX(books.publishDate)) AS last_book_year
             FROM collections
             LEFT JOIN authors ON collections.author_id = authors.id
+            LEFT JOIN books ON books.collection_id = collections.id
             WHERE collections.id = ?
+            GROUP BY collections.id, authors.nickname, authors.authorName
+            ORDER BY books.publishDate ASC;
             `, [uniqueId]
         );
 
-        // Fetch the first book's name and date for each collections
-        for (let i = 0; i < collectionData.length; i++) {
-            const [firstBook] = await pool.query(`
-                SELECT bookName, publishDate
-                FROM books
-                WHERE collection_id = ?
-                ORDER BY publishDate ASC
-                LIMIT 1
-            `, [collectionData[i].id]);
-
-            // Embed the first book's name and date into the collections result
-            collectionData[i].firstBook = firstBook.length > 0 ? firstBook[0] : null;
+        let url = null;
+        if (collectionData[0].image) {
+          url = await getImageURL(collectionData[0].image);
         }
+        collectionData[0].imageURL = url;
 
         // Emit the newly added collections data if Socket.IO is initialized
         if (req.io) {

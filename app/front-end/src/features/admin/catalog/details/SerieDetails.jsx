@@ -54,11 +54,6 @@ function SerieDetails() {
         setSerieData(serieResponse.data);
         // console.log('Fetched serie data:', serieResponse.data);
 
-        // Convert series image
-        if (serieResponse.data.image) {
-          serieResponse.data.image = bufferToBlobURL(serieResponse.data.image);
-        }
-
         // If serieName is not in the URL, update it
         if (!serieName || serieName !== serieResponse.data.serieName) {
           navigate(`/admin/catalog/series/${serieId}/${encodeURIComponent(serieResponse.data.serieName)}`, { replace: true });
@@ -67,14 +62,7 @@ function SerieDetails() {
         const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}?limit=${booksLimit}`, 'GET');
         // console.log('Books response:', booksResponse.data); // Debugging
 
-        const booksWithBlobs = booksResponse.data.books.map((book) => {
-          // console.log('Book data:', book); // Debugging
-          return {
-            ...book,
-            image: bufferToBlobURL(book.image) // Convert buffer to Blob URL
-          };
-        });
-        setBooks(booksWithBlobs);
+        setBooks(booksResponse.data.books);
         SetBooksCount(booksResponse.data.totalCount);
         // console.log('The total count is:', booksResponse.data.totalCount);
 
@@ -100,7 +88,6 @@ function SerieDetails() {
           return {
             ...prevSerieData,
             ...updatedSeries,
-            image: bufferToBlobURL(updatedSeries.image), // Convert updated series image to Blob URL
           };
         }
 
@@ -113,12 +100,7 @@ function SerieDetails() {
       // console.log('Books updated via socket:', updatedBooks);
       setBooks((prevData) => {
         const updatedData = prevData.map((book) =>
-          book.id === updatedBooks.id
-            ? {
-              ...updatedBooks,
-              image: bufferToBlobURL(updatedBooks.image), // Convert buffer to Blob URL
-            }
-            : book
+          book.id === updatedBooks.id ? updatedBooks : book
         );
 
         // Sort the updatedData by date in ascending order (oldest first)
@@ -129,7 +111,6 @@ function SerieDetails() {
     // Event listener for bookAdded
     socket.on('bookAdded', (bookData) => {
       if (bookData.serie_name === serieName) {
-        bookData.image = bufferToBlobURL(bookData.image); // Convert buffer to Blob URL
         setBooks((prevData) => {
           const updatedData = [...prevData, bookData];
 
@@ -182,7 +163,7 @@ function SerieDetails() {
     <div className='md:flex md:flex-row pt-2 md:space-x-6 xl:space-x-8 pb-10'>
       <div className='w-full pt-2 md:w-[22rem] md:h-full md:sticky md:top-20 lg:top-[4.5rem] overflow-hidden'>
         <div className=' max-w-[13rem] mx-auto'>
-          <img src={serieData.image || blank_image} alt="serie image" className='h-[16rem] w-full bg-[#edf4e6] rounded-lg mx-auto object-cover' />
+          <img src={serieData.imageURL || blank_image} alt="serie image" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' />
           <div className='w-full mx-auto'>
             <p
               title={capitalize(serieData.serieName)}
@@ -231,9 +212,9 @@ function SerieDetails() {
           {books.map((item, index) => (
             <div key={item.id} className='flex space-x-2 mt-4 pb-3 border-b-2 border-slate-100 cursor-default'>
               <img
-                src={item.image || blank_image} // Fallback image if Blob URL is null
+                src={item.imageURL || blank_image}
                 alt='book image'
-                className='h-[9rem] w-[6rem] rounded-lg object-cover'
+                className='bg-[rgba(3,149,60,0.08)] h-[9rem] w-[6rem] rounded-lg object-cover'
               />
               <div className='min-h-full w-full flex flex-col justify-between'>
                 <div className='flex justify-between items-center'>

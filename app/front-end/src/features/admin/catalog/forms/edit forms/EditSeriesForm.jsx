@@ -11,6 +11,7 @@ function EditSeriesForm({ onClose }) {
   const [seriesId, setSeriesId] = useState(serieId || initialSeriesId);
   const [seriesData, setSeriesData] = useState({});
   const [seriesImageURL, setSeriesImageURL] = useState('');
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [authorSearch, setAuthorSearch] = useState('');
   const [authorOptions, setAuthorOptions] = useState([]);
   const [selectedAuthor, setSelectedAuthor] = useState('');
@@ -19,6 +20,8 @@ function EditSeriesForm({ onClose }) {
   const [collectionOptions, setCollectionOptions] = useState([]);
   const [selectedCollections, setSelectedCollections] = useState([]); // Stores selected collection names
   const [selectedCollectionIds, setSelectedCollectionIds] = useState([]); // Stores collection IDs
+  const [relatedCollections, setRelatedCollections] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -30,8 +33,8 @@ function EditSeriesForm({ onClose }) {
         const data = response.data;
         setSeriesData(data);
 
-        if (data.image && data.image.data) {
-          setSeriesImageURL(bufferToBlobURL(data.image));
+        if (data.image) {
+          setSeriesImageURL(data.imageURL);
         } else {
           setSeriesImageURL(data.imageURL || '');
         }
@@ -132,20 +135,32 @@ function EditSeriesForm({ onClose }) {
     setSeriesImageURL(url);
   };
 
+  const handleImageUpload = (file) => {
+    setSelectedImageFile(file); // Track the uploaded file
+  };
+
   const handleSubmit = async (event) => {
+    setIsLoading(true);
     event.preventDefault();
     const formData = new FormData(event.target);
 
     formData.append('related_collections', selectedCollectionIds);
+    let imageName = seriesData.image;
 
-    if (seriesImageURL && seriesImageURL !== seriesData.imageURL) {
-      const file = await downloadImage(seriesImageURL, formData.get('serieName') || '');
+    if (selectedImageFile) {
+      formData.append('seriesImage', selectedImageFile); // Add the uploaded image file to form data
+    } else if (seriesImageURL && seriesImageURL !== seriesData.imageURL) {
+      const file = await downloadImage(seriesImageURL, seriesData.serieName);
       if (file) {
         formData.append('seriesImage', file);
       } else {
-        console.error('Image file not available');
+        return console.error('Image file not available');
       }
+    } else if (!seriesImageURL) {
+      imageName = null;
     }
+
+    formData.append('imageName', imageName);
 
     formData.append('author_id', selectedAuthor);
 
@@ -154,10 +169,13 @@ function EditSeriesForm({ onClose }) {
         'Content-Type': 'multipart/form-data',
       });
       if (response.status !== 200) throw new Error('Failed to update series');
+      setIsLoading(false);
       if (onClose) onClose();
       toast.success(response.data.message);
     } catch (error) {
+      setIsLoading(false);
       console.error('Error updating series:', error);
+      toast.error('Error updating the serie');
     }
   };
 
@@ -165,7 +183,7 @@ function EditSeriesForm({ onClose }) {
     <div>
       <h2 className="text-lg font-semibold">Edit Series</h2>
       <form onSubmit={handleSubmit} className="flex flex-col md:flex-row max-h-custom2 md:max-h-fit overflow-y-auto md:overflow-hidden">
-        <ImagePreview imageURL={seriesImageURL} onImageChange={handleImageChange} />
+        <ImagePreview imageURL={seriesImageURL} onImageChange={handleImageChange} onImageUpload={handleImageUpload} />
         <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[15rem] md:overflow-y-auto">
           <div className="mb-2">
             <label className="block text-sm font-medium">Series Name:</label>
@@ -269,9 +287,17 @@ function EditSeriesForm({ onClose }) {
           </div>
           <button
             type="submit"
-            className="bg-green-700 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn"
+            className={`bg-green-700 flex items-center space-x-2 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isLoading}
           >
-            Save Changes
+            {isLoading ? (
+              <>
+                <span className='white-loader'></span>
+                <span>Saving...</span>
+              </>
+            ) :
+              'Save Changes'
+            }
           </button>
         </div>
       </form>

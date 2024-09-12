@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const { getImageURL } = require('../../utils/imageUtils');
 
 /**
  * Get recommended authors based on the genres provided by the user.
@@ -29,6 +30,15 @@ exports.recommendAuthors = async (req, res) => {
         genreParams.push(excludeId);
 
         const [results] = await pool.query(query, genreParams);
+
+        let url = null;
+        for (const result of results) {
+          url = null;
+          if (result.image) {
+            url = await getImageURL(result.image);
+          }
+          result.imageURL = url;
+        }
 
         res.json(results);
     } catch (error) {
@@ -63,6 +73,15 @@ exports.recommendSeries = async (req, res) => {
         genreParams.push(excludeId);
 
         const [results] = await pool.query(query, genreParams);
+
+        let url = null;
+        for (const result of results) {
+          url = null;
+          if (result.image) {
+            url = await getImageURL(result.image);
+          }
+          result.imageURL = url;
+        }
 
         res.json(results);
     } catch (error) {

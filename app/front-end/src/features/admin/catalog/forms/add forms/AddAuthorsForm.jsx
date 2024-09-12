@@ -6,13 +6,19 @@ import { downloadImage } from '../../../../../utils/imageUtils';
 
 function AddAuthorsForm({ onClose }) {
   const [authorImageURL, setAuthorImageURL] = useState('');
-  const [imageFile, setImageFile] = useState(null);
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleImageChange = (url) => {
     setAuthorImageURL(url);
   };
 
+  const handleImageUpload = (file) => {
+    setSelectedImageFile(file); // Track the uploaded file
+  };
+
   const handleSubmit = async (event) => {
+    setIsLoading(true);
     event.preventDefault();
     const formData = new FormData(event.target);
 
@@ -21,15 +27,15 @@ function AddAuthorsForm({ onClose }) {
     const nameParts = fullName.trim().split(' ');
     const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0];
 
-    if (authorImageURL) {
+    if (selectedImageFile) {
+      formData.append('authorImage', selectedImageFile); // Add the uploaded image file to form data
+    } else if (authorImageURL) {
       const file = await downloadImage(authorImageURL, lastName);
       if (file) {
         formData.append('authorImage', file);
       } else {
-        console.error('Image file not available');
+        return console.error('Image file not available');
       }
-    } else {
-      console.error('No image URL provided');
     }
 
     // Debug output
@@ -43,18 +49,17 @@ function AddAuthorsForm({ onClose }) {
       if (response.status !== 201) throw new Error('Failed to submit form');
       // console.log('Form submitted successfully');
       // console.log(response);
-      
+
+      setIsLoading(false);
       if (onClose) {
         onClose(); // Call the onClose function to close the modal
       }
       toast.success(response.data.message);
 
     } catch (error) {
+      setIsLoading(false);
       console.error('Error submitting form:', error.response ? error.response.data : error.message);
-      // Optionally, you might want to show an error message to the user
-      if (onClose) {
-        onClose(); // Call the onClose function to close the modal
-      }
+      toast.error('Error updating the author');
     }
   };
 
@@ -63,7 +68,7 @@ function AddAuthorsForm({ onClose }) {
     <div className=''>
       <h2 className="text-lg font-semibold">Add Author</h2>
       <form onSubmit={handleSubmit} className="flex flex-col md:flex-row max-h-custom2 md:max-h-fit overflow-y-auto md:overflow-hidden">
-        <ImagePreview onImageChange={handleImageChange} />
+        <ImagePreview onImageChange={handleImageChange} onImageUpload={handleImageUpload} />
         <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[15rem] md:overflow-y-auto">
           <div className="mb-2">
             <label className="block text-sm font-medium">Author name:</label>
@@ -129,9 +134,17 @@ function AddAuthorsForm({ onClose }) {
           </div>
           <button
             type="submit"
-            className="bg-green-700 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn"
+            className={`bg-green-700 flex items-center space-x-2 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isLoading}
           >
-            Save Author
+            {isLoading ? (
+              <>
+                <span className='white-loader'></span>
+                <span>Saving...</span>
+              </>
+            ) :
+              'Save Changes'
+            }
           </button>
         </div>
       </form>

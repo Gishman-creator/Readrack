@@ -70,7 +70,7 @@ function EditSeriesForm({ onClose }) {
           const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
           setAuthorOptions(response.data.results.map(author => ({
             id: author.id,
-            authorName: author.nickname || author.name
+            authorName: author.nickname || author.authorName
           })));
         } catch (error) {
           console.error('Error fetching authors:', error);
@@ -184,7 +184,7 @@ function EditSeriesForm({ onClose }) {
       <h2 className="text-lg font-semibold">Edit Series</h2>
       <form onSubmit={handleSubmit} className="flex flex-col md:flex-row max-h-custom2 md:max-h-fit overflow-y-auto md:overflow-hidden">
         <ImagePreview imageURL={seriesImageURL} onImageChange={handleImageChange} onImageUpload={handleImageUpload} />
-        <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[15rem] md:overflow-y-auto">
+        <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[19rem] md:overflow-y-auto">
           <div className="mb-2">
             <label className="block text-sm font-medium">Series Name:</label>
             <input

@@ -18,6 +18,8 @@ import { useSocket } from '../../../../context/SocketContext';
 import blank_image from '../../../../assets/brand_blank_image.png';
 import EditCollectionsForm from '../forms/edit forms/EditCollectionsForm';
 import AddCollectionsForm from '../forms/add forms/AddCollectionsForm';
+import DeatailsPageSkeleton from '../../../user/components/skeletons/DeatailsPageSkeleton';
+import NotFoundPage from '../../../../pages/NotFoundPage';
 
 function AuthorDetails() {
   const { authorId, authorName } = useParams();
@@ -26,6 +28,7 @@ function AuthorDetails() {
   const [collections, setCollections] = useState([]);
   const [books, setBooks] = useState([]);
   const [IsLoading, setIsLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [modalType, setModalType] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);  // Manage modal visibility
 
@@ -102,6 +105,9 @@ function AuthorDetails() {
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching books data:', error);
+        if (error.response && error.response.status === 404) {
+          setNotFound(true);
+        }
         setIsLoading(false);
       }
     };
@@ -289,7 +295,9 @@ function AuthorDetails() {
   };
 
   if (IsLoading) {
-    return <p className='flex justify-center items-center'>Loading...</p>;
+    return <DeatailsPageSkeleton activeTab={activeTab} />;
+  } else if (notFound) {
+    return <NotFoundPage type='author' />
   }
 
   return (

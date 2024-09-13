@@ -12,12 +12,15 @@ import AddAuthorsForm from '../forms/add forms/AddAuthorsForm';
 import AddBooksForm from '../forms/add forms/AddBooksForm';
 import { useSocket } from '../../../../context/SocketContext';
 import blank_image from '../../../../assets/brand_blank_image.png';
+import NotFoundPage from '../../../../pages/NotFoundPage';
+import DeatailsPageSkeleton from '../../../user/components/skeletons/DeatailsPageSkeleton';
 
 function CollectionDetails() {
   const { collectionId, collectionName } = useParams();
   const [collectionData, setCollectionData] = useState({});
   const [books, setBooks] = useState([]);
   const [IsLoading, setIsLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [modalType, setModalType] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);  // Manage modal visibility
   const dispatch = useDispatch();
@@ -76,6 +79,9 @@ function CollectionDetails() {
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching collections data:', error);
+        if (error.response && error.response.status === 404) {
+          setNotFound(true);
+        }
         setIsLoading(false);
       }
     };
@@ -163,7 +169,9 @@ function CollectionDetails() {
   };
 
   if (IsLoading) {
-    return <p className='flex justify-center items-center'>Loading...</p>;
+    return <DeatailsPageSkeleton activeTab={activeTab} />;
+  } else if (notFound) {
+    return <NotFoundPage type='collection' />
   }
 
   return (

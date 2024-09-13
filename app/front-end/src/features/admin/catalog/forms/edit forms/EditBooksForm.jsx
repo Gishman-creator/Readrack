@@ -64,7 +64,7 @@ function EditBooksForm({ onClose }) {
           const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
           setAuthorOptions(response.data.results.map(author => ({
             id: author.id,
-            authorName: author.nickname ? author.nickname : author.name
+            authorName: author.nickname ? author.nickname : author.authorName
           })));
           // console.log(authorOptions);
         } catch (error) {
@@ -230,7 +230,7 @@ function EditBooksForm({ onClose }) {
           imageURL={bookImageURL} // Pass existing image URL to the ImagePreview component
           onImageUpload={handleImageUpload}
         />
-        <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[15rem] md:overflow-y-auto">
+        <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[19rem] md:overflow-y-auto">
           <div className="mb-4">
             <label className="block text-sm font-medium">Book name:</label>
             <input

@@ -6,6 +6,7 @@ import { toggleVisibility, toggleExpansion, setVisibility, setExpansion } from '
 
 const SideBar = () => {
     const dispatch = useDispatch();
+    const activeTab = useSelector((state) => state.catalog.activeTab);
     const { isVisible, isExpanded } = useSelector((state) => state.sideBar);
     const location = useLocation();
     const navigate = useNavigate();
@@ -68,7 +69,7 @@ const SideBar = () => {
                             </li>
                             <li>
                                 <Link
-                                    to="/admin/catalog?tab=series"
+                                    to={`/admin/catalog?tab=${activeTab.toLowerCase()}`}
                                     title={isExpanded ? null : 'Catalog'}
                                     className={`flex items-center p-1 on-click-sidebar ${isExpanded ? 'rounded' : 'rounded-lg'} ${isCatalogRoute ? 'bg-primary text-white hover:bg-primary' : ''
                                         }`}

@@ -2,6 +2,10 @@
 
 sudo rsync -avz --exclude 'node_modules' --exclude '.git' . ~/projects/readrack
 
+**Granting permission:
+
+chmod 600 "rwanda-mig.pem"
+
 **copying changes to the aws ec2 instance:
 
 ~/projects/readrack$ rsync -avz -e "ssh -i ./rwanda-mig.pem" . ubuntu@ec2-3-88-21-240.compute-1.amazonaws.com:~/app
@@ -14,9 +18,9 @@ migisha@DESKTOP-9SM1JON:~/projects/readrack$ ssh -i "rwanda-mig.pem" ubuntu@ec2-
 
 **How to restart the server:
 
-sudo systemctl status myapp.service
+sudo systemctl restart myapp.service
 
 directories:
 
-/etc/systemd/system/myapp
+/etc/systemd/system/myapp.service
 /etc/app.env

@@ -18,7 +18,7 @@ import { useSocket } from '../../../../context/SocketContext';
 import blank_image from '../../../../assets/brand_blank_image.png';
 import EditCollectionsForm from '../forms/edit forms/EditCollectionsForm';
 import AddCollectionsForm from '../forms/add forms/AddCollectionsForm';
-import DeatailsPageSkeleton from '../../../user/components/skeletons/DeatailsPageSkeleton';
+import DeatailsPageSkeleton from '../../../../components/skeletons/DeatailsPageSkeleton';
 import NotFoundPage from '../../../../pages/NotFoundPage';
 
 function AuthorDetails() {
@@ -38,6 +38,7 @@ function AuthorDetails() {
   const [seriesCount, SetSeriesCount] = useState();
   const [collectionsCount, SetCollectionsCount] = useState();
   const [booksCount, SetBooksCount] = useState();
+  const activeTab = useSelector((state) => state.catalog.activeTab);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -295,7 +296,7 @@ function AuthorDetails() {
   };
 
   if (IsLoading) {
-    return <DeatailsPageSkeleton activeTab={activeTab} />;
+    return <DeatailsPageSkeleton activeTab={activeTab} admin={true} />;
   } else if (notFound) {
     return <NotFoundPage type='author' />
   }

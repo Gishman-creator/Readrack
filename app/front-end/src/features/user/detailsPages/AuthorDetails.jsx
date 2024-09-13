@@ -10,7 +10,7 @@ import { FaXTwitter } from 'react-icons/fa6';
 import Recommendations from '../recommendations/Recommendations';
 import NotFoundPage from '../../../pages/NotFoundPage';
 import blank_image from '../../../assets/brand_blank_image.png'
-import DeatailsPageSkeleton from '../components/skeletons/DeatailsPageSkeleton';
+import DeatailsPageSkeleton from '../../../components/skeletons/DeatailsPageSkeleton';
 import { useSocket } from '../../../context/SocketContext';
 
 function AuthorDetails() {
@@ -36,7 +36,7 @@ function AuthorDetails() {
   const socket = useSocket();
 
   useEffect(() => {
-    
+
     const updatePageLimitAndInterval = () => {
       const width = window.innerWidth;
       if (width >= 1024) {
@@ -256,7 +256,7 @@ function AuthorDetails() {
   }
 
   if (IsLoading) {
-    return <DeatailsPageSkeleton activeTab={activeTab} />;
+    return <DeatailsPageSkeleton activeTab={activeTab} admin={false} />;
   } else if (notFound) {
     return <NotFoundPage type='author' />
   }

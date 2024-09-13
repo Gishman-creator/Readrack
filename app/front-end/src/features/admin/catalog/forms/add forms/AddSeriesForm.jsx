@@ -73,9 +73,9 @@ function AddSeriesForm({ onClose }) {
     formData.append('author_id', selectedAuthor);
 
     // Debug output
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
-    }
+    // for (let [key, value] of formData.entries()) {
+    //   console.log(`${key}:`, value);
+    // }
 
     // Process form data (e.g., send to server)
     try {
@@ -84,8 +84,8 @@ function AddSeriesForm({ onClose }) {
       });
 
       if (response.status !== 201) throw new Error('Failed to submit form');
-      console.log('Form submitted successfully');
-      console.log(response);
+      // console.log('Form submitted successfully');
+      // console.log(response);
 
       setIsLoading(false);
       if (onClose) {

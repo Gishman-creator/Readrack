@@ -75,9 +75,9 @@ function EditCollectionsForm({ onClose }) {
   };
 
   const handleImageChange = (url) => {
-    console.log('The new image url from edit series is:', url);
+    // console.log('The new image url from edit series is:', url);
     setCollectionsImageURL(url);
-    console.log('The image is:', collectionsImageURL)
+    // console.log('The image is:', collectionsImageURL)
   };
 
   const handleImageUpload = (file) => {

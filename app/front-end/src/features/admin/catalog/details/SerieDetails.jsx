@@ -12,7 +12,7 @@ import AddAuthorsForm from '../forms/add forms/AddAuthorsForm';
 import AddBooksForm from '../forms/add forms/AddBooksForm';
 import { useSocket } from '../../../../context/SocketContext';
 import blank_image from '../../../../assets/brand_blank_image.png';
-import DeatailsPageSkeleton from '../../../user/components/skeletons/DeatailsPageSkeleton';
+import DeatailsPageSkeleton from '../../../../components/skeletons/DeatailsPageSkeleton';
 import NotFoundPage from '../../../../pages/NotFoundPage';
 
 function SerieDetails() {
@@ -27,6 +27,7 @@ function SerieDetails() {
 
   const [booksLimit, setBooksLimit] = useState();
   const [booksCount, SetBooksCount] = useState();
+  const activeTab = useSelector((state) => state.catalog.activeTab);
 
   const navigate = useNavigate();
   const socket = useSocket();
@@ -162,7 +163,7 @@ function SerieDetails() {
   };
 
   if (IsLoading) {
-    return <DeatailsPageSkeleton activeTab={activeTab} />;
+    return <DeatailsPageSkeleton activeTab={activeTab} admin={true} />;
   } else if (notFound) {
     return <NotFoundPage type='serie' />
   }

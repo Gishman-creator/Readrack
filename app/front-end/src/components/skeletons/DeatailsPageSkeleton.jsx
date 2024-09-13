@@ -1,10 +1,10 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 
-const DeatailsPageSkeleton = ({ activeTab }) => {
+const DeatailsPageSkeleton = ({ activeTab, admin }) => {
 
   return (
-    <div className="px-[4%] sm:px-[12%] py-6">
+    <div className={`${admin ? '' : 'px-[4%] sm:px-[12%] py-6'}`}>
       <div className="md:flex md:flex-row md:space-x-6 xl:space-x-8 mb-10">
         {/* Skeleton for author image */}
         <div className="w-full md:w-[22rem] md:h-full md:sticky md:top-20 lg:top-[4.5rem] overflow-auto">

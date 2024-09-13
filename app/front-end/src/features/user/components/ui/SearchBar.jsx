@@ -66,7 +66,7 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
         try {
             const response = await axiosUtils('/api/search', 'GET', {}, {}, { query: term, type: 'all' });
             const results = response.data.results || []; // Ensure results is an array
-            console.log('The results are:', response.data)
+            // console.log('The results are:', response.data)
             setSearchResults(results.slice(0, 5));
         } catch (error) {
             console.error('Error searching:', error);
@@ -86,7 +86,7 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     };
 
     const handleSelectResult = (result) => {
-        console.log('Result selected:', result);
+        // console.log('Result selected:', result);
         if (result.type == 'serie') {
             navigate(`/series/${result.id}/${encodeURIComponent(result.name)}`);
         } else if (result.type == 'author') {

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import axiosUtils from '../../../utils/axiosUtils';
-import { SkeletonCard } from '../components/skeletons/SkeletonCard';
+import { SkeletonCard } from '../../../components/skeletons/SkeletonCard';
 import Card from '../components/Card';
 import { useSelector } from 'react-redux';
 import { bufferToBlobURL } from '../../../utils/imageUtils';

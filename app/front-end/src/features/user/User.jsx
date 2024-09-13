@@ -51,10 +51,10 @@ function User() {
     dispatch(setActiveTab(''));
     if (location.pathname.startsWith('/series')) {
       dispatch(setActiveTab('Series'));
-      console.log('Active tab set to: series')
+      // console.log('Active tab set to: series')
     } else if (location.pathname.startsWith('/authors')) {
       dispatch(setActiveTab('Authors'));
-      console.log('Active tab set to: authors')
+      // console.log('Active tab set to: authors')
     }
   }, [location, dispatch]);
 

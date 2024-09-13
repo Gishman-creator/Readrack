@@ -7,7 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Recommendations from '../recommendations/Recommendations';
 import NotFoundPage from '../../../pages/NotFoundPage';
 import blank_image from '../../../assets/brand_blank_image.png';
-import DeatailsPageSkeleton from '../components/skeletons/DeatailsPageSkeleton';
+import DeatailsPageSkeleton from '../../../components/skeletons/DeatailsPageSkeleton';
 import { useSocket } from '../../../context/SocketContext';
 
 function CollectionDetails() {
@@ -139,7 +139,7 @@ function CollectionDetails() {
   }
 
   if (IsLoading) {
-    return <DeatailsPageSkeleton activeTab={activeTab} />;
+    return <DeatailsPageSkeleton activeTab={activeTab} admin={false} />;
   } else if (notFound) {
     return <NotFoundPage type='collection' />
   }

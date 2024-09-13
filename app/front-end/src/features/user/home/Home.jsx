@@ -6,7 +6,7 @@ import Pagination from '../components/ui/Pagination';
 import { useSelector, useDispatch } from 'react-redux';
 import axiosUtils from '../../../utils/axiosUtils';
 import { bufferToBlobURL } from '../../../utils/imageUtils';
-import { SkeletonCard } from '../components/skeletons/SkeletonCard';
+import { SkeletonCard } from '../../../components/skeletons/SkeletonCard';
 import NotFoundPage from '../../../pages/NotFoundPage';
 
 export default function Home() {
@@ -60,7 +60,7 @@ export default function Home() {
     useEffect(() => {
         const fetchData = async () => {
             setIsLoading(true);
-            console.log('The active tab is:', activeTab);
+            // console.log('The active tab is:', activeTab);
             if (!activeTab) return; // Wait until activeTab is set
 
             try {

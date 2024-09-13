@@ -54,8 +54,7 @@ function Admin() {
     }, [dispatch]);
 
     if (isLoggedIn === null) {
-        // Render a loading state while checking the token
-        return <div className=" bg-[#f9f9f9] flex justify-center items-center min-h-screen">Loading...</div>;
+        return ;
     }
 
     return (

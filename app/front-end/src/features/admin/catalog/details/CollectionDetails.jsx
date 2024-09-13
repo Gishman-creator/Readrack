@@ -13,7 +13,7 @@ import AddBooksForm from '../forms/add forms/AddBooksForm';
 import { useSocket } from '../../../../context/SocketContext';
 import blank_image from '../../../../assets/brand_blank_image.png';
 import NotFoundPage from '../../../../pages/NotFoundPage';
-import DeatailsPageSkeleton from '../../../user/components/skeletons/DeatailsPageSkeleton';
+import DeatailsPageSkeleton from '../../../../components/skeletons/DeatailsPageSkeleton';
 
 function CollectionDetails() {
   const { collectionId, collectionName } = useParams();
@@ -27,6 +27,7 @@ function CollectionDetails() {
 
   const [booksLimit, setBooksLimit] = useState();
   const [booksCount, SetBooksCount] = useState();
+  const activeTab = useSelector((state) => state.catalog.activeTab);
 
   const navigate = useNavigate();
   const socket = useSocket();
@@ -54,7 +55,7 @@ function CollectionDetails() {
       if (!booksLimit) return;
       try {
         const collectionResponse = await axiosUtils(`/api/getCollectionById/${collectionId}`, 'GET');
-        console.log('The colleciton response is:', collectionResponse);
+        // console.log('The colleciton response is:', collectionResponse);
 
         // Handle case where collectionResponse.data.collections is an array with one item
         const fetchedCollection = Array.isArray(collectionResponse.data)
@@ -62,7 +63,7 @@ function CollectionDetails() {
           : collectionResponse.data;
 
         setCollectionData(fetchedCollection);
-        console.log('Fetched collection data:', fetchedCollection);
+        // console.log('Fetched collection data:', fetchedCollection);
 
         // If collectionName is not in the URL, update it
         if (!collectionName || collectionName !== fetchedCollection.collectionName) {
@@ -70,7 +71,7 @@ function CollectionDetails() {
         }
 
         const booksResponse = await axiosUtils(`/api/getBooksByCollectionId/${fetchedCollection.id}?limit=${booksLimit}`, 'GET');
-        console.log('Books response:', booksResponse.data); // Debugging
+        // console.log('Books response:', booksResponse.data); // Debugging
 
         setBooks(booksResponse.data.books);
         SetBooksCount(booksResponse.data.totalCount);
@@ -169,7 +170,7 @@ function CollectionDetails() {
   };
 
   if (IsLoading) {
-    return <DeatailsPageSkeleton activeTab={activeTab} />;
+    return <DeatailsPageSkeleton activeTab={activeTab} admin={true} />;
   } else if (notFound) {
     return <NotFoundPage type='collection' />
   }

@@ -4,7 +4,7 @@ import axiosUtils from '../../../utils/axiosUtils';
 import Card from '../components/Card';
 import { bufferToBlobURL } from '../../../utils/imageUtils';
 import Pagination from '../components/ui/Pagination';
-import { SkeletonCard } from '../components/skeletons/SkeletonCard';
+import { SkeletonCard } from '../../../components/skeletons/SkeletonCard';
 import Dropdown from '../components/ui/Dropdown';
 
 const SearchResults = () => {
@@ -97,7 +97,7 @@ const SearchResults = () => {
             setIsLoading(true);
             try {
                 const response = await axiosUtils(`/api/search?query=${initialQuery}&type=${type}&seriePageLimitStart=${seriePageLimitStart}&seriePageLimitEnd=${seriePageLimitEnd}&authorPageLimitStart=${authorPageLimitStart}&authorPageLimitEnd=${authorPageLimitEnd}`, 'GET');
-                console.log('The search results are:', response);
+                // console.log('The search results are:', response);
 
                 const dataWithBlobs = response.data.results.map((item) => ({
                     ...item,

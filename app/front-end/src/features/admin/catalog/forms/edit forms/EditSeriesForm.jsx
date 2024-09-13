@@ -29,7 +29,7 @@ function EditSeriesForm({ onClose }) {
     const fetchSeriesData = async () => {
       try {
         const response = await axiosUtils(`/api/getSerieById/${seriesId}`, 'GET');
-        console.log('The serie data are:', response.data);
+        // console.log('The serie data are:', response.data);
         const data = response.data;
         setSeriesData(data);
 
@@ -87,7 +87,7 @@ function EditSeriesForm({ onClose }) {
       const fetchCollections = async () => {
         try {
           const response = await axiosUtils(`/api/search?query=${collectionSearch}&type=collections`, 'GET');
-          console.log('The found collections are:', response)
+          // console.log('The found collections are:', response)
           setCollectionOptions(response.data.results.map(collection => ({
             id: collection.id,
             collectionName: collection.collectionName

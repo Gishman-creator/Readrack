@@ -58,7 +58,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                     data = response.data.data;
                     totalCount = response.data.totalCount;
                 }
-                console.log('Total data fetched:', data);
+                // console.log('Total data fetched:', data);
                 setTableData(data);
                 dispatch(setTableTotalItems(totalCount));
                 // console.log('Total count of data:', totalCount)

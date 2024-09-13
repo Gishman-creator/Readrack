@@ -7,7 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Recommendations from '../recommendations/Recommendations';
 import NotFoundPage from '../../../pages/NotFoundPage';
 import blank_image from '../../../assets/brand_blank_image.png';
-import DeatailsPageSkeleton from '../components/skeletons/DeatailsPageSkeleton';
+import DeatailsPageSkeleton from '../../../components/skeletons/DeatailsPageSkeleton';
 import { useSocket } from '../../../context/SocketContext';
 import RelatedCollections from '../related_collections/RelatedCollections';
 
@@ -50,7 +50,7 @@ function SerieDetails() {
     const fetchSeriesData = async () => {
       setIsLoading(true);
       if (!booksLimit) return;
-        setRelatedCollections([]);
+      setRelatedCollections([]);
       try {
         const serieResponse = await axiosUtils(`/api/getSerieById/${serieId}`, 'GET');
         setSerieData(serieResponse.data);
@@ -68,7 +68,7 @@ function SerieDetails() {
             collectionIds.map(async (id) => {
               const res = await axiosUtils(`/api/getCollectionById/${id}`, 'GET');
               const collectionData = res.data;
-              
+
               return collectionData;
             })
           );
@@ -158,7 +158,7 @@ function SerieDetails() {
   }
 
   if (IsLoading) {
-    return <DeatailsPageSkeleton activeTab={activeTab} />;
+    return <DeatailsPageSkeleton activeTab={activeTab} admin={false} />;
   } else if (notFound) {
     return <NotFoundPage type='serie' />
   }

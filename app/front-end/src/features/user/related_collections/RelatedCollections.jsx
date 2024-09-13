@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import axiosUtils from '../../../utils/axiosUtils';
-import { SkeletonCard } from '../components/skeletons/SkeletonCard';
+import { SkeletonCard } from '../../../components/skeletons/SkeletonCard';
 import Card from '../components/Card';
 import { useSelector } from 'react-redux';
 import { bufferToBlobURL } from '../../../utils/imageUtils';
@@ -50,7 +50,7 @@ function RelatedCollections({ data }) {
                 className='w-full flex flex-row pt-4 space-x-4 px-3 overflow-x-scroll scrollbar-hidden'
             >
                 {cardData.map((item) => (
-                <Card key={item.id} card={item} activeTab='Collections' fixedWidth={true} />
+                    <Card key={item.id} card={item} activeTab='Collections' fixedWidth={true} />
                 ))}
             </div>
         </div>

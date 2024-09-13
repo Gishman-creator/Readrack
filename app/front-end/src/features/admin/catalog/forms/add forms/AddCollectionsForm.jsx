@@ -76,9 +76,9 @@ function AddCollectionsForm({ onClose }) {
     formData.append('author_id', selectedAuthor);
 
     // Debug output
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
-    }
+    // for (let [key, value] of formData.entries()) {
+    //   console.log(`${key}:`, value);
+    // }
 
     // Process form data (e.g., send to server)
     try {

@@ -11,7 +11,7 @@ function Card({ card, activeTab, fixedWidth }) {
     // console.log('The cardData from card.jsx', card.image);
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    console.log('The card image url is:', card);
+    // console.log('The card image url is:', card);
 
     const navigateToDetails = (id) => {
         if (activeTab === 'Series') {

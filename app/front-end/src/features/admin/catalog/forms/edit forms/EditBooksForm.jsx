@@ -168,9 +168,9 @@ function EditBooksForm({ onClose }) {
     const formData = new FormData(event.target);
 
     // Log form data entries
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`);
-    }
+    // for (let [key, value] of formData.entries()) {
+    //   console.log(`${key}: ${value}`);
+    // }
 
     const bookName = formData.get('bookName') || '';
     let imageName = bookDetails.image;
@@ -195,9 +195,9 @@ function EditBooksForm({ onClose }) {
     formData.append('collection_id', selectedCollection);
 
     // Log form data entries
-    for (let [key, value] of formData.entries()) {
+    // for (let [key, value] of formData.entries()) {
       // console.log(`${key}: ${value}`);
-    }
+    // }
 
     try {
       const response = await axiosUtils(`/api/updateBook/${bookId}`, 'PUT', formData, {

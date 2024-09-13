@@ -20,7 +20,7 @@ function EditAuthorForm({ onClose }) {
     const fetchAuthorData = async () => {
       try {
         const response = await axiosUtils(`/api/getAuthorById/${authorId}`, 'GET');
-        console.log('Author data fetched:', response.data); // Log the entire response data
+        // console.log('Author data fetched:', response.data); // Log the entire response data
 
         setAuthorData(response.data);
         // console.log('Author data:', response.data);

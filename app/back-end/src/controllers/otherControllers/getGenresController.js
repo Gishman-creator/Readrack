@@ -18,28 +18,42 @@ exports.getGenresController = async (req, res) => {
         return res.status(400).json({ message: 'Tab is required' });
     }
 
-    let query;
+    let tableName;
     if (tab === 'Series') {
-        query = 'SELECT COUNT(*) as count FROM series WHERE genres LIKE ?';
+        tableName = 'series';
     } else if (tab === 'Authors') {
-        query = 'SELECT COUNT(*) as count FROM authors WHERE genres LIKE ?';
+        tableName = 'authors';
     } else {
         return res.status(400).json({ message: 'Invalid tab value' });
     }
 
     try {
-        const genresWithResults = [];
+        // Construct a single query with multiple genres using OR condition
+        const query = `
+            SELECT genres
+            FROM ${tableName}
+            WHERE ${genres.map(() => 'genres LIKE ?').join(' OR ')}
+        `;
 
-        // Loop through each genre and execute the query
-        for (let genre of genres) {
-            const [rows] = await pool.query(query, [`%${genre}%`]);
+        // Generate the parameters for the LIKE clauses
+        const params = genres.map(genre => `%${genre}%`);
 
-            if (rows[0].count > 0) {
-                genresWithResults.push(genre); // Only add genre if rows found
-            }
-        }
+        const [rows] = await pool.query(query, params);
 
-        res.json({ genres: genresWithResults });
+        // Initialize an object to track matched genres
+        const genresWithResults = new Set();
+
+        // Iterate over each row and match genres with flexible comparison
+        rows.forEach(row => {
+            const rowGenres = row.genres.split(',').map(g => g.trim().toLowerCase()); // Normalize and split
+            genres.forEach(genre => {
+                if (rowGenres.some(rg => rg.includes(genre.toLowerCase()))) {
+                    genresWithResults.add(genre); // Add the genre if any part of it matches
+                }
+            });
+        });
+
+        res.json({ genres: Array.from(genresWithResults) });
     } catch (error) {
         console.error('Error fetching genres:', error);
         res.status(500).json({ message: 'Error fetching genres' });

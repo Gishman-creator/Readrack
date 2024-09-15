@@ -32,6 +32,7 @@ function Catalog() {
     const formattedTab = tab.charAt(0).toUpperCase() + tab.slice(1);
     // console.log('The tab is:', formattedTab);
     dispatch(setActiveTab(formattedTab));
+    navigate(`/admin/catalog?tab=${formattedTab.toLowerCase()}`, { replace: true });
   }, [location.search, dispatch]);
 
   const handleTabClick = (tab) => {

@@ -11,9 +11,11 @@ import axiosUtils from '../../utils/axiosUtils'; // Adjust path as necessary
 import { setLoginState } from '../authentication/slices/authSlice';
 import Login from '../authentication/components/Login';
 import NotFoundPage from '../../pages/NotFoundPage';
+import NetworkErrorPage from '../../pages/NetworkErrorPage';
 
 function Admin() {
     const [isLoggedIn, setIsLoggedIn] = useState(null);  // Manage local login state
+    const [networkError, setNetworkError] = useState(false);
     const dispatch = useDispatch();
     const { isExpanded } = useSelector((state) => state.sideBar);
 
@@ -46,16 +48,26 @@ function Admin() {
                 }
             } catch (error) {
                 console.error('Token validation failed:', error);
-                setIsLoggedIn(false);
-                dispatch(setLoginState(false));
+                if (error.message === "Network Error" || error.response.status === 500) {
+                    setNetworkError(true);
+                    console.log("Network error networkError set to true");
+                }
+                // setIsLoggedIn(false);
+                // dispatch(setLoginState(false));
             }
         };
 
         validateTokens();
     }, [dispatch]);
 
+    // Handle network error first
+    if (networkError) {
+        return <div className='h-screen pt-5 bg-white'><NetworkErrorPage /></div>;
+    }
+
+    // Return a loading indicator while checking login status
     if (isLoggedIn === null) {
-        return ;
+        return <div className='h-screen flex justify-center items-center'><span className='green-loader-lg'></span></div>; // You can replace this with a proper loading component
     }
 
     return (

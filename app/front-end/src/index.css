@@ -107,6 +107,18 @@
   animation: rotation 1s linear infinite;
 }
 
+/* Green Loader */
+.green-loader-lg {
+  width: 60px;
+  height: 60px;
+  border: 5px solid #15803d;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
 /* White Loader */
 .white-loader {
   width: 15px;

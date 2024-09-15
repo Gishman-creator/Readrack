@@ -8,6 +8,7 @@ import axiosUtils from '../../../utils/axiosUtils';
 import { bufferToBlobURL } from '../../../utils/imageUtils';
 import { SkeletonCard } from '../../../components/skeletons/SkeletonCard';
 import NotFoundPage from '../../../pages/NotFoundPage';
+import NetworkErrorPage from '../../../pages/NetworkErrorPage';
 
 export default function Home() {
     const activeTab = useSelector((state) => state.user.activeTab);
@@ -20,6 +21,7 @@ export default function Home() {
 
     const [isLoading, setIsLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
+    const [networkError, setNetworkError] = useState(false);
     const [cardData, setCardData] = useState([]);
 
     const dispatch = useDispatch();
@@ -80,7 +82,9 @@ export default function Home() {
             } catch (error) {
                 setIsLoading(false);
                 console.error(`Error fetching ${activeTab} data:`, error);
-                if (error.response && error.response.status === 404) {
+                if (error.message === "Network Error" || error.response.status === 500) {
+                    setNetworkError(true);
+                } else if (error.response && error.response.status === 404) {
                     setNotFound(true);
                 }
             }
@@ -96,7 +100,10 @@ export default function Home() {
 
     if (notFound) {
         return <NotFoundPage type={activeTab} />
+    } else if (networkError) {
+        return <NetworkErrorPage />
     }
+
 
     return (
         <div className='bg-white pb-10'>

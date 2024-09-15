@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { MagnifyingGlassIcon, ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom'; // Assuming you are using react-router for navigation
 import axiosUtils from '../../../../utils/axiosUtils';
-import { capitalize } from '../../../../utils/stringUtils';
+import { capitalize, spacesToHyphens } from '../../../../utils/stringUtils';
 import { incrementSearchCount } from '../../../../utils/searchCountUtils';
 import { delay } from 'lodash';
 
@@ -79,7 +79,7 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     const handleSearchSubmit = (e) => {
         // console.log('Handle search submit called');
         e.preventDefault(); // Prevent form submission
-        navigate(`/search?q=${encodeURIComponent(searchTerm)}&type=all`);
+        navigate(`/search?q=${spacesToHyphens(searchTerm)}&type=all`);
         setIsInputFocused(false);
         setSearchTerm('');
         toggleSearch(false);
@@ -88,11 +88,11 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     const handleSelectResult = (result) => {
         // console.log('Result selected:', result);
         if (result.type == 'serie') {
-            navigate(`/series/${result.id}/${encodeURIComponent(result.name)}`);
+            navigate(`/series/${result.id}/${spacesToHyphens(result.name)}`);
         } else if (result.type == 'author') {
-            navigate(`/authors/${result.id}/${encodeURIComponent(result.name)}`);
+            navigate(`/authors/${result.id}/${spacesToHyphens(result.name)}`);
         } else if (result.type == 'collection') {
-            navigate(`/collections/${result.id}/${encodeURIComponent(result.name)}`);
+            navigate(`/collections/${result.id}/${spacesToHyphens(result.name)}`);
         }
         setIsInputFocused(false);
         incrementSearchCount(result.type, result.id);
@@ -132,7 +132,7 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
                         />
                         {isLoading ? (
                             searchTerm ?
-                                <div className="mr-1 green-loader"></div>
+                                <div className="mr-1 p-2 green-loader"></div>
                                 :
                                 <MagnifyingGlassIcon
                                     type='submit'

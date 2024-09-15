@@ -26,3 +26,8 @@ export function formatDate(date) {
     return `${monthNames[month]} ${day}, ${year}`;
 }
 
+export function spacesToHyphens(str) {
+    if (!str) return str;
+    return str.split(' ').join('-');  // Replace spaces with hyphens
+}
+

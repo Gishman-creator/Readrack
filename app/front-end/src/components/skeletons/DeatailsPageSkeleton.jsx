@@ -16,10 +16,10 @@ const DeatailsPageSkeleton = ({ activeTab, admin }) => {
               <div className="w-48 h-4 bg-gray-200 rounded-lg animate-pulse mx-auto mb-4"></div>
               {activeTab === 'Authors' ? (
                 <div className="flex justify-evenly items-center mt-10">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
-                  <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
-                  <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
-                  <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                  <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                  <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                  <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                  <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
                 </div>
               ) : (
                 <div className="w-full h-12 bg-gray-200 rounded-lg animate-pulse mt-12"></div>

@@ -1,12 +1,25 @@
 const pool = require('../../config/db');
 const { putImage, getImageURL } = require('../../utils/imageUtils');
 
+// Helper function to fetch authors based on their IDs
+const getAuthorsByIds = async (authorIds) => {
+  if (!authorIds) return [];
+
+  const idsArray = authorIds.split(',').map(id => id.trim()); // Split the string and trim any spaces
+  const placeholders = idsArray.map(() => '?').join(','); // Prepare placeholders for SQL IN clause
+
+  const query = `SELECT id AS author_id, authorName AS author_name, nickname FROM authors WHERE id IN (${placeholders})`;
+  const [authors] = await pool.query(query, idsArray);
+  
+  return authors;
+};
+
 const updateBook = async (req, res) => {
   const { id } = req.params;
   console.log('Body', req.body);
   console.log('File', req.file); // Log file information
   console.log('The request body is:', req.body);
-  const { bookName, serie_id, collection_id, author_id, publishDate, genres, link, imageName } = req.body;
+  const { bookName, serie_id, collection_id, author_id, publishDate, customDate, genres, link, imageName } = req.body;
     
   const image = req.file ? await putImage(id, req.file, 'books') || imageName : null; // Await the function to resolve the promise
   console.log('The image key for Amazon is:', image);
@@ -20,8 +33,8 @@ const updateBook = async (req, res) => {
   try {
     // Update the book in the database
     const [updateResult] = await pool.query(
-      'UPDATE books SET bookName = ?, serie_id = ?, collection_id = ?, author_id = ?, publishDate = ?, genres = ?, link = ?, image = ? WHERE id = ?',
-      [bookName, serie_id || null, collection_id || null, author_id || null, publishDate, genres, link, image, id]
+      'UPDATE books SET bookName = ?, serie_id = ?, collection_id = ?, author_id = ?, publishDate = ?, customDate = ?, genres = ?, link = ?, image = ? WHERE id = ?',
+      [bookName, serie_id || null, collection_id || null, author_id || null, publishDate || null, customDate || null, genres, link, image, id]
     );
 
     if (updateResult.affectedRows === 0) {
@@ -42,6 +55,11 @@ const updateBook = async (req, res) => {
     if (bookRows.length === 0) {
       return res.status(404).json({ message: 'Book not found after update' });
     }
+
+    const book = bookRows[0];
+    // Fetch authors for the book
+    const authors = await getAuthorsByIds(book.author_id);
+    book.authors = authors;
 
     let url = null;
     if (bookRows[0].image) {

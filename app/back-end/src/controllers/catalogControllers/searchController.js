@@ -2,11 +2,16 @@ const pool = require('../../config/db');
 const { getImageURL } = require('../../utils/imageUtils');
 
 // Function to build the SQL for any-order search
-const buildAnyOrderQuery = (query, columnName) => {
-  const characters = query.split('');
-  let conditions = characters.map(char => `${columnName} LIKE ?`).join(' AND ');
-  let queryParams = characters.map(char => `%${char}%`);
-  return { conditions, queryParams };
+const buildExactOrderQuery = (query, columnName) => {
+  // Replace special characters in the query with wildcard pattern
+  const sanitizedQuery = query.replace(/[^a-zA-Z0-9]/g, ''); // Removing special characters
+  const sqlPattern = sanitizedQuery.split('').join('%'); // Create the pattern: "h%e%l%l%o" for "hello"
+
+  // Construct SQL using REPLACE to remove spaces and special characters from the database column
+  const condition = `${columnName} LIKE ?`;
+
+  // Return condition and query parameters
+  return { condition, queryParams: [`%${sqlPattern}%`] };
 };
 
 exports.search = async (req, res) => {
@@ -48,29 +53,30 @@ exports.search = async (req, res) => {
 
     // Apply query filter if available (for any order search)
     if (query) {
-      const { conditions: seriesConditions, queryParams: seriesParams } = buildAnyOrderQuery(query, 'serieName');
-      const { conditions: collectionsConditions, queryParams: collectionsParams } = buildAnyOrderQuery(query, 'collectionName');
-      const { conditions: authorsConditions, queryParams: authorsParams } = buildAnyOrderQuery(query, 'authorName');
-      const { conditions: authorsNicknameConditions, queryParams: authorsNicknameParams } = buildAnyOrderQuery(query, 'nickname');
-      const { conditions: booksConditions, queryParams: booksParams } = buildAnyOrderQuery(query, 'bookName');
-      
+      // Use the new buildExactOrderQuery function
+      const { condition: seriesCondition, queryParams: seriesParams } = buildExactOrderQuery(query, 'REPLACE(REPLACE(REPLACE(serieName, " ", ""), ",", ""), ".", "")');
+      const { condition: collectionsCondition, queryParams: collectionsParams } = buildExactOrderQuery(query, 'REPLACE(REPLACE(REPLACE(collectionName, " ", ""), ",", ""), ".", "")');
+      const { condition: authorsCondition, queryParams: authorsParams } = buildExactOrderQuery(query, 'REPLACE(REPLACE(REPLACE(authorName, " ", ""), ",", ""), ".", "")');
+      const { condition: authorsNicknameCondition, queryParams: authorsNicknameParams } = buildExactOrderQuery(query, 'REPLACE(REPLACE(REPLACE(nickname, " ", ""), ",", ""), ".", "")');
+      const { condition: booksCondition, queryParams: booksParams } = buildExactOrderQuery(query, 'REPLACE(REPLACE(REPLACE(bookName, " ", ""), ",", ""), ".", "")');
+  
       // Append WHERE clauses
-      seriesQuery += ` WHERE ${seriesConditions} order by searchCount desc`;
-      collectionsQuery += ` WHERE ${collectionsConditions} order by searchCount desc`;
-      authorsQuery += ` WHERE ${authorsConditions} OR ${authorsNicknameConditions} order by searchCount desc`;
-      booksQuery += ` WHERE ${booksConditions} order by searchCount desc`;
-      
-      seriesCountQuery += ` WHERE ${seriesConditions}`;
-      collectionsCountQuery += ` WHERE ${collectionsConditions}`;
-      authorsCountQuery += ` WHERE ${authorsConditions} OR ${authorsNicknameConditions}`;
-      booksCountQuery += ` WHERE ${booksConditions}`;
-      
+      seriesQuery += ` WHERE ${seriesCondition} order by searchCount desc`;
+      collectionsQuery += ` WHERE ${collectionsCondition} order by searchCount desc`;
+      authorsQuery += ` WHERE ${authorsCondition} OR ${authorsNicknameCondition} order by searchCount desc`;
+      booksQuery += ` WHERE ${booksCondition} order by searchCount desc`;
+  
+      seriesCountQuery += ` WHERE ${seriesCondition}`;
+      collectionsCountQuery += ` WHERE ${collectionsCondition}`;
+      authorsCountQuery += ` WHERE ${authorsCondition} OR ${authorsNicknameCondition}`;
+      booksCountQuery += ` WHERE ${booksCondition}`;
+  
       // Append params
       seriesQueryParams.push(...seriesParams);
       collectionsQueryParams.push(...collectionsParams);
-      authorsQueryParams.push(...authorsParams, ...authorsNicknameParams); // for nickname search
+      authorsQueryParams.push(...authorsParams, ...authorsNicknameParams);
       booksQueryParams.push(...booksParams);
-
+  
       countQueryParams.push(...seriesParams, ...seriesParams);
     }
 

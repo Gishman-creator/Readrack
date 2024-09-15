@@ -1,8 +1,21 @@
 const pool = require('../../config/db');
 const { getImageURL } = require('../../utils/imageUtils');
 
-exports.getBooks = async (req, res) => {
+// Helper function to fetch authors based on their IDs
+const getAuthorsByIds = async (authorIds) => {
+  if (!authorIds) return [];
 
+  const idsArray = authorIds.split(',').map(id => id.trim()); // Split the string and trim any spaces
+  const placeholders = idsArray.map(() => '?').join(','); // Prepare placeholders for SQL IN clause
+
+  const query = `SELECT id AS author_id, authorName AS author_name, nickname FROM authors WHERE id IN (${placeholders})`;
+  const [authors] = await pool.query(query, idsArray);
+  
+  return authors;
+};
+
+// Fetch all books with author details
+exports.getBooks = async (req, res) => {
   const validatePagination = (value, defaultValue) => {
     return isNaN(value) ? defaultValue : value;
   };
@@ -11,56 +24,53 @@ exports.getBooks = async (req, res) => {
   const limitEnd = req.query.limitEnd ? validatePagination(parseInt(req.query.limitEnd, 10)) : null;
 
   try {
-    // Get the total count of books
     const [countResult] = await pool.query('SELECT COUNT(*) AS total FROM books');
     const totalCount = countResult[0].total;
 
-    // Fetch books with pagination and join with authors and series to get their names
     let dataQuery = `
-      SELECT books.*, authors.authorName AS author_name, authors.nickname, series.serieName AS serie_name, collections.collectionName AS collection_name
+      SELECT books.*, series.serieName AS serie_name, collections.collectionName AS collection_name
       FROM books
-      LEFT JOIN authors ON books.author_id = authors.id
       LEFT JOIN series ON books.serie_id = series.id
       LEFT JOIN collections ON books.collection_id = collections.id
     `;
     const queryParams = [];
 
-    // Add LIMIT clause if both limitStart and limitEnd are defined
     if (typeof limitStart === 'number' && typeof limitEnd === 'number') {
       dataQuery += ' LIMIT ?, ?';
       queryParams.push(limitStart, limitEnd - limitStart);
     }
 
-    const [rows] = await pool.query(dataQuery, queryParams);
+    const [books] = await pool.query(dataQuery, queryParams);
 
-    let url = null;
-    for (const row of rows) {
-      url = null;
-      if (row.image) {
-        url = await getImageURL(row.image);
+    for (const book of books) {
+      // Fetch authors for each book
+      const authors = await getAuthorsByIds(book.author_id);
+      book.authors = authors;
+
+      // Fetch image URL if available
+      if (book.image) {
+        book.imageURL = await getImageURL(book.image);
+      } else {
+        book.imageURL = null;
       }
-      row.imageURL = url;
     }
 
-    // Return both the total count and the paginated books
-    res.json({ data: rows, totalCount: totalCount });
+    res.json({ data: books, totalCount: totalCount });
   } catch (error) {
     console.error('Error fetching books:', error);
     res.status(500).send('Error fetching books');
   }
 };
 
-
+// Fetch a specific book by ID with author details
 exports.getBookById = async (req, res) => {
   const { id } = req.params;
   const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
 
   try {
-    // Fetch a specific book by ID and join with authors and series to get their names
     let query = `
-      SELECT books.*, authors.authorName AS author_name, authors.nickname, series.serieName AS serie_name, collections.collectionName AS collection_name
+      SELECT books.*, series.serieName AS serie_name, collections.collectionName AS collection_name
       FROM books
-      LEFT JOIN authors ON books.author_id = authors.id
       LEFT JOIN series ON books.serie_id = series.id
       LEFT JOIN collections ON books.collection_id = collections.id
       WHERE books.id = ?
@@ -72,24 +82,31 @@ exports.getBookById = async (req, res) => {
       queryParams.push(limit);
     }
 
-    const [rows] = await pool.query(query, queryParams);
+    const [books] = await pool.query(query, queryParams);
 
-    if (rows.length === 0) {
+    if (books.length === 0) {
       return res.status(404).json({ message: 'Book not found' });
     }
 
-    let url = null;
-    if (rows[0].image) {
-      url = await getImageURL(rows[0].image);
-    }
-    rows[0].imageURL = url;
+    const book = books[0];
+    // Fetch authors for the book
+    const authors = await getAuthorsByIds(book.author_id);
+    book.authors = authors;
 
-    res.json(rows[0]);
+    // Fetch image URL if available
+    if (book.image) {
+      book.imageURL = await getImageURL(book.image);
+    } else {
+      book.imageURL = null;
+    }
+
+    res.json(book);
   } catch (error) {
     console.error('Error fetching book:', error);
     res.status(500).send('Error fetching book');
   }
 };
+
 
 exports.getBooksBySerieId = async (req, res) => {
   const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
@@ -98,9 +115,8 @@ exports.getBooksBySerieId = async (req, res) => {
   try {
     // Fetch books by serie_id and join with authors and series to get their names
     let query = `
-      SELECT books.*, authors.authorName AS author_name, authors.nickname, series.serieName AS serie_name, collections.collectionName AS collection_name
+      SELECT books.*, series.serieName AS serie_name, collections.collectionName AS collection_name
       FROM books
-      LEFT JOIN authors ON books.author_id = authors.id
       LEFT JOIN series ON books.serie_id = series.id
       LEFT JOIN collections ON books.collection_id = collections.id
       WHERE books.serie_id = ?
@@ -123,6 +139,11 @@ exports.getBooksBySerieId = async (req, res) => {
 
     let url = null;
     for (const book of books) {
+      // Fetch authors for each book
+      const authors = await getAuthorsByIds(book.author_id);
+      book.authors = authors;
+
+      // Fetch image URL if available
       url = null;
       if (book.image) {
         url = await getImageURL(book.image);
@@ -145,9 +166,8 @@ exports.getBooksByCollectionId = async (req, res) => {
   try {
     // Fetch books by collection_id and join with authors and collections to get their names
     let query = `
-      SELECT books.*, authors.authorName AS author_name, authors.nickname, series.serieName AS serie_name, collections.collectionName AS collection_name
+      SELECT books.*, series.serieName AS serie_name, collections.collectionName AS collection_name
       FROM books
-      LEFT JOIN authors ON books.author_id = authors.id
       LEFT JOIN series ON books.serie_id = series.id
       LEFT JOIN collections ON books.collection_id = collections.id
       WHERE books.collection_id = ?
@@ -170,6 +190,11 @@ exports.getBooksByCollectionId = async (req, res) => {
 
     let url = null;
     for (const book of books) {
+      // Fetch authors for each book
+      const authors = await getAuthorsByIds(book.author_id);
+      book.authors = authors;
+
+      // Fetch image URL if available
       url = null;
       if (book.image) {
         url = await getImageURL(book.image);
@@ -189,14 +214,16 @@ exports.getBooksByAuthorId = async (req, res) => {
   let { author_id } = req.params;
 
   try {
+    // Create the pattern for the LIKE query by concatenating the wildcards
+    const likePattern = `%${author_id}%`;
+
     // Fetch books by author_id and join with authors and series to get their names
     let query = `
-      SELECT books.*, authors.authorName AS author_name, authors.nickname, series.serieName AS serie_name, collections.collectionName AS collection_name
+      SELECT books.*, series.serieName AS serie_name, collections.collectionName AS collection_name
       FROM books
-      LEFT JOIN authors ON books.author_id = authors.id
       LEFT JOIN series ON books.serie_id = series.id
       LEFT JOIN collections ON books.collection_id = collections.id
-      WHERE books.author_id = ?
+      WHERE books.author_id like ?
       AND books.serie_id is null
       AND books.collection_id is null
       ORDER BY books.publishDate ASC
@@ -204,11 +231,11 @@ exports.getBooksByAuthorId = async (req, res) => {
     let countQuery = `
       SELECT COUNT(*) AS totalCount 
       FROM books 
-      WHERE author_id = ?
+      WHERE author_id like ?
       AND books.serie_id is null
       AND books.collection_id is null
     `;
-    const queryParams = [author_id];
+    const queryParams = [likePattern];
 
     if (limit) {
       query += ' LIMIT ?';
@@ -220,6 +247,11 @@ exports.getBooksByAuthorId = async (req, res) => {
 
     let url = null;
     for (const book of books) {
+      // Fetch authors for each book
+      const authors = await getAuthorsByIds(book.author_id);
+      book.authors = authors;
+
+      // Fetch image URL if available
       url = null;
       if (book.image) {
         url = await getImageURL(book.image);

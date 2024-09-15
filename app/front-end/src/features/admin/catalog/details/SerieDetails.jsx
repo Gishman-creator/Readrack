@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import axiosUtils from '../../../../utils/axiosUtils';
-import { capitalize, formatDate } from '../../../../utils/stringUtils';
+import { capitalize, formatDate, spacesToHyphens } from '../../../../utils/stringUtils';
 import { bufferToBlobURL } from '../../../../utils/imageUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PencilSquareIcon, PlusIcon } from '@heroicons/react/24/outline';
 import Modal from '../../components/Modal';  // Assuming you have a reusable Modal component
 import EditBooksForm from '../forms/edit forms/EditBooksForm'; // Import the EditBooksForm component
-import { setAuthorName, setBookId, setSerieName, toggleRowSelection } from '../../slices/catalogSlice';
+import { setAuthor, setBookId, setSerie, toggleRowSelection } from '../../slices/catalogSlice';
 import AddAuthorsForm from '../forms/add forms/AddAuthorsForm';
 import AddBooksForm from '../forms/add forms/AddBooksForm';
 import { useSocket } from '../../../../context/SocketContext';
 import blank_image from '../../../../assets/brand_blank_image.png';
 import DeatailsPageSkeleton from '../../../../components/skeletons/DeatailsPageSkeleton';
 import NotFoundPage from '../../../../pages/NotFoundPage';
+import NetworkErrorPage from '../../../../pages/NetworkErrorPage';
 
 function SerieDetails() {
   const { serieId, serieName } = useParams();
@@ -21,6 +22,7 @@ function SerieDetails() {
   const [books, setBooks] = useState([]);
   const [IsLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
   const [modalType, setModalType] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);  // Manage modal visibility
   const dispatch = useDispatch();
@@ -52,7 +54,6 @@ function SerieDetails() {
 
   useEffect(() => {
     const fetchSeriesData = async () => {
-      if (!booksLimit) return;
       try {
         const serieResponse = await axiosUtils(`/api/getSerieById/${serieId}`, 'GET');
         setSerieData(serieResponse.data);
@@ -60,10 +61,10 @@ function SerieDetails() {
 
         // If serieName is not in the URL, update it
         if (!serieName || serieName !== serieResponse.data.serieName) {
-          navigate(`/admin/catalog/series/${serieId}/${encodeURIComponent(serieResponse.data.serieName)}`, { replace: true });
+          navigate(`/admin/catalog/series/${serieId}/${spacesToHyphens(serieResponse.data.serieName)}`, { replace: true });
         }
 
-        const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}?limit=${booksLimit}`, 'GET');
+        const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}`, 'GET');
         // console.log('Books response:', booksResponse.data); // Debugging
 
         setBooks(booksResponse.data.books);
@@ -73,7 +74,9 @@ function SerieDetails() {
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching series data:', error);
-        if (error.response && error.response.status === 404) {
+        if (error.message === "Network Error" || error.response.status === 500) {
+          setNetworkError(true);
+        } else if (error.response && error.response.status === 404) {
           setNotFound(true);
         }
         setIsLoading(false);
@@ -134,7 +137,7 @@ function SerieDetails() {
       socket.off('bookAdded');
     };
 
-  }, [serieId, serieName, navigate, booksLimit, socket]);
+  }, [serieId, serieName, navigate, socket]);
 
   const handleSetLimit = () => {
     if (window.innerWidth >= 1024) {
@@ -152,8 +155,8 @@ function SerieDetails() {
   };
 
   const handelAddClick = (serie) => {
-    dispatch(setSerieName(serie.serieName));
-    dispatch(setAuthorName(serie.author_name));
+    dispatch(setSerie(serie));
+    dispatch(setAuthor(serie));
     setModalType('addBook');
     setIsModalOpen(true);
   }
@@ -166,7 +169,10 @@ function SerieDetails() {
     return <DeatailsPageSkeleton activeTab={activeTab} admin={true} />;
   } else if (notFound) {
     return <NotFoundPage type='serie' />
+  } else if (networkError) {
+    return <NetworkErrorPage />
   }
+
 
   return (
     <div className='md:flex md:flex-row pt-2 md:space-x-6 xl:space-x-8 pb-10'>
@@ -182,9 +188,9 @@ function SerieDetails() {
             </p>
             <p
               className='font-arima text-center md:text-left hover:underline cursor-pointer'
-              onClick={() => navigate(`/admin/catalog/authors/${serieData.author_id}/${encodeURIComponent(serieData.author_name)}`)}
+              onClick={() => navigate(`/admin/catalog/authors/${serieData.author_id}/${spacesToHyphens(serieData.author_name)}`)}
             >
-              by {capitalize(serieData.author_name)}
+              by {capitalize(serieData.nickname || serieData.author_name)}
             </p>
             <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
               <p className='md:inline font-medium font-poppins text-center md:text-left text-sm'>Genres:</p>
@@ -218,7 +224,7 @@ function SerieDetails() {
           </div>
         </div>
         <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
-          {books.map((item, index) => (
+          {books.slice(0, booksLimit).map((item, index) => (
             <div key={item.id} className='flex space-x-2 mt-4 pb-3 border-b-2 border-slate-100 cursor-default'>
               <img
                 src={item.imageURL || blank_image}
@@ -235,9 +241,9 @@ function SerieDetails() {
                     onClick={() => handleEditClick(item)}  // Handle click to open modal
                   />
                 </div>
-                <p className='font-arima text-sm'>by {capitalize(item.author_name)}</p>
+                <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                 <p className='font-arima text-slate-400 text-sm mt-1'>
-                  #{index + 1}, published {formatDate(item.publishDate)}
+                  #{index + 1}, published {formatDate(item.publishDate) || item.customDate}
                 </p>
                 <a
                   href={item.link}

@@ -10,6 +10,19 @@ const generateRandomId = () => {
   return Math.floor(100000 + Math.random() * 900000); // Generate a random 6-digit integer
 };
 
+// Helper function to fetch authors based on their IDs
+const getAuthorsByIds = async (authorIds) => {
+  if (!authorIds) return [];
+
+  const idsArray = authorIds.split(',').map(id => id.trim()); // Split the string and trim any spaces
+  const placeholders = idsArray.map(() => '?').join(','); // Prepare placeholders for SQL IN clause
+
+  const query = `SELECT id AS author_id, authorName AS author_name, nickname FROM authors WHERE id IN (${placeholders})`;
+  const [authors] = await pool.query(query, idsArray);
+  
+  return authors;
+};
+
 const addBook = async (req, res) => {
   try {
     const {
@@ -18,9 +31,12 @@ const addBook = async (req, res) => {
       serie_id,
       collection_id,
       publishDate,
+      customDate,
       genres,
       link,
     } = req.body;
+
+    console.log('the received author ids are:', author_id);
 
     console.log('The added book info:', req.body);
     
@@ -50,19 +66,20 @@ const addBook = async (req, res) => {
     // Insert book data into the database with the unique ID
     const query = `
       INSERT INTO books (
-        id, image, bookName, author_id, serie_id, collection_id, genres, publishDate, link
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, image, bookName, author_id, serie_id, collection_id, genres, publishDate, customDate, link
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
       uniqueId,
-      bookImageBlob,
+      image,
       bookName,
       author_id || null,
       serieId,
       collectionId,
       genres || null,
       publishDate || null,
+      customDate || null,
       link || null,
     ];
 
@@ -71,14 +88,18 @@ const addBook = async (req, res) => {
     await pool.execute(query, values);
 
     const [bookData] = await pool.query(`
-      SELECT books.*, authors.authorName AS author_name, series.serieName AS serie_name, collections.collectionName AS collection_name
+      SELECT books.*, series.serieName AS serie_name, collections.collectionName AS collection_name
       FROM books
-      LEFT JOIN authors ON books.author_id = authors.id
       LEFT JOIN series ON books.serie_id = series.id
       LEFT JOIN collections ON books.collection_id = collections.id
       WHERE books.id = ?
       `, [uniqueId]
     );
+
+    const book = bookData[0];
+    // Fetch authors for the book
+    const authors = await getAuthorsByIds(book.author_id);
+    book.authors = authors;
 
     let url = null;
     if (bookData[0].image) {

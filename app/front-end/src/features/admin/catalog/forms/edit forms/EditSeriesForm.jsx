@@ -22,6 +22,7 @@ function EditSeriesForm({ onClose }) {
   const [selectedCollectionIds, setSelectedCollectionIds] = useState([]); // Stores collection IDs
   const [relatedCollections, setRelatedCollections] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [authorIsLoading, setAuthorIsLoading] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -40,7 +41,7 @@ function EditSeriesForm({ onClose }) {
         }
 
         setSelectedAuthor(data.author_id || '');
-        setAuthorSearch(data.author_name || '');
+        setAuthorSearch(data.nickname || data.author_name || '');
 
         // Fetch related collections
         if (data.related_collections) {
@@ -66,12 +67,14 @@ function EditSeriesForm({ onClose }) {
   useEffect(() => {
     if (authorSearch) {
       const fetchAuthors = async () => {
+        setAuthorIsLoading(true);
         try {
           const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
           setAuthorOptions(response.data.results.map(author => ({
             id: author.id,
             authorName: author.nickname || author.authorName
           })));
+          setAuthorIsLoading(false);
         } catch (error) {
           console.error('Error fetching authors:', error);
         }
@@ -154,6 +157,7 @@ function EditSeriesForm({ onClose }) {
       if (file) {
         formData.append('seriesImage', file);
       } else {
+        setIsLoading(false);
         return console.error('Image file not available');
       }
     } else if (!seriesImageURL) {
@@ -197,14 +201,19 @@ function EditSeriesForm({ onClose }) {
           </div>
           <div className="mb-4 relative">
             <label className="block text-sm font-medium">Author Name:</label>
-            <input
-              type="text"
-              value={authorSearch}
-              onChange={handleAuthorChange}
-              className="w-full border border-gray-300 rounded-lg px-2 py-1"
-              placeholder="Search author..."
-            />
-            {authorOptions.length > 0 && (
+            <div className='flex items-center border border-gray-300 rounded-lg'>
+              <input
+                type="text"
+                value={authorSearch}
+                onChange={handleAuthorChange}
+                className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                placeholder="Search author..."
+              />
+              {authorIsLoading && (
+                <span className='px-2 mx-2 w-6 h-full green-loader'></span>
+              )}
+            </div>
+            {authorOptions.length > 0 ? (
               <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full z-10">
                 {authorOptions.map((author) => (
                   <li
@@ -215,6 +224,14 @@ function EditSeriesForm({ onClose }) {
                     {author.authorName}
                   </li>
                 ))}
+              </ul>
+            ) : authorSearch && !authorIsLoading && (
+              <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
+                <li
+                  className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                >
+                  No authors found
+                </li>
               </ul>
             )}
           </div>

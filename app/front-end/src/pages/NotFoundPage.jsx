@@ -7,12 +7,10 @@ function NotFoundPage({ type }) {
 
   let data;
   
-  if(type === 'author' || type === 'Authors') {
-    data = "We couldn't find the author you were looking for.";
-  } else if ( type === 'serie' || type === 'Series' ) {
-    data = "We couldn't find the serie you were looking for.";
+  if(type) {
+    data = `We couldn't find the ${type} you were looking for.`;
   } else {
-    data = 'The page ran away with the spoon.';
+    data = "We couldn't find the page you were looking for.";
   }
 
   const navigate = useNavigate();

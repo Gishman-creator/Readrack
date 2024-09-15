@@ -2,11 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import axiosUtils from "../../../../utils/axiosUtils";
-import { capitalize, formatDate } from "../../../../utils/stringUtils";
+import { capitalize, formatDate, spacesToHyphens } from "../../../../utils/stringUtils";
 import TableHeader from "./TableHeader";
 import { toggleRowSelection, selectAllRows, clearSelection, setTableTotalItems } from "../../slices/catalogSlice";
 import { useSocket } from "../../../../context/SocketContext";
 import toast from "react-hot-toast";
+import NetworkErrorPage from "../../../../pages/NetworkErrorPage";
 
 function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, openEditCollectionsModal }) {
 
@@ -25,6 +26,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
     const [totalCount, setTotalCount] = useState();
     const [selectAllChecked, setSelectAllChecked] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [networkError, setNetworkError] = useState(false);
 
 
     const navigate = useNavigate(); // Initialize navigate
@@ -41,7 +43,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                     const response = await axiosUtils(`/api/search?query=${searchTerm}&type=${type}&seriePageLimitStart=${limitStart}&seriePageLimitEnd=${limitEnd}&authorPageLimitStart=${limitStart}&authorPageLimitEnd=${limitEnd}&bookPageLimitStart=${limitStart}&bookPageLimitEnd=${limitEnd}`, 'GET');
                     data = response.data.results;
                     totalCount = response.data.totalBooksCount;
-                } else {
+                } else if (!searchTerm) {
                     if (activeTab === "Series") {
                         // console.log('Getting series');
                         response = await axiosUtils(`/api/getSeries?limitStart=${limitStart}&limitEnd=${limitEnd}`, 'GET');
@@ -67,6 +69,9 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                 setIsLoading(false);
             } catch (error) {
                 console.error(`Error fetching ${activeTab.toLowerCase()}:`, error);
+                if (error.message === "Network Error" || error.response.status === 500) {
+                    setNetworkError(true);
+                }
             }
         };
 
@@ -190,11 +195,11 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
 
         // Navigate based on the activeTab
         if (activeTab === "Series") {
-            navigate(`series/${item.id}/${encodeURIComponent(item.serieName)}`); // Navigate to SerieDetails
+            navigate(`series/${item.id}/${spacesToHyphens(item.serieName)}`); // Navigate to SerieDetails
         } else if (activeTab === "Collections") {
-            navigate(`collections/${item.id}/${encodeURIComponent(item.collectionName)}`); // Navigate to AuthorDetails
+            navigate(`collections/${item.id}/${spacesToHyphens(item.collectionName)}`); // Navigate to AuthorDetails
         } else if (activeTab === "Authors") {
-            navigate(`authors/${item.id}/${encodeURIComponent(item.authorName)}`); // Navigate to AuthorDetails
+            navigate(`authors/${item.id}/${spacesToHyphens(item.authorName)}`); // Navigate to AuthorDetails
         } else if (activeTab === "Books") {
             dispatch(toggleRowSelection(rowId));
         }
@@ -373,6 +378,10 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
         ));
     };
 
+    if (networkError) {
+        return <NetworkErrorPage />
+    }
+
 
     return (
         <div className="rounded-lg max-h-custom overflow-hidden custom-drop-shadow2">
@@ -401,7 +410,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                         <tr className="">
                             <td colSpan={7} className="space-x-2 text-center py-4">
                                 <span className="black-loader"></span>
-                                <span>loading {activeTab}...</span>
+                                <span className="mb-1">loading {activeTab}...</span>
                             </td>
                         </tr>
                     ) :

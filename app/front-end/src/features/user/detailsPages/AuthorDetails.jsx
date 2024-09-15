@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axiosUtils from '../../../utils/axiosUtils';
-import { capitalize, formatDate } from '../../../utils/stringUtils';
+import { capitalize, formatDate, spacesToHyphens } from '../../../utils/stringUtils';
 import { bufferToBlobURL } from '../../../utils/imageUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -12,6 +12,7 @@ import NotFoundPage from '../../../pages/NotFoundPage';
 import blank_image from '../../../assets/brand_blank_image.png'
 import DeatailsPageSkeleton from '../../../components/skeletons/DeatailsPageSkeleton';
 import { useSocket } from '../../../context/SocketContext';
+import NetworkErrorPage from '../../../pages/NetworkErrorPage';
 
 function AuthorDetails() {
 
@@ -23,6 +24,7 @@ function AuthorDetails() {
   const [books, setBooks] = useState([]);
   const [IsLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
 
   const [seriesLimit, setSeriesLimit] = useState();
   const [collectionsLimit, setCollectionsLimit] = useState();
@@ -61,7 +63,6 @@ function AuthorDetails() {
   useEffect(() => {
     const fetchBooksData = async () => {
       setIsLoading(true);
-      if (!seriesLimit || !booksLimit) return;
       try {
         const authorResponse = await axiosUtils(`/api/getAuthorById/${authorId}`, 'GET');
         // console.log(authorResponse.data);
@@ -71,25 +72,25 @@ function AuthorDetails() {
 
         // If authorName is not in the URL, update it
         if (!authorName || authorName !== authorResponse.data.authorName) {
-          navigate(`/authors/${authorId}/${encodeURIComponent(authorResponse.data.authorName)}`, { replace: true });
+          navigate(`/authors/${authorId}/${spacesToHyphens(authorResponse.data.authorName)}`, { replace: true });
         }
 
         // Fetching series by the author
-        const seriesResponse = await axiosUtils(`/api/getSeriesByAuthorId/${authorResponse.data.id}?limit=${seriesLimit}`, 'GET');
+        const seriesResponse = await axiosUtils(`/api/getSeriesByAuthorId/${authorResponse.data.id}`, 'GET');
         // console.log('Series response:', seriesResponse.data); // Debugging
 
         setSeries(seriesResponse.data.series);
         SetSeriesCount(seriesResponse.data.totalCount);
 
         // Fetching collections by the author
-        const collectionsResponse = await axiosUtils(`/api/getCollectionsByAuthorId/${authorResponse.data.id}?limit=${collectionsLimit}`, 'GET');
+        const collectionsResponse = await axiosUtils(`/api/getCollectionsByAuthorId/${authorResponse.data.id}`, 'GET');
         // console.log('Collections response:', collectionsResponse.data); // Debugging
 
         setCollections(collectionsResponse.data.collections);
         SetCollectionsCount(collectionsResponse.data.totalCount);
 
         // Fetching books by the author
-        const booksResponse = await axiosUtils(`/api/getBooksByAuthorId/${authorResponse.data.id}?limit=${booksLimit}`, 'GET');
+        const booksResponse = await axiosUtils(`/api/getBooksByAuthorId/${authorResponse.data.id}`, 'GET');
         // console.log('Books response:', booksResponse.data); // Debugging
 
         setBooks(booksResponse.data.books);
@@ -98,7 +99,9 @@ function AuthorDetails() {
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching books data:', error);
-        if (error.response && error.response.status === 404) {
+        if (error.message === "Network Error" || error.response.status === 500) {
+          setNetworkError(true);
+        } else if (error.response && error.response.status === 404) {
           setNotFound(true);
         }
         setIsLoading(false);
@@ -228,7 +231,7 @@ function AuthorDetails() {
       socket.off('dataDeleted');
     };
 
-  }, [authorId, authorName, navigate, seriesLimit, collectionsLimit, booksLimit, socket]);
+  }, [authorId, authorName, navigate, socket]);
 
   const handleSetLimit = (type) => {
     if (type == 'series') {
@@ -259,6 +262,8 @@ function AuthorDetails() {
     return <DeatailsPageSkeleton activeTab={activeTab} admin={false} />;
   } else if (notFound) {
     return <NotFoundPage type='author' />
+  } else if (networkError) {
+    return <NetworkErrorPage />
   }
 
   return (
@@ -266,7 +271,7 @@ function AuthorDetails() {
       <div className='md:flex md:flex-row md:space-x-6 xl:space-x-8 mb-10'>
         <div className='w-full pt-2 md:w-[22rem] md:h-full md:sticky md:top-20 lg:top-[4.5rem] overflow-auto'>
           <div className=' max-w-[13rem] mx-auto'>
-            <img src={authorData.imageURL || blank_image} alt="author image" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' />
+            <img src={authorData.imageURL || blank_image} alt="" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' />
             <div className='w-full mx-auto'>
               <p
                 title={capitalize(authorData.authorName)}
@@ -343,17 +348,17 @@ function AuthorDetails() {
                 </p>
               </div>
               <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
-                {series.map((item, index) => (
+                {series.slice(0, seriesLimit).map((item, index) => (
                   <div
                     key={item.id}
                     className='flex space-x-2 mt-4 pb-3 border-b-2 border-gray-300 cursor-pointer'
                     onClick={() => {
-                      navigate(`/series/${item.id}/${encodeURIComponent(item.serieName)}`);
+                      navigate(`/series/${item.id}/${spacesToHyphens(item.serieName)}`);
                     }}
                   >
                     <img
                       src={item.imageURL || blank_image} // Fallback image if Blob URL is null
-                      alt='book image'
+                      alt=''
                       className='bg-[rgba(3,149,60,0.08)] min-h-[9rem] w-[6rem] rounded-lg object-cover'
                     />
                     <div className='min-h-full w-full flex flex-col'>
@@ -403,12 +408,12 @@ function AuthorDetails() {
                 </p>
               </div>
               <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
-                {collections.map((item, index) => (
+                {collections.slice(0, collectionsLimit).map((item, index) => (
                   <div
                     key={item.id}
                     className='flex space-x-2 mt-4 pb-3 border-b-2 border-gray-300 cursor-pointer'
                     onClick={() => {
-                      navigate(`/collections/${item.id}/${encodeURIComponent(item.collectionName)}`);
+                      navigate(`/collections/${item.id}/${spacesToHyphens(item.collectionName)}`);
                     }}
                   >
                     <img
@@ -457,11 +462,11 @@ function AuthorDetails() {
           {/* Author Books */}
           <div className='flex justify-between items-center mt-8 md:mt-12'>
             <p className='font-poppins font-semibold text-lg 2xl:text-center'>
-              Other {authorData.nickname ? capitalize(authorData.nickname) : capitalize(authorData.authorName)} Books:
+              Other {capitalize(authorData.nickname || authorData.authorName)} Books:
             </p>
           </div>
           <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
-            {books.map((item, index) => (
+            {books.slice(0, booksLimit).map((item, index) => (
               <div key={item.id} className='flex space-x-2 mt-4 pb-3 border-b-2 border-gray-300 cursor-default'>
                 <img
                   src={item.imageURL || blank_image} // Fallback image if Blob URL is null
@@ -474,9 +479,9 @@ function AuthorDetails() {
                       {capitalize(item.bookName)}
                     </p>
                   </div>
-                  <p className='font-arima text-sm'>by {capitalize(item.nickname ? item.nickname : item.author_name)}</p>
+                  <p className='font-arima text-sm'>by  {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                   <p className='font-arima text-slate-400 text-sm mt-1'>
-                    #{index + 1}, published {formatDate(item.publishDate)}
+                    #{index + 1}, published {formatDate(item.publishDate) || item.customDate}
                   </p>
                   <a
                     href={item.link}

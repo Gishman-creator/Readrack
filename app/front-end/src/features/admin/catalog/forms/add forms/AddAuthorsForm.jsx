@@ -34,6 +34,7 @@ function AddAuthorsForm({ onClose }) {
       if (file) {
         formData.append('authorImage', file);
       } else {
+        setIsLoading(false);
         return console.error('Image file not available');
       }
     }
@@ -59,7 +60,7 @@ function AddAuthorsForm({ onClose }) {
     } catch (error) {
       setIsLoading(false);
       console.error('Error submitting form:', error.response ? error.response.data : error.message);
-      toast.error('Error updating the author');
+      toast.error('Error adding the author');
     }
   };
 

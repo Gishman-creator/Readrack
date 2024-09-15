@@ -18,10 +18,13 @@ function EditBooksForm({ onClose }) {
   const [authorOptions, setAuthorOptions] = useState([]);
   const [serieOptions, setSerieOptions] = useState([]);
   const [collectionOptions, setCollectionOptions] = useState([]);
-  const [selectedAuthor, setSelectedAuthor] = useState('');
+  const [selectedAuthors, setSelectedAuthors] = useState([]);
   const [selectedSerie, setSelectedSerie] = useState('');
   const [selectedCollection, setSelectedCollection] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [authorIsLoading, setAuthorIsLoading] = useState(false);
+  const [serieIsLoading, setSerieIsLoading] = useState(false);
+  const [collectionIsLoading, setCollectionIsLoading] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -42,8 +45,7 @@ function EditBooksForm({ onClose }) {
           }
 
           setBookId(response.data.id);
-          setSelectedAuthor(response.data.author_id || '');
-          setAuthorSearch(response.data.author_name || '');
+          setSelectedAuthors(response.data.authors || '');
           setSelectedSerie(response.data.serie_id || '');
           setSerieSearch(response.data.serie_name || '');
           setSelectedCollection(response.data.collection_id || '');
@@ -60,13 +62,15 @@ function EditBooksForm({ onClose }) {
   useEffect(() => {
     if (authorSearch) {
       const fetchAuthors = async () => {
+        setAuthorIsLoading(true);
         try {
           const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
           setAuthorOptions(response.data.results.map(author => ({
-            id: author.id,
-            authorName: author.nickname ? author.nickname : author.authorName
+            author_id: author.id,
+            author_name: author.nickname ? author.nickname : author.authorName
           })));
           // console.log(authorOptions);
+          setAuthorIsLoading(false);
         } catch (error) {
           console.error('Error fetching authors:', error);
         }
@@ -80,12 +84,14 @@ function EditBooksForm({ onClose }) {
   useEffect(() => {
     if (serieSearch) {
       const fetchSeries = async () => {
+        setSerieIsLoading(true);
         try {
           const response = await axiosUtils(`/api/search?query=${serieSearch}&type=series`, 'GET');
           setSerieOptions(response.data.results.map(serie => ({
             id: serie.id,
             serieName: serie.serieName
           })));
+          setSerieIsLoading(false);
         } catch (error) {
           console.error('Error fetching series:', error);
         }
@@ -99,12 +105,14 @@ function EditBooksForm({ onClose }) {
   useEffect(() => {
     if (collectionSearch) {
       const fetchCollections = async () => {
+        setCollectionIsLoading(true);
         try {
           const response = await axiosUtils(`/api/search?query=${collectionSearch}&type=collections`, 'GET');
           setCollectionOptions(response.data.results.map(collection => ({
             id: collection.id,
             collectionName: collection.collectionName
           })));
+          setCollectionIsLoading(false);
         } catch (error) {
           console.error('Error fetching collections:', error);
         }
@@ -118,8 +126,21 @@ function EditBooksForm({ onClose }) {
   const handleAuthorChange = (e) => {
     setAuthorSearch(e.target.value);
     if (!e.target.value) {
-      setSelectedAuthor(e.target.value)
+      setSelectedAuthors(e.target.value)
     }
+  };
+
+  const handleAuthorSelect = (author) => {
+    // Allow multiple authors to be selected
+    if (!selectedAuthors.some((a) => a.author_id === author.author_id)) {
+      setSelectedAuthors([...selectedAuthors, author]);
+    }
+    setAuthorSearch('');
+    setAuthorOptions([]);
+  };
+
+  const handleRemoveAuthor = (authorId) => {
+    setSelectedAuthors((prev) => prev.filter((author) => author.author_id !== authorId));
   };
 
   const handleSerieChange = (e) => {
@@ -128,12 +149,6 @@ function EditBooksForm({ onClose }) {
 
   const handleCollectionChange = (e) => {
     setCollectionSearch(e.target.value);
-  };
-
-  const handleAuthorSelect = (author) => {
-    setSelectedAuthor(author.id);
-    setAuthorSearch(author.authorName);
-    setAuthorOptions([]);
   };
 
   const handleSerieSelect = (serie) => {
@@ -182,6 +197,7 @@ function EditBooksForm({ onClose }) {
       if (file) {
         formData.append('bookImage', file);
       } else {
+        setIsLoading(false);
         return console.error('Image file not available');
       }
     } else if (!bookImageURL) {
@@ -190,13 +206,13 @@ function EditBooksForm({ onClose }) {
 
     formData.append('imageName', imageName);
 
-    formData.append('author_id', selectedAuthor);
+    formData.append('author_id', selectedAuthors);
     formData.append('serie_id', selectedSerie);
     formData.append('collection_id', selectedCollection);
 
     // Log form data entries
     // for (let [key, value] of formData.entries()) {
-      // console.log(`${key}: ${value}`);
+    // console.log(`${key}: ${value}`);
     // }
 
     try {
@@ -243,37 +259,80 @@ function EditBooksForm({ onClose }) {
           </div>
           <div className="mb-4 relative">
             <label className="block text-sm font-medium">Author name:</label>
-            <input
-              type="text"
-              value={authorSearch}
-              onChange={handleAuthorChange}
-              className="w-full border border-gray-300 rounded-lg px-2 py-1"
-              placeholder="Search author..."
-            />
-            {authorOptions.length > 0 && (
+            <div className='flex items-center border border-gray-300 rounded-lg'>
+              <input
+                type="text"
+                value={authorSearch}
+                onChange={handleAuthorChange}
+                className="w-full border-none outline-none px-2 py-1"
+                placeholder="Search author..."
+              />
+              {authorIsLoading && (
+                <span className='px-2 mx-2 w-6 h-full green-loader'></span>
+              )}
+            </div>
+            {authorOptions.length > 0 ? (
               <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
                 {authorOptions.map((author) => (
                   <li
-                    key={author.id}
+                    key={author.author_id}
                     onClick={() => handleAuthorSelect(author)}
                     className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                   >
-                    {author.authorName}
+                    {author.author_name}
                   </li>
                 ))}
               </ul>
+            ) : authorSearch && !authorIsLoading && (
+              <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
+                <li
+                  className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                >
+                  No authors found
+                </li>
+              </ul>
+            )}
+          </div>
+          {/* Display selected authors */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium">Selected Authors:</label>
+            {selectedAuthors.length > 0 ? (
+              <div className="bg-green-700 rounded-lg my-2 flex flex-wrap gap-2 p-2">
+                {selectedAuthors.map((author, index) => (
+                  <span key={author.author_id} className="bg-[rgba(255,255,255,0.3)] flex items-center max-w-fit max-h-fit text-white font-poppins font-semibold px-2 py-1 rounded-lg text-sm space-x-1">
+                    <span>{author.nickname || author.author_name}</span>
+                    <span
+                      className='text-xl cursor-pointer'
+                      onClick={() => handleRemoveAuthor(author.author_id)}
+                    >
+                      &times;
+                    </span>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-green-700 rounded-lg my-2 flex flex-wrap gap-2 p-2">
+                <span className="bg-[rgba(255,255,255,0.3)] flex items-center max-w-fit max-h-fit text-white font-poppins font-semibold px-2 py-1 rounded-lg text-sm space-x-1">
+                  No authors selected
+                </span>
+              </div>
             )}
           </div>
           <div className="mb-4 relative">
             <label className="block text-sm font-medium">Serie name:</label>
-            <input
-              type="text"
-              value={serieSearch}
-              onChange={handleSerieChange}
-              className="w-full border border-gray-300 rounded-lg px-2 py-1"
-              placeholder="Search series..."
-            />
-            {serieOptions.length > 0 && (
+            <div className='flex items-center border border-gray-300 rounded-lg'>
+              <input
+                type="text"
+                value={serieSearch}
+                onChange={handleSerieChange}
+                className="w-full border-none outline-none px-2 py-1"
+                placeholder="Search series..."
+              />
+              {serieIsLoading && (
+                <span className='px-2 mx-2 w-6 h-full green-loader'></span>
+              )}
+            </div>
+            {serieOptions.length > 0 ? (
               <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full top-12 z-10">
                 {serieOptions.map((serie) => (
                   <li
@@ -285,18 +344,31 @@ function EditBooksForm({ onClose }) {
                   </li>
                 ))}
               </ul>
+            ) : serieSearch && !serieIsLoading && (
+              <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
+                <li
+                  className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                >
+                  No series found
+                </li>
+              </ul>
             )}
           </div>
           <div className="mb-4 relative">
             <label className="block text-sm font-medium">Collection name:</label>
-            <input
-              type="text"
-              value={collectionSearch}
-              onChange={handleCollectionChange}
-              className="w-full border border-gray-300 rounded-lg px-2 py-1"
-              placeholder="Search collections..."
-            />
-            {collectionOptions.length > 0 && (
+            <div className='flex items-center border border-gray-300 rounded-lg'>
+              <input
+                type="text"
+                value={collectionSearch}
+                onChange={handleCollectionChange}
+                className="w-full border-none outline-none px-2 py-1"
+                placeholder="Search collections..."
+              />
+              {collectionIsLoading && (
+                <span className='px-2 mx-2 w-6 h-full green-loader'></span>
+              )}
+            </div>
+            {collectionOptions.length > 0 ? (
               <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full top-12 z-10">
                 {collectionOptions.map((collection) => (
                   <li
@@ -307,6 +379,14 @@ function EditBooksForm({ onClose }) {
                     {collection.collectionName}
                   </li>
                 ))}
+              </ul>
+            ) : collectionSearch && !collectionIsLoading && (
+              <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
+                <li
+                  className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                >
+                  No collections found
+                </li>
               </ul>
             )}
           </div>
@@ -329,6 +409,15 @@ function EditBooksForm({ onClose }) {
                 className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium">Custom date:</label>
+            <input
+              type="text"
+              name="customDate"
+              defaultValue={bookDetails.customDate || ''}
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
+            />
           </div>
           <div className="mb-4">
             <label className="block text-sm font-medium">Amazon link:</label>

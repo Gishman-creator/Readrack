@@ -66,6 +66,7 @@ function EditAuthorForm({ onClose }) {
       if (file) {
         formData.append('authorsImage', file);
       } else {
+        setIsLoading(false);
         return console.error('Image file not available');
       }
     } else if (!authorImageURL) {

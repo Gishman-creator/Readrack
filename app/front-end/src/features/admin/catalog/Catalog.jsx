@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { setActiveTab, setAuthorName, setSerieName, setTableLimitEnd, setTableLimitStart } from '../slices/catalogSlice';
+import { setActiveTab, setAuthor, setSerie, setTableLimitEnd, setTableLimitStart } from '../slices/catalogSlice';
 import SearchBar from '../components/ui/SearchBar';
 import FilterBtn from '../components/ui/FilterBtn';
 import Table from '../components/ui/Table';
@@ -53,8 +53,8 @@ function Catalog() {
   };
 
   const renderModalContent = () => {
-    dispatch(setSerieName(''));
-    dispatch(setAuthorName(''));
+    dispatch(setSerie(''));
+    dispatch(setAuthor(''));
     switch (modalContent) {
       case 'Series':
         return <AddSeriesForm onClose={closeModal} />;

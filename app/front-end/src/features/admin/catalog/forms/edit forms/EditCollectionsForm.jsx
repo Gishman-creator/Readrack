@@ -16,6 +16,7 @@ function EditCollectionsForm({ onClose }) {
   const [authorOptions, setAuthorOptions] = useState([]);
   const [selectedAuthor, setSelectedAuthor] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [authorIsLoading, setAuthorIsLoading] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -25,7 +26,7 @@ function EditCollectionsForm({ onClose }) {
         const response = await axiosUtils(`/api/getCollectionById/${collectionsId}`, 'GET');
         const data = response.data;
         setCollectionsData(data);
-        
+
         if (data.image) {
           setCollectionsImageURL(data.imageURL);
         } else {
@@ -33,7 +34,7 @@ function EditCollectionsForm({ onClose }) {
         }
 
         setSelectedAuthor(data.author_id || '');
-        setAuthorSearch(data.author_name || '');
+        setAuthorSearch(data.nickname || data.author_name || '');
       } catch (error) {
         console.error('Error fetching collections data:', error);
       }
@@ -45,12 +46,14 @@ function EditCollectionsForm({ onClose }) {
   useEffect(() => {
     if (authorSearch) {
       const fetchAuthors = async () => {
+        setAuthorIsLoading(true);
         try {
           const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
           setAuthorOptions(response.data.results.map(author => ({
             id: author.id,
             authorName: author.nickname || author.authorName
           })));
+          setAuthorIsLoading(false);
         } catch (error) {
           console.error('Error fetching authors:', error);
         }
@@ -63,7 +66,7 @@ function EditCollectionsForm({ onClose }) {
 
   const handleAuthorChange = (e) => {
     setAuthorSearch(e.target.value);
-    if(!e.target.value){
+    if (!e.target.value) {
       setSelectedAuthor(e.target.value);
     }
   };
@@ -98,6 +101,7 @@ function EditCollectionsForm({ onClose }) {
       if (file) {
         formData.append('collectionsImage', file);
       } else {
+        setIsLoading(false);
         return console.error('Image file not available');
       }
     } else if (!collectionsImageURL) {
@@ -141,14 +145,19 @@ function EditCollectionsForm({ onClose }) {
           </div>
           <div className="mb-4 relative">
             <label className="block text-sm font-medium">Author Name:</label>
-            <input
-              type="text"
-              value={authorSearch}
-              onChange={handleAuthorChange}
-              className="w-full border border-gray-300 rounded-lg px-2 py-1"
-              placeholder="Search author..."
-            />
-            {authorOptions.length > 0 && (
+            <div className='flex items-center border border-gray-300 rounded-lg'>
+              <input
+                type="text"
+                value={authorSearch}
+                onChange={handleAuthorChange}
+                className="w-full border-none outline-none px-2 py-1"
+                placeholder="Search author..."
+              />
+              {authorIsLoading && (
+                <span className='px-2 mx-2 w-6 h-full green-loader'></span>
+              )}
+            </div>
+            {authorOptions.length > 0 ? (
               <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full z-10">
                 {authorOptions.map((author) => (
                   <li
@@ -159,6 +168,14 @@ function EditCollectionsForm({ onClose }) {
                     {author.authorName}
                   </li>
                 ))}
+              </ul>
+            ) : authorSearch && !authorIsLoading && (
+              <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
+                <li
+                  className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                >
+                  No authors found
+                </li>
               </ul>
             )}
           </div>

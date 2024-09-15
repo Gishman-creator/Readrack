@@ -6,6 +6,7 @@ import { bufferToBlobURL } from '../../../utils/imageUtils';
 import Pagination from '../components/ui/Pagination';
 import { SkeletonCard } from '../../../components/skeletons/SkeletonCard';
 import Dropdown from '../components/ui/Dropdown';
+import NetworkErrorPage from '../../../pages/NetworkErrorPage';
 
 const SearchResults = () => {
     const [searchParams] = useSearchParams();
@@ -20,6 +21,7 @@ const SearchResults = () => {
     const [series, setSeries] = useState([]);
     const [authors, setAuthors] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [networkError, setNetworkError] = useState(false);
 
     const [seriePageLimitStart, setSeriePageLimitStart] = useState();
     const [authorPageLimitStart, setAuthorPageLimitStart] = useState();
@@ -122,6 +124,9 @@ const SearchResults = () => {
                 }
             } catch (error) {
                 console.error('Error fetching search results:', error);
+                if (error.message === "Network Error" || error.response.status === 500) {
+                    setNetworkError(true);
+                }
             } finally {
                 setIsLoading(false);
             }
@@ -151,6 +156,10 @@ const SearchResults = () => {
         setType(formattedSelectedType);
         navigate(`/search?q=${searchTerm}&type=${formattedSelectedType}`);
     };
+
+    if (networkError) {
+        return <NetworkErrorPage />
+    }
 
     return (
         <div className="px-[4%] sm:px-[12%] pb-10">

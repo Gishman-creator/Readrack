@@ -40,7 +40,7 @@ export async function downloadImage(url, seriesName) {
     return file; // Return the created file
   } catch (error) {
     console.error('Error downloading image:', error);
-    toast.error('Error downloading the iamge');
+    toast.error('Error downloading the image');
     return null; // Return null in case of an error
   }
 };

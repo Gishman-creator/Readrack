@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import axiosUtils from '../../../../utils/axiosUtils';
-import { capitalize, formatDate } from '../../../../utils/stringUtils';
+import { capitalize, formatDate, spacesToHyphens } from '../../../../utils/stringUtils';
 import { bufferToBlobURL } from '../../../../utils/imageUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PencilSquareIcon, PlusIcon } from '@heroicons/react/24/outline';
 import Modal from '../../components/Modal';  // Assuming you have a reusable Modal component
 import EditBooksForm from '../forms/edit forms/EditBooksForm'; // Import the EditBooksForm component
-import { setAuthorName, setBookId, setCollectionName, toggleRowSelection } from '../../slices/catalogSlice';
+import { setAuthor, setBookId, setCollection, toggleRowSelection } from '../../slices/catalogSlice';
 import AddAuthorsForm from '../forms/add forms/AddAuthorsForm';
 import AddBooksForm from '../forms/add forms/AddBooksForm';
 import { useSocket } from '../../../../context/SocketContext';
 import blank_image from '../../../../assets/brand_blank_image.png';
 import NotFoundPage from '../../../../pages/NotFoundPage';
 import DeatailsPageSkeleton from '../../../../components/skeletons/DeatailsPageSkeleton';
+import NetworkErrorPage from '../../../../pages/NetworkErrorPage';
 
 function CollectionDetails() {
   const { collectionId, collectionName } = useParams();
@@ -21,6 +22,7 @@ function CollectionDetails() {
   const [books, setBooks] = useState([]);
   const [IsLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
   const [modalType, setModalType] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);  // Manage modal visibility
   const dispatch = useDispatch();
@@ -52,7 +54,6 @@ function CollectionDetails() {
 
   useEffect(() => {
     const fetchCollectionsData = async () => {
-      if (!booksLimit) return;
       try {
         const collectionResponse = await axiosUtils(`/api/getCollectionById/${collectionId}`, 'GET');
         // console.log('The colleciton response is:', collectionResponse);
@@ -67,11 +68,15 @@ function CollectionDetails() {
 
         // If collectionName is not in the URL, update it
         if (!collectionName || collectionName !== fetchedCollection.collectionName) {
-          navigate(`/admin/catalog/collections/${collectionId}/${encodeURIComponent(fetchedCollection.collectionName)}`, { replace: true });
+          navigate(`/admin/catalog/collections/${collectionId}/${spacesToHyphens(fetchedCollection.collectionName)}`, { replace: true });
         }
 
-        const booksResponse = await axiosUtils(`/api/getBooksByCollectionId/${fetchedCollection.id}?limit=${booksLimit}`, 'GET');
+        const booksResponse = await axiosUtils(`/api/getBooksByCollectionId/${fetchedCollection.id}`, 'GET');
         // console.log('Books response:', booksResponse.data); // Debugging
+
+        // for (const book of booksResponse.data.books) {
+        //   console.log("The book author is:", book.authors);
+        // }
 
         setBooks(booksResponse.data.books);
         SetBooksCount(booksResponse.data.totalCount);
@@ -80,7 +85,9 @@ function CollectionDetails() {
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching collections data:', error);
-        if (error.response && error.response.status === 404) {
+        if (error.message === "Network Error" || error.response.status === 500) {
+          setNetworkError(true);
+        } else if (error.response && error.response.status === 404) {
           setNotFound(true);
         }
         setIsLoading(false);
@@ -141,7 +148,7 @@ function CollectionDetails() {
       socket.off('bookAdded');
     };
 
-  }, [collectionId, collectionName, navigate, booksLimit, socket]);
+  }, [collectionId, collectionName, navigate, socket]);
 
   const handleSetLimit = () => {
     if (window.innerWidth >= 1024) {
@@ -159,8 +166,8 @@ function CollectionDetails() {
   };
 
   const handelAddClick = (collection) => {
-    dispatch(setCollectionName(collection.collectionName));
-    dispatch(setAuthorName(collection.author_name));
+    dispatch(setCollection(collection));
+    dispatch(setAuthor(collection));
     setModalType('addBook');
     setIsModalOpen(true);
   }
@@ -173,7 +180,10 @@ function CollectionDetails() {
     return <DeatailsPageSkeleton activeTab={activeTab} admin={true} />;
   } else if (notFound) {
     return <NotFoundPage type='collection' />
+  } else if (networkError) {
+    return <NetworkErrorPage />
   }
+
 
   return (
     <div className='md:flex md:flex-row pt-2 md:space-x-6 xl:space-x-8 pb-10'>
@@ -190,9 +200,9 @@ function CollectionDetails() {
             {collectionData.author_name && (
               <p
                 className='font-arima text-center md:text-left hover:underline cursor-pointer'
-                onClick={() => navigate(`/admin/catalog/authors/${collectionData.author_id}/${encodeURIComponent(collectionData.author_name)}`)}
+                onClick={() => navigate(`/admin/catalog/authors/${collectionData.author_id}/${spacesToHyphens(collectionData.author_name)}`)}
               >
-                by {capitalize(collectionData.author_name)}
+                by {capitalize(collectionData.nickname || collectionData.author_name)}
               </p>
             )}
             <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
@@ -227,7 +237,7 @@ function CollectionDetails() {
           </div>
         </div>
         <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
-          {books.map((item, index) => (
+          {books.slice(0, booksLimit).map((item, index) => (
             <div key={item.id} className='flex space-x-2 mt-4 pb-3 border-b-2 border-slate-100 cursor-default'>
               <img
                 src={item.imageURL || blank_image} // Fallback image if Blob URL is null
@@ -244,11 +254,11 @@ function CollectionDetails() {
                     onClick={() => handleEditClick(item)}  // Handle click to open modal
                   />
                 </div>
-                {item.author_name && (
-                  <p className='font-arima text-sm'>by {capitalize(item.author_name)}</p>
+                {item.authors.length > 0 && (
+                  <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                 )}
                 <p className='font-arima text-slate-400 text-sm mt-1'>
-                  #{index + 1}, published {formatDate(item.publishDate)}
+                  #{index + 1}, published {formatDate(item.publishDate) || item.customDate}
                 </p>
                 <a
                   href={item.link}

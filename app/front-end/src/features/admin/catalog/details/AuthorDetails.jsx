@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axiosUtils from '../../../../utils/axiosUtils';
-import { capitalize, formatDate } from '../../../../utils/stringUtils';
+import { capitalize, formatDate, spacesToHyphens } from '../../../../utils/stringUtils';
 import { bufferToBlobURL } from '../../../../utils/imageUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -9,7 +9,7 @@ import { FaInstagram, FaFacebook, FaTwitter } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import Modal from '../../components/Modal';  // Assuming you have a reusable Modal component
 import EditBooksForm from '../forms/edit forms/EditBooksForm'; // Import the EditBooksForm component
-import { setAuthorName, setBookId, setCollectionId, setSerieId, setSerieName, toggleRowSelection } from '../../slices/catalogSlice';
+import { setAuthor, setBookId, setCollectionId, setSerieId, setSerie, toggleRowSelection } from '../../slices/catalogSlice';
 import AddAuthorsForm from '../forms/add forms/AddAuthorsForm';
 import AddBooksForm from '../forms/add forms/AddBooksForm';
 import AddSeriesForm from '../forms/add forms/AddSeriesForm';
@@ -20,6 +20,7 @@ import EditCollectionsForm from '../forms/edit forms/EditCollectionsForm';
 import AddCollectionsForm from '../forms/add forms/AddCollectionsForm';
 import DeatailsPageSkeleton from '../../../../components/skeletons/DeatailsPageSkeleton';
 import NotFoundPage from '../../../../pages/NotFoundPage';
+import NetworkErrorPage from '../../../../pages/NetworkErrorPage';
 
 function AuthorDetails() {
   const { authorId, authorName } = useParams();
@@ -29,6 +30,7 @@ function AuthorDetails() {
   const [books, setBooks] = useState([]);
   const [IsLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
   const [modalType, setModalType] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);  // Manage modal visibility
 
@@ -69,7 +71,6 @@ function AuthorDetails() {
   useEffect(() => {
     const fetchBooksData = async () => {
       setIsLoading(true);
-      if (!seriesLimit || !booksLimit || !collectionsLimit) return;
       try {
         const authorResponse = await axiosUtils(`/api/getAuthorById/${authorId}`, 'GET');
         // console.log(authorResponse.data);
@@ -79,25 +80,25 @@ function AuthorDetails() {
 
         // If authorName is not in the URL, update it
         if (!authorName || authorName !== authorResponse.data.authorName) {
-          navigate(`/admin/catalog/authors/${authorId}/${encodeURIComponent(authorResponse.data.authorName)}`, { replace: true });
+          navigate(`/admin/catalog/authors/${authorId}/${spacesToHyphens(authorResponse.data.authorName)}`, { replace: true });
         }
 
         // Fetching series by the author
-        const seriesResponse = await axiosUtils(`/api/getSeriesByAuthorId/${authorResponse.data.id}?limit=${seriesLimit}`, 'GET');
+        const seriesResponse = await axiosUtils(`/api/getSeriesByAuthorId/${authorResponse.data.id}`, 'GET');
         // console.log('Series response:', seriesResponse.data); // Debugging
 
         setSeries(seriesResponse.data.series);
         SetSeriesCount(seriesResponse.data.totalCount);
 
         // Fetching collections by the author
-        const collectionsResponse = await axiosUtils(`/api/getCollectionsByAuthorId/${authorResponse.data.id}?limit=${collectionsLimit}`, 'GET');
+        const collectionsResponse = await axiosUtils(`/api/getCollectionsByAuthorId/${authorResponse.data.id}`, 'GET');
         // console.log('Collections response:', collectionsResponse.data); // Debugging
 
         setCollections(collectionsResponse.data.collections);
         SetCollectionsCount(collectionsResponse.data.totalCount);
 
         // Fetching books by the author
-        const booksResponse = await axiosUtils(`/api/getBooksByAuthorId/${authorResponse.data.id}?limit=${booksLimit}`, 'GET');
+        const booksResponse = await axiosUtils(`/api/getBooksByAuthorId/${authorResponse.data.id}`, 'GET');
         // console.log('Books response:', booksResponse.data); // Debugging
 
         setBooks(booksResponse.data.books);
@@ -106,7 +107,9 @@ function AuthorDetails() {
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching books data:', error);
-        if (error.response && error.response.status === 404) {
+        if (error.message === "Network Error" || error.response.status === 500) {
+          setNetworkError(true);
+        } else if (error.response && error.response.status === 404) {
           setNotFound(true);
         }
         setIsLoading(false);
@@ -236,7 +239,7 @@ function AuthorDetails() {
       socket.off('dataDeleted');
     };
 
-  }, [authorId, authorName, navigate, seriesLimit, collectionsLimit, booksLimit, socket]);
+  }, [authorId, authorName, navigate, socket]);
 
   const handleSetLimit = (type) => {
     if (type == 'series') {
@@ -279,13 +282,13 @@ function AuthorDetails() {
 
   const handleAddClick = (type, item) => {
     if (type === 'book') {
-      dispatch(setAuthorName(item.authorName));
+      dispatch(setAuthor(item));
       setModalType('addBook');
     } else if (type === 'serie') {
-      dispatch(setAuthorName(item.authorName));
+      dispatch(setAuthor(item));
       setModalType('addSeries');
     } else if (type === 'collection') {
-      dispatch(setAuthorName(item.authorName));
+      dispatch(setAuthor(item));
       setModalType('addCollections');
     }
     setIsModalOpen(true);
@@ -299,7 +302,10 @@ function AuthorDetails() {
     return <DeatailsPageSkeleton activeTab={activeTab} admin={true} />;
   } else if (notFound) {
     return <NotFoundPage type='author' />
+  } else if (networkError) {
+    return <NetworkErrorPage />
   }
+
 
   return (
     <div className='md:flex md:flex-row md:space-x-6 xl:space-x-8'>
@@ -311,7 +317,7 @@ function AuthorDetails() {
               title={capitalize(authorData.authorName)}
               className='font-poppins font-medium text-lg text-center md:text-left mt-2 md:overflow-hidden md:whitespace-nowrap md:text-ellipsis cursor-default'
             >
-              {capitalize(authorData.authorName)}
+              {capitalize(authorData.nickname ||authorData.authorName)}
             </p>
             <p className='font-arima font-medium text-sm text-center md:text-left'>{capitalize(authorData.nationality)}, Born on {formatDate(authorData.dob)}</p>
             <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
@@ -327,7 +333,7 @@ function AuthorDetails() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <NewspaperIcon title={`${authorData.authorName}'s Page`} className="w-10 h-10 inline p-2 cursor-pointer rounded-lg on-click" />
+                  <NewspaperIcon title={`${authorData.nickname || authorData.authorName}'s Page`} className="w-10 h-10 inline p-2 cursor-pointer rounded-lg on-click" />
                 </a>
               }
               {authorData.x &&
@@ -336,7 +342,7 @@ function AuthorDetails() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <FaXTwitter title={`${authorData.authorName}'s X`} className="w-10 h-10 inline p-2 cursor-pointer rounded-lg on-click" />
+                  <FaXTwitter title={`${authorData.nickname || authorData.authorName}'s X`} className="w-10 h-10 inline p-2 cursor-pointer rounded-lg on-click" />
                 </a>
               }
               {authorData.instagram &&
@@ -345,7 +351,7 @@ function AuthorDetails() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <FaInstagram title={`${authorData.authorName}'s Instagram`} className="w-10 h-10 inline p-2 cursor-pointer rounded-lg on-click" />
+                  <FaInstagram title={`${authorData.nickname || authorData.authorName}'s Instagram`} className="w-10 h-10 inline p-2 cursor-pointer rounded-lg on-click" />
                 </a>
               }
               {authorData.facebook &&
@@ -354,7 +360,7 @@ function AuthorDetails() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <FaFacebook title={`${authorData.authorName}'s Facebook`} className="w-10 h-10 inline p-2 cursor-pointer rounded-lg on-click" />
+                  <FaFacebook title={`${authorData.nickname || authorData.authorName}'s Facebook`} className="w-10 h-10 inline p-2 cursor-pointer rounded-lg on-click" />
                 </a>
               }
             </div>
@@ -363,7 +369,7 @@ function AuthorDetails() {
       </div>
       <div className='w-full md:mt-2 mb-2'>
         <div className='mt-6 md:mt-0'>
-          <p className='font-poppins font-semibold text-lg 2xl:text-center'>About {capitalize(authorData.authorName)}:</p>
+          <p className='font-poppins font-semibold text-lg 2xl:text-center'>About {capitalize(authorData.nickname || authorData.authorName)}:</p>
           <p className='font-arima'>{authorData.biography}</p>
           <div className='mt-2'>
             <p className='inline font-medium font-poppinstext-left text-sm'>Awards:</p>
@@ -378,7 +384,7 @@ function AuthorDetails() {
           <>
             <div className='flex justify-between items-center mt-8 md:mt-6'>
               <p className='font-poppins font-semibold text-lg 2xl:text-center'>
-                {capitalize(authorData.authorName)} Series:
+                {capitalize(authorData.nickname || authorData.authorName)} Series:
               </p>
               <div
                 className='bg-green-700 flex items-center space-x-2 text-center text-white text-sm font-semibold font-poppins px-3 p-2 rounded cursor-pointer on-click-amzn'
@@ -389,11 +395,11 @@ function AuthorDetails() {
               </div>
             </div>
             <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
-              {series.map((item, index) => (
+              {series.slice(0, seriesLimit).map((item, index) => (
                 <div
                   key={item.id}
                   className='flex space-x-2 mt-4 pb-3 border-b-2 border-slate-300 cursor-default'
-                  onClick={() => navigate(`/admin/catalog/series/${item.id}/${encodeURIComponent(item.serieName)}`)}
+                  onClick={() => navigate(`/admin/catalog/series/${item.id}/${spacesToHyphens(item.serieName)}`)}
                 >
                   <img
                     src={item.imageURL || blank_image} // Fallback image if Blob URL is null
@@ -447,7 +453,7 @@ function AuthorDetails() {
           <>
             <div className='flex justify-between items-center mt-8 md:mt-6'>
               <p className='font-poppins font-semibold text-lg 2xl:text-center'>
-                {capitalize(authorData.authorName)} Collections:
+                {capitalize(authorData.nickname || authorData.authorName)} Collections:
               </p>
               <div
                 className='bg-green-700 flex items-center space-x-2 text-center text-white text-sm font-semibold font-poppins px-3 p-2 rounded cursor-pointer on-click-amzn'
@@ -458,11 +464,11 @@ function AuthorDetails() {
               </div>
             </div>
             <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
-              {collections.map((item, index) => (
+              {collections.slice(0, collectionsLimit).map((item, index) => (
                 <div
                   key={item.id}
                   className='flex space-x-2 mt-4 pb-3 border-b-2 border-slate-300 cursor-default'
-                  onClick={() => navigate(`/admin/catalog/collections/${item.id}/${encodeURIComponent(item.collectionName)}`)}
+                  onClick={() => navigate(`/admin/catalog/collections/${item.id}/${spacesToHyphens(item.collectionName)}`)}
                 >
                   <img
                     src={item.imageURL || blank_image} // Fallback image if Blob URL is null
@@ -514,7 +520,7 @@ function AuthorDetails() {
         {/* Author Books */}
         <div className='flex justify-between items-center mt-8 md:mt-6'>
           <p className='font-poppins font-semibold text-lg 2xl:text-center'>
-            Other {capitalize(authorData.authorName)} Books:
+            Other {capitalize(authorData.nickname || authorData.authorName)} Books:
           </p>
           <div
             className='bg-green-700 flex items-center space-x-2 text-center text-white text-sm font-semibold font-poppins px-3 p-2 rounded cursor-pointer on-click-amzn'
@@ -525,7 +531,7 @@ function AuthorDetails() {
           </div>
         </div>
         <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
-          {books.map((item, index) => (
+          {books.slice(0, booksLimit).map((item, index) => (
             <div key={item.id} className='flex space-x-2 mt-4 pb-3 border-b-2 border-slate-300 cursor-default'>
               <img
                 src={item.imageURL || blank_image} // Fallback image if Blob URL is null
@@ -542,9 +548,9 @@ function AuthorDetails() {
                     onClick={() => handleEditClick('book', item)}  // Handle click to open modal
                   />
                 </div>
-                <p className='font-arima text-sm'>by {capitalize(item.nickname ? item.nickname : item.author_name)}</p>
+                <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                 <p className='font-arima text-slate-400 text-sm mt-1'>
-                  #{index + 1}, published {formatDate(item.publishDate)}
+                  #{index + 1}, published {formatDate(item.publishDate) || item.customDate}
                 </p>
                 <a
                   href={item.link}

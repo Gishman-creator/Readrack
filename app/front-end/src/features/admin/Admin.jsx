@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import axiosUtils from '../../utils/axiosUtils'; // Adjust path as necessary
 import { setLoginState } from '../authentication/slices/authSlice';
 import Login from '../authentication/components/Login';
+import NotFoundPage from '../../pages/NotFoundPage';
 
 function Admin() {
     const [isLoggedIn, setIsLoggedIn] = useState(null);  // Manage local login state
@@ -69,6 +70,7 @@ function Admin() {
                             <Route path="dashboard" element={<Dashboard />} />
                             <Route path="catalog/*" element={<CatalogCont />} />
                             <Route path="editor" element={<Editor />} />
+                            <Route path='*' element={<NotFoundPage />} />
                         </Routes>
                     </div>
                 </div>

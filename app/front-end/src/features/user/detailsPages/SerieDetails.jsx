@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axiosUtils from '../../../utils/axiosUtils';
-import { capitalize, formatDate } from '../../../utils/stringUtils';
+import { capitalize, formatDate, spacesToHyphens } from '../../../utils/stringUtils';
 import { bufferToBlobURL } from '../../../utils/imageUtils';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -10,6 +10,7 @@ import blank_image from '../../../assets/brand_blank_image.png';
 import DeatailsPageSkeleton from '../../../components/skeletons/DeatailsPageSkeleton';
 import { useSocket } from '../../../context/SocketContext';
 import RelatedCollections from '../related_collections/RelatedCollections';
+import NetworkErrorPage from '../../../pages/NetworkErrorPage';
 
 function SerieDetails() {
 
@@ -19,6 +20,7 @@ function SerieDetails() {
   const [books, setBooks] = useState([]);
   const [IsLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
 
   const [booksLimit, setBooksLimit] = useState();
   const [booksCount, SetBooksCount] = useState();
@@ -49,7 +51,6 @@ function SerieDetails() {
   useEffect(() => {
     const fetchSeriesData = async () => {
       setIsLoading(true);
-      if (!booksLimit) return;
       setRelatedCollections([]);
       try {
         const serieResponse = await axiosUtils(`/api/getSerieById/${serieId}`, 'GET');
@@ -58,7 +59,7 @@ function SerieDetails() {
 
         // If serieName is not in the URL, update it
         if (!serieName || serieName !== serieResponse.data.serieName) {
-          navigate(`/series/${serieId}/${encodeURIComponent(serieResponse.data.serieName)}`, { replace: true });
+          navigate(`/series/${serieId}/${spacesToHyphens(serieResponse.data.serieName)}`, { replace: true });
         }
 
         // Fetch related collections and convert images to Blob URLs
@@ -75,7 +76,7 @@ function SerieDetails() {
           setRelatedCollections(fetchedRelatedCollections);
         }
 
-        const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}?limit=${booksLimit}`, 'GET');
+        const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}`, 'GET');
         // console.log('Books response:', booksResponse.data); // Debugging
 
         setBooks(booksResponse.data.books);
@@ -85,7 +86,9 @@ function SerieDetails() {
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching series data:', error);
-        if (error.response && error.response.status === 404) {
+        if (error.message === "Network Error" || error.response.status === 500) {
+          setNetworkError(true);
+        } else if (error.response && error.response.status === 404) {
           setNotFound(true);
         }
         setIsLoading(false);
@@ -146,7 +149,7 @@ function SerieDetails() {
       socket.off('bookAdded');
     };
 
-  }, [serieId, serieName, navigate, booksLimit, socket]);
+  }, [serieId, serieName, navigate, socket]);
 
   const handleSetLimit = () => {
     if (window.innerWidth >= 1024) {
@@ -161,14 +164,17 @@ function SerieDetails() {
     return <DeatailsPageSkeleton activeTab={activeTab} admin={false} />;
   } else if (notFound) {
     return <NotFoundPage type='serie' />
+  } else if (networkError) {
+    return <NetworkErrorPage />
   }
+
 
   return (
     <div className=' px-[4%] sm:px-[12%]'>
       <div className='md:flex md:flex-row pt-2 md:space-x-6 xl:space-x-8 pb-10'>
         <div className='w-full pt-2 md:w-[22rem] md:h-full md:sticky md:top-20 lg:top-[4.5rem] overflow-hidden'>
           <div className=' max-w-[13rem] mx-auto'>
-            <img src={serieData.imageURL || blank_image} alt="serie image" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' />
+            <img src={serieData.imageURL || blank_image} alt="" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' />
             <div className='w-full mx-auto'>
               <p
                 title={capitalize(serieData.serieName)}
@@ -179,7 +185,7 @@ function SerieDetails() {
               <p
                 className='font-arima text-center md:text-left hover:underline cursor-pointer'
                 onClick={() => {
-                  navigate(`/authors/${serieData.author_id}/${encodeURIComponent(serieData.author_name)}`);
+                  navigate(`/authors/${serieData.author_id}/${spacesToHyphens(serieData.author_name)}`);
                 }}
               >
                 by {serieData.nickname ? capitalize(serieData.nickname) : capitalize(serieData.author_name)}
@@ -209,11 +215,11 @@ function SerieDetails() {
             </p>
           </div>
           <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
-            {books.map((item, index) => (
+            {books.slice(0, booksLimit).map((item, index) => (
               <div key={item.id} className='flex space-x-2 mt-4 pb-3 border-b-2 border-gray-100 cursor-default'>
                 <img
                   src={item.imageURL || blank_image} // Fallback image if Blob URL is null
-                  alt='book image'
+                  alt=''
                   className='bg-[rgba(3,149,60,0.08)] min-h-[9rem] w-[6rem] rounded-lg object-cover'
                 />
                 <div className='min-h-full w-full flex flex-col'>
@@ -222,9 +228,9 @@ function SerieDetails() {
                       {capitalize(item.bookName)}
                     </p>
                   </div>
-                  <p className='font-arima text-sm'>by {item.nickname ? capitalize(item.nickname) : capitalize(item.author_name)}</p>
+                  <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                   <p className='font-arima text-slate-400 text-sm mt-1'>
-                    #{index + 1}, published {formatDate(item.publishDate)}
+                    #{index + 1}, published {formatDate(item.publishDate) || item.customDate}
                   </p>
                   <a
                     href={item.link}

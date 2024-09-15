@@ -1,6 +1,6 @@
 import React from 'react';
 import blank_image from '../../../assets/brand_blank_image.png';
-import { capitalize } from '../../../utils/stringUtils';
+import { capitalize, spacesToHyphens } from '../../../utils/stringUtils';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setActiveGenre } from '../slices/userSlice';
@@ -16,13 +16,13 @@ function Card({ card, activeTab, fixedWidth }) {
     const navigateToDetails = (id) => {
         if (activeTab === 'Series') {
             incrementSearchCount('series', id);
-            navigate(`/series/${card.id}/${encodeURIComponent(card.name)}`);
+            navigate(`/series/${card.id}/${spacesToHyphens(card.serieName)}`);
         } else if (activeTab === 'Collections') {
             incrementSearchCount('collections', id);
-            navigate(`/collections/${card.id}/${encodeURIComponent(card.name)}`);
+            navigate(`/collections/${card.id}/${spacesToHyphens(card.collectionName)}`);
         } else {
             incrementSearchCount('authors', id);
-            navigate(`/authors/${card.id}/${encodeURIComponent(card.name)}`);
+            navigate(`/authors/${card.id}/${spacesToHyphens(card.authorName)}`);
         }
         dispatch(setActiveGenre(''));
         window.scrollTo({ top: 0 });
@@ -42,7 +42,7 @@ function Card({ card, activeTab, fixedWidth }) {
             <div className="relative overflow-hidden rounded-lg duration-300 group-hover:shadow-custom3">
                 <img
                     src={card.imageURL || blank_image}
-                    alt={`${activeTab === 'Series' ? 'Series' : activeTab === 'Authors' ? 'Author' : 'Collection'} image`}
+                    alt=''
                     className="bg-[rgba(3,149,60,0.08)] h-48 w-full transform transition-transform duration-300 group-hover:scale-105 object-cover"
                 />
                 {card.searchCount > 5 && (

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axiosUtils from '../../../utils/axiosUtils';
-import { capitalize, formatDate } from '../../../utils/stringUtils';
+import { capitalize, formatDate, spacesToHyphens } from '../../../utils/stringUtils';
 import { bufferToBlobURL } from '../../../utils/imageUtils';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -9,6 +9,7 @@ import NotFoundPage from '../../../pages/NotFoundPage';
 import blank_image from '../../../assets/brand_blank_image.png';
 import DeatailsPageSkeleton from '../../../components/skeletons/DeatailsPageSkeleton';
 import { useSocket } from '../../../context/SocketContext';
+import NetworkErrorPage from '../../../pages/NetworkErrorPage';
 
 function CollectionDetails() {
 
@@ -18,6 +19,7 @@ function CollectionDetails() {
   const [books, setBooks] = useState([]);
   const [IsLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
 
   const [booksLimit, setBooksLimit] = useState();
   const [booksCount, SetBooksCount] = useState();
@@ -53,10 +55,10 @@ function CollectionDetails() {
 
         // If collectionName is not in the URL, update it
         if (!collectionName || collectionName !== collectionResponse.data.collectionName) {
-          navigate(`/collections/${collectionId}/${encodeURIComponent(collectionResponse.data.collectionName)}`, { replace: true });
+          navigate(`/collections/${collectionId}/${spacesToHyphens(collectionResponse.data.collectionName)}`, { replace: true });
         }
 
-        const booksResponse = await axiosUtils(`/api/getBooksByCollectionId/${collectionResponse.data.id}?limit=${booksLimit}`, 'GET');
+        const booksResponse = await axiosUtils(`/api/getBooksByCollectionId/${collectionResponse.data.id}`, 'GET');
         // console.log('Books response:', booksResponse.data); // Debugging
 
         setBooks(booksResponse.data.books);
@@ -66,7 +68,9 @@ function CollectionDetails() {
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching collections data:', error);
-        if (error.response && error.response.status === 404) {
+        if (error.message === "Network Error" || error.response.status === 500) {
+          setNetworkError(true);
+        } else if (error.response && error.response.status === 404) {
           setNotFound(true);
         }
         setIsLoading(false);
@@ -127,7 +131,7 @@ function CollectionDetails() {
       socket.off('bookAdded');
     };
 
-  }, [collectionId, collectionName, navigate, booksLimit, socket]);
+  }, [collectionId, collectionName, navigate, socket]);
 
   const handleSetLimit = () => {
     if (window.innerWidth >= 1024) {
@@ -142,14 +146,17 @@ function CollectionDetails() {
     return <DeatailsPageSkeleton activeTab={activeTab} admin={false} />;
   } else if (notFound) {
     return <NotFoundPage type='collection' />
+  } else if (networkError) {
+    return <NetworkErrorPage />
   }
+
 
   return (
     <div className=' px-[4%] sm:px-[12%]'>
       <div className='md:flex md:flex-row pt-2 md:space-x-6 xl:space-x-8 pb-10'>
         <div className='w-full pt-2 md:w-[22rem] md:h-full md:sticky md:top-20 lg:top-[4.5rem] overflow-hidden'>
           <div className=' max-w-[13rem] mx-auto'>
-            <img src={collectionData.imageURL || blank_image} alt="collection image" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' />
+            <img src={collectionData.imageURL || blank_image} alt="" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' />
             <div className='w-full mx-auto'>
               <p
                 title={capitalize(collectionData.collectionName)}
@@ -161,7 +168,7 @@ function CollectionDetails() {
                 <p
                   className='font-arima text-center md:text-left hover:underline cursor-pointer'
                   onClick={() => {
-                    navigate(`/authors/${collectionData.author_id}/${encodeURIComponent(collectionData.author_name)}`);
+                    navigate(`/authors/${collectionData.author_id}/${spacesToHyphens(collectionData.author_name)}`);
                   }}
                 >
                   by {collectionData.nickname ? capitalize(collectionData.nickname) : capitalize(collectionData.author_name)}
@@ -192,11 +199,11 @@ function CollectionDetails() {
             </p>
           </div>
           <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
-            {books.map((item, index) => (
+            {books.slice(0, booksLimit).map((item, index) => (
               <div key={item.id} className='flex space-x-2 mt-4 pb-3 border-b-2 border-gray-100 cursor-default'>
                 <img
                   src={item.imageURL || blank_image} // Fallback image if Blob URL is null
-                  alt='book image'
+                  alt=''
                   className='bg-[rgba(3,149,60,0.08)] min-h-[9rem] w-[6rem] rounded-lg object-cover'
                 />
                 <div className='min-h-full w-full flex flex-col'>
@@ -206,10 +213,10 @@ function CollectionDetails() {
                     </p>
                   </div>
                   {item.authorName && (
-                    <p className='font-arima text-sm'>by {item.nickname ? capitalize(item.nickname) : capitalize(item.authorName)}</p>
+                    <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                   )}
                   <p className='font-arima text-slate-400 text-sm mt-1'>
-                    #{index + 1}, published {formatDate(item.publishDate)}
+                    #{index + 1}, published {formatDate(item.publishDate) || item.customDate}
                   </p>
                   <a
                     href={item.link}

@@ -225,7 +225,7 @@ function CollectionDetails() {
                       {capitalize(item.bookName)}
                     </p>
                   </div>
-                  {item.authorName && (
+                  {item.authors.length > 0 && (
                     <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                   )}
                   <p className='font-arima text-slate-400 text-sm mt-1'>

@@ -7,10 +7,10 @@ const updateAuthor = async (req, res) => {
     console.log('Body', req.body);
     console.log('File', req.file); // Log file information
 
-    const { authorName, nickname, dob, nationality, biography, awards, x, instagram, facebook, website, genres, imageName } = req.body;
-    console.log(authorName, nickname, dob, nationality, biography, awards, x, instagram, facebook, website, genres);
+    const { authorName, nickname, dob, dod, nationality, biography, awards, x, instagram, facebook, website, genres, imageName } = req.body;
+    console.log(authorName, nickname, dob, dod, nationality, biography, awards, x, instagram, facebook, website, genres);
 
-    const image = req.file ? await putImage(id, req.file, 'authors') || imageName : null; // Await the function to resolve the promise
+    const image = req.file ? await putImage(id, req.file, 'authors') : imageName; // Await the function to resolve the promise
     console.log('The image key for Amazon is:', image);
 
     if (image) {
@@ -19,8 +19,8 @@ const updateAuthor = async (req, res) => {
 
     try {
         const [result] = await pool.query(
-            'UPDATE authors SET authorName = ?, nickname = ?, dob = ?, nationality = ?, biography = ?, awards = ?, x = ?, instagram = ?, facebook = ?, website = ?, genres = ?, image = ? WHERE id = ?',
-            [authorName, nickname || null, dob, nationality, biography, awards, x, instagram, facebook, website, genres, image, id]
+            'UPDATE authors SET authorName = ?, nickname = ?, dob = ?, dod = ?, nationality = ?, biography = ?, awards = ?, x = ?, instagram = ?, facebook = ?, website = ?, genres = ?, image = ? WHERE id = ?',
+            [authorName, nickname || null, dob, dod || null, nationality, biography, awards, x, instagram, facebook, website, genres, image, id]
         );
 
         // Fetch the updated author data
@@ -41,7 +41,7 @@ const updateAuthor = async (req, res) => {
         }
 
         let url = null;
-        if (authorRows[0].image) {
+        if (authorRows[0].image && authorRows[0].image !== 'null') {
           url = await getImageURL(authorRows[0].image);
         }
         authorRows[0].imageURL = url;

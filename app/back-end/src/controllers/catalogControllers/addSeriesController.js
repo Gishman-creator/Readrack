@@ -53,7 +53,7 @@ const addSeries = async (req, res) => {
         );
 
         let url = null;
-        if (serieData[0].image) {
+        if (serieData[0].image && serieData[0].image !== 'null') {
           url = await getImageURL(serieData[0].image);
         }
         serieData[0].imageURL = url;

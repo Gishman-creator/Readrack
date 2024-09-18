@@ -19,9 +19,15 @@ exports.recommendAuthors = async (req, res) => {
         const userGenres = genres.split(',');
 
         const query = `
-            SELECT * FROM authors 
-            WHERE (${userGenres.map(() => `genres LIKE ?`).join(' OR ')})
-            AND id != ?
+            SELECT a.*, 
+              COUNT(DISTINCT s.id) AS numSeries, 
+              COUNT(DISTINCT b.id) AS numBooks
+            FROM authors a
+            LEFT JOIN series s ON a.id = s.author_id
+            LEFT JOIN books b ON FIND_IN_SET(a.id, b.author_id) > 0
+            WHERE (${userGenres.map(() => `a.genres LIKE ?`).join(' OR ')})
+            AND a.id != ?
+            GROUP BY a.id
             ORDER BY searchCount DESC 
             LIMIT 10;
         `;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axiosUtils from '../../../../utils/axiosUtils';
-import { capitalize, formatDate, spacesToHyphens } from '../../../../utils/stringUtils';
+import { calculateAgeAtDeath, capitalize, formatDate, spacesToHyphens } from '../../../../utils/stringUtils';
 import { bufferToBlobURL } from '../../../../utils/imageUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -21,6 +21,7 @@ import AddCollectionsForm from '../forms/add forms/AddCollectionsForm';
 import DeatailsPageSkeleton from '../../../../components/skeletons/DeatailsPageSkeleton';
 import NotFoundPage from '../../../../pages/NotFoundPage';
 import NetworkErrorPage from '../../../../pages/NetworkErrorPage';
+import { sortByFirstBookYearAsc, sortByPublishDateAsc } from '../../../../utils/sortingUtils';
 
 function AuthorDetails() {
   const { authorId, authorName } = useParams();
@@ -36,7 +37,9 @@ function AuthorDetails() {
 
   const [seriesLimit, setSeriesLimit] = useState();
   const [collectionsLimit, setCollectionsLimit] = useState();
+  const [groupRange, setGroupRange] = useState();
   const [booksLimit, setBooksLimit] = useState();
+  const [booksRange, setBooksRange] = useState();
   const [seriesCount, SetSeriesCount] = useState();
   const [collectionsCount, SetCollectionsCount] = useState();
   const [booksCount, SetBooksCount] = useState();
@@ -52,11 +55,15 @@ function AuthorDetails() {
       if (width >= 1024) {
         setSeriesLimit(4);
         setCollectionsLimit(4);
+        setGroupRange(4);
         setBooksLimit(6);
+        setBooksRange(6);
       } else {
         setSeriesLimit(3);
         setCollectionsLimit(3);
+        setGroupRange(3);
         setBooksLimit(5);
+        setBooksRange(5);
       }
     };
 
@@ -73,8 +80,15 @@ function AuthorDetails() {
       setIsLoading(true);
       try {
         const authorResponse = await axiosUtils(`/api/getAuthorById/${authorId}`, 'GET');
-        // console.log(authorResponse.data);
-        setAuthorData(authorResponse.data);
+
+        // Adding the age property to the author data
+        const authorDataWithAge = {
+          ...authorResponse.data,
+          age: calculateAgeAtDeath(authorResponse.data.dob, authorResponse.data.dod),
+        };
+        console.log('Author age at death:', authorDataWithAge.age);
+
+        setAuthorData(authorDataWithAge);
 
         // console.log('The author name is:', authorName);
 
@@ -85,7 +99,7 @@ function AuthorDetails() {
 
         // Fetching series by the author
         const seriesResponse = await axiosUtils(`/api/getSeriesByAuthorId/${authorResponse.data.id}`, 'GET');
-        // console.log('Series response:', seriesResponse.data); // Debugging
+        console.log('Series response:', seriesResponse.data); // Debugging
 
         setSeries(seriesResponse.data.series);
         SetSeriesCount(seriesResponse.data.totalCount);
@@ -99,7 +113,7 @@ function AuthorDetails() {
 
         // Fetching books by the author
         const booksResponse = await axiosUtils(`/api/getBooksByAuthorId/${authorResponse.data.id}`, 'GET');
-        // console.log('Books response:', booksResponse.data); // Debugging
+        console.log('Books response:', booksResponse.data); // Debugging
 
         setBooks(booksResponse.data.books);
         SetBooksCount(booksResponse.data.totalCount);
@@ -107,7 +121,7 @@ function AuthorDetails() {
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching books data:', error);
-        if (error.message === "Network Error" || error.response.status === 500) {
+        if (error.message === "Network Error" || error.response.status === 500 || error.response.status === 501) {
           setNetworkError(true);
         } else if (error.response && error.response.status === 404) {
           setNotFound(true);
@@ -147,7 +161,7 @@ function AuthorDetails() {
         );
 
         // Sort the updatedData by date in ascending order (oldest first)
-        return updatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        return updatedData.sort(sortByFirstBookYearAsc);
       });
     });
 
@@ -160,7 +174,7 @@ function AuthorDetails() {
         );
 
         // Sort the updatedData by date in ascending order (oldest first)
-        return updatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        return updatedData.sort(sortByFirstBookYearAsc);
       });
     });
 
@@ -173,46 +187,51 @@ function AuthorDetails() {
         );
 
         // Sort the updatedData by date in ascending order (oldest first)
-        return updatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        return updatedData.sort(sortByPublishDateAsc);
       });
     });
 
     // New event listener for serieAdded
     socket.on('serieAdded', (serieData) => {
-      // console.log('New serie added via socket:', serieData);
-      if (serieData.author_name === authorName) {
+      if (serieData.author_id === parseInt(authorId)) {
         setSeries((prevData) => {
           const updatedData = [...prevData, serieData];
 
           // Sort the updatedData by date in ascending order (oldest first)
-          return updatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+          return updatedData.sort(sortByFirstBookYearAsc);
         });
+        SetSeriesCount((prevCount) => prevCount + 1);
       }
     });
 
     // New event listener for collectionAdded
     socket.on('collectionAdded', (collectionData) => {
       // console.log('New collection added via socket:', collectionData);
-      if (collectionData.author_name === authorName) {
+      if (collectionData.author_id === parseInt(authorId)) {
         setCollections((prevData) => {
           const updatedData = [...prevData, collectionData];
 
           // Sort the updatedData by date in ascending order (oldest first)
-          return updatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+          return updatedData.sort(sortByFirstBookYearAsc);
         });
+        SetCollectionsCount((prevCount) => prevCount + 1);
       }
     });
 
     // Event listener for bookAdded
     socket.on('bookAdded', (bookData) => {
-      // console.log('Books added via socket:', bookData);
-      if (bookData.author_name === authorName) {
+      // Split the author_id string into an array of individual author IDs
+      const authorIds = bookData.author_id.split(',').map(id => id.trim());
+    
+      // Check if the current authorId is one of the authorIds
+      if (authorIds.includes(authorId)) {
         setBooks((prevData) => {
           const updatedData = [...prevData, bookData];
 
           // Sort the updatedData by date in ascending order (oldest first)
-          return updatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+          return updatedData.sort(sortByPublishDateAsc);
         });
+        SetBooksCount((prevCount) => prevCount + 1);
       }
     });
 
@@ -220,10 +239,13 @@ function AuthorDetails() {
       // console.log('Data deleted via socket:', { ids, type });
       if (type = 'series') {
         setSeries((prevData) => prevData.filter((item) => !ids.includes(item.id)));
+        SetSeriesCount((prevCount) => prevCount - ids.length);
       } else if (type = 'collections') {
         setCollections((prevData) => prevData.filter((item) => !ids.includes(item.id)));
-      } else {
+        SetCollectionsCount((prevCount) => prevCount - ids.length);
+      } else if (type = 'books') {
         setBooks((prevData) => prevData.filter((item) => !ids.includes(item.id)));
+        SetBooksCount((prevCount) => prevCount - ids.length);
       }
     });
 
@@ -299,7 +321,7 @@ function AuthorDetails() {
   };
 
   if (IsLoading) {
-    return <DeatailsPageSkeleton activeTab={activeTab} admin={true} />;
+    return <DeatailsPageSkeleton activeTab='Authors' admin={true} />;
   } else if (notFound) {
     return <NotFoundPage type='author' />
   } else if (networkError) {
@@ -315,11 +337,17 @@ function AuthorDetails() {
           <div className='w-full mx-auto'>
             <p
               title={capitalize(authorData.authorName)}
-              className='font-poppins font-medium text-lg text-center md:text-left mt-2 md:overflow-hidden md:whitespace-nowrap md:text-ellipsis cursor-default'
+              className='font-poppins font-medium text-lg text-center md:text-left mt-2 mb-2 md:overflow-hidden md:whitespace-nowrap md:text-ellipsis cursor-default'
             >
-              {capitalize(authorData.nickname ||authorData.authorName)}
+              {capitalize(authorData.nickname || authorData.authorName)}
             </p>
             <p className='font-arima font-medium text-sm text-center md:text-left'>{capitalize(authorData.nationality)}, Born on {formatDate(authorData.dob)}</p>
+            {authorData.dod && (
+              <>
+                <p className='font-arima font-medium text-sm text-center md:text-left'>Died on {formatDate(authorData.dod)},</p>
+                <p className='font-arima font-medium text-sm text-center md:text-left'> at {authorData.age} years old.</p>
+              </>
+            )}
             <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
               <p className='md:inline font-medium font-poppins text-center md:text-left text-sm'>Genres:</p>
               <div className='md:inline flex flex-wrap gap-x-2 md:ml-1 text-sm text-center md:text-left font-arima items-center justify-center md:justify-start w-[90%] mx-auto'>
@@ -437,7 +465,7 @@ function AuthorDetails() {
                 </div>
               ))}
             </div>
-            {(seriesCount > seriesLimit || seriesLimit > 4) && (
+            {(seriesCount > seriesLimit || seriesLimit > groupRange) && (
               <span
                 onClick={() => handleSetLimit('series')}
                 className='text-sm max-w-fit mt-2 hover:underline text-green-700 font-semibold font-arima cursor-pointer'
@@ -506,7 +534,7 @@ function AuthorDetails() {
                 </div>
               ))}
             </div>
-            {(collectionsCount > collectionsLimit || collectionsLimit > 4) && (
+            {(collectionsCount > collectionsLimit || collectionsLimit > groupRange) && (
               <span
                 onClick={() => handleSetLimit('collections')}
                 className='text-sm max-w-fit mt-2 hover:underline text-green-700 font-semibold font-arima cursor-pointer'
@@ -564,7 +592,7 @@ function AuthorDetails() {
             </div>
           ))}
         </div>
-        {(booksCount > booksLimit || booksLimit > 6) && (
+        {(booksCount > booksLimit || booksLimit > booksRange) && (
           <span
             onClick={() => handleSetLimit('books')}
             className='text-sm max-w-fit mt-2 hover:underline text-green-700 font-semibold font-arima cursor-pointer'

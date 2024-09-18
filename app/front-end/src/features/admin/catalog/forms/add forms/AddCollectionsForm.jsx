@@ -3,21 +3,27 @@ import ImagePreview from './ImagePreview';
 import axiosUtils from '../../../../../utils/axiosUtils';
 import toast from 'react-hot-toast';
 import { downloadImage } from '../../../../../utils/imageUtils';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { setAuthor } from '../../../slices/catalogSlice';
 
 function AddCollectionsForm({ onClose }) {
   const authorDetailsAuthor = useSelector((state) => state.catalog.author);
+  const detailsAuthor = {id: authorDetailsAuthor.id, authorName: authorDetailsAuthor.nickname || authorDetailsAuthor.authorName}
   const [collectionsImageURL, setCollectionsImageURL] = useState('');
   const [selectedImageFile, setSelectedImageFile] = useState(null);
 
   const [authorSearch, setAuthorSearch] = useState(authorDetailsAuthor.authorName || '');
   const [authorOptions, setAuthorOptions] = useState([]);
-  const [selectedAuthor, setSelectedAuthor] = useState(authorDetailsAuthor.authorName || '');
+  const [selectedAuthor, setSelectedAuthor] = useState(detailsAuthor || '');
   const [isLoading, setIsLoading] = useState(false);
   const [authorIsLoading, setAuthorIsLoading] = useState(false);
 
+  const dispatch = useDispatch();
+
   useEffect(() => {
-    if (authorSearch) {
+    if (selectedAuthor && authorSearch === selectedAuthor.authorName) return;
+    setSelectedAuthor('');
+    if (authorSearch && !selectedAuthor) {
       const fetchAuthors = async () => {
         setAuthorIsLoading(true);
         try {
@@ -45,7 +51,7 @@ function AddCollectionsForm({ onClose }) {
   };
 
   const handleAuthorSelect = (author) => {
-    setSelectedAuthor(author.id);
+    setSelectedAuthor(author);
     setAuthorSearch(author.authorName); // Set the selected author in the input
     setAuthorOptions([]);
   };
@@ -77,7 +83,7 @@ function AddCollectionsForm({ onClose }) {
       }
     }
 
-    formData.append('author_id', selectedAuthor);
+    formData.append('author_id', selectedAuthor.id);
 
     // Debug output
     // for (let [key, value] of formData.entries()) {
@@ -95,6 +101,9 @@ function AddCollectionsForm({ onClose }) {
       // console.log(response);
 
       setIsLoading(false);
+      dispatch(setAuthor(''));
+      setAuthorSearch('');
+      setSelectedAuthor('');
       if (onClose) {
         onClose(); // Call the onClose function to close the modal
       }
@@ -148,7 +157,7 @@ function AddCollectionsForm({ onClose }) {
                   </li>
                 ))}
               </ul>
-            ) : authorSearch && !authorIsLoading && (
+            ) : authorSearch && !authorIsLoading && !selectedAuthor && (
               <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
                 <li
                   className="cursor-pointer px-4 py-2 hover:bg-gray-100"

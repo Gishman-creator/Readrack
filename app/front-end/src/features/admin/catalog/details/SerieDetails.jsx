@@ -15,6 +15,7 @@ import blank_image from '../../../../assets/brand_blank_image.png';
 import DeatailsPageSkeleton from '../../../../components/skeletons/DeatailsPageSkeleton';
 import NotFoundPage from '../../../../pages/NotFoundPage';
 import NetworkErrorPage from '../../../../pages/NetworkErrorPage';
+import { sortByPublishDateAsc } from '../../../../utils/sortingUtils';
 
 function SerieDetails() {
   const { serieId, serieName } = useParams();
@@ -28,6 +29,7 @@ function SerieDetails() {
   const dispatch = useDispatch();
 
   const [booksLimit, setBooksLimit] = useState();
+  const [booksRange, setBooksRange] = useState();
   const [booksCount, SetBooksCount] = useState();
   const activeTab = useSelector((state) => state.catalog.activeTab);
 
@@ -39,8 +41,10 @@ function SerieDetails() {
       const width = window.innerWidth;
       if (width >= 1024) {
         setBooksLimit(6);
+        setBooksRange(6);
       } else {
         setBooksLimit(5);
+        setBooksRange(5);
       }
     };
 
@@ -65,7 +69,7 @@ function SerieDetails() {
         }
 
         const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}`, 'GET');
-        // console.log('Books response:', booksResponse.data); // Debugging
+        console.log('Books response:', booksResponse.data); // Debugging
 
         setBooks(booksResponse.data.books);
         SetBooksCount(booksResponse.data.totalCount);
@@ -74,7 +78,7 @@ function SerieDetails() {
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching series data:', error);
-        if (error.message === "Network Error" || error.response.status === 500) {
+        if (error.message === "Network Error" || error.response.status === 500 || error.response.status === 501) {
           setNetworkError(true);
         } else if (error.response && error.response.status === 404) {
           setNotFound(true);
@@ -107,34 +111,47 @@ function SerieDetails() {
 
     // Event listener for booksUpdated
     socket.on('booksUpdated', (updatedBooks) => {
-      // console.log('Books updated via socket:', updatedBooks);
+      console.log('Books updated via socket:', updatedBooks);
       setBooks((prevData) => {
         const updatedData = prevData.map((book) =>
           book.id === updatedBooks.id ? updatedBooks : book
         );
 
         // Sort the updatedData by date in ascending order (oldest first)
-        return updatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        return updatedData.sort(sortByPublishDateAsc);
       });
     });
 
     // Event listener for bookAdded
     socket.on('bookAdded', (bookData) => {
-      if (bookData.serie_name === serieName) {
+      console.log('Book added via socket:', bookData.serie_id);
+      console.log('Serie ID:', serieId);
+      if (bookData.serie_id === parseInt(serieId)) {
         setBooks((prevData) => {
+          console.log('Previous data:', prevData);
           const updatedData = [...prevData, bookData];
 
           // Sort the updatedData by date in ascending order (oldest first)
-          return updatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+          return updatedData.sort(sortByPublishDateAsc);
         });
+        console.log('Book added successfully');
+        SetBooksCount((prevCount) => prevCount + 1);
       }
     });
 
+    socket.on('dataDeleted', ({ ids, type }) => {
+      // console.log('Data deleted via socket:', { ids, type });
+      if (type = 'books') {
+        setBooks((prevData) => prevData.filter((item) => !ids.includes(item.id)));
+        SetBooksCount((prevCount) => prevCount - ids.length);
+      }
+    });
 
     return () => {
       socket.off('seriesUpdated');
       socket.off('booksUpdated');
       socket.off('bookAdded');
+      socket.off('dataDeleted');
     };
 
   }, [serieId, serieName, navigate, socket]);
@@ -257,7 +274,7 @@ function SerieDetails() {
             </div>
           ))}
         </div>
-        {(booksCount > booksLimit || booksLimit > 6) && (
+        {(booksCount > booksLimit || booksLimit > booksRange) && (
           <span
             onClick={() => handleSetLimit()}
             className='text-sm max-w-fit mt-2 hover:underline text-green-700 font-semibold font-arima cursor-pointer'

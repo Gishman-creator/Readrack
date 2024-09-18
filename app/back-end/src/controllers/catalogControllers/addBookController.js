@@ -4,23 +4,11 @@ const pool = require('../../config/db');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() }); // Use memory storage for image blob
 const { putImage, getImageURL } = require('../../utils/imageUtils');
+const { getAuthorsByIds } = require('../../utils/getUtils');
 
 // Function to generate a random ID
 const generateRandomId = () => {
   return Math.floor(100000 + Math.random() * 900000); // Generate a random 6-digit integer
-};
-
-// Helper function to fetch authors based on their IDs
-const getAuthorsByIds = async (authorIds) => {
-  if (!authorIds) return [];
-
-  const idsArray = authorIds.split(',').map(id => id.trim()); // Split the string and trim any spaces
-  const placeholders = idsArray.map(() => '?').join(','); // Prepare placeholders for SQL IN clause
-
-  const query = `SELECT id AS author_id, authorName AS author_name, nickname FROM authors WHERE id IN (${placeholders})`;
-  const [authors] = await pool.query(query, idsArray);
-  
-  return authors;
 };
 
 const addBook = async (req, res) => {
@@ -102,7 +90,7 @@ const addBook = async (req, res) => {
     book.authors = authors;
 
     let url = null;
-    if (bookData[0].image) {
+    if (bookData[0].image && bookData[0].image !== 'null') {
       url = await getImageURL(bookData[0].image);
     }
     bookData[0].imageURL = url;

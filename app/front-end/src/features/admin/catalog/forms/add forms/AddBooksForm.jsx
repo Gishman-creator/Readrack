@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import ImagePreview from './ImagePreview';
 import axiosUtils from '../../../../../utils/axiosUtils';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { downloadImage } from '../../../../../utils/imageUtils';
+import { setAuthor, setCollection, setSerie } from '../../../slices/catalogSlice';
 
 function AddBooksForm({ onClose }) {
   const [bookImageURL, setBookImageURL] = useState('');
@@ -11,7 +12,8 @@ function AddBooksForm({ onClose }) {
   const detailsSerie = useSelector((state) => state.catalog.serie);
   const detailsCollection = useSelector((state) => state.catalog.collection);
   const serieDetailsAuthor = useSelector((state) => state.catalog.author);
-  const detailsAuthor = { id: serieDetailsAuthor.id, authorName: serieDetailsAuthor.nickname || serieDetailsAuthor.authorName};
+  console.log('serieDetailsAuthor', serieDetailsAuthor)
+  const detailsAuthor = { id: serieDetailsAuthor.author_id || serieDetailsAuthor.id, authorName: (serieDetailsAuthor.nickname || serieDetailsAuthor.author_name) || (serieDetailsAuthor.nickname || serieDetailsAuthor.authorName)};
   const [authorSearch, setAuthorSearch] = useState('');
   const [serieSearch, setSerieSearch] = useState(detailsSerie ? detailsSerie.serieName : '');
   const [collectionSearch, setCollectionSearch] = useState(detailsCollection ? detailsCollection.collectionName : '');
@@ -19,12 +21,14 @@ function AddBooksForm({ onClose }) {
   const [serieOptions, setSerieOptions] = useState([]);
   const [collectionOptions, setCollectionOptions] = useState([]);
   const [selectedAuthors, setSelectedAuthors] = useState(serieDetailsAuthor  ? [detailsAuthor] : []);
-  const [selectedSerie, setSelectedSerie] = useState(detailsSerie ? detailsSerie.id : '');
-  const [selectedCollection, setSelectedCollection] = useState(detailsCollection ? detailsCollection.id : '');
+  const [selectedSerie, setSelectedSerie] = useState(detailsSerie ? {id: detailsSerie.id, serieName: detailsSerie.serieName} : '');
+  const [selectedCollection, setSelectedCollection] = useState(detailsCollection ? {id: detailsCollection.id, collectionName: detailsCollection.collectionName} : '');
   const [isLoading, setIsLoading] = useState(false);
   const [authorIsLoading, setAuthorIsLoading] = useState(false);
   const [serieIsLoading, setSerieIsLoading] = useState(false);
   const [collectionIsLoading, setCollectionIsLoading] = useState(false);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (authorSearch) {
@@ -48,7 +52,9 @@ function AddBooksForm({ onClose }) {
   }, [authorSearch]);
 
   useEffect(() => {
-    if (serieSearch) {
+    if (selectedSerie && serieSearch === selectedSerie.serieName) return;
+    setSelectedSerie('');
+    if (serieSearch && !selectedSerie) {
       const fetchSeries = async () => {
         setSerieIsLoading(true);
         try {
@@ -69,7 +75,9 @@ function AddBooksForm({ onClose }) {
   }, [serieSearch]);
 
   useEffect(() => {
-    if (collectionSearch) {
+    if (selectedCollection && collectionSearch === selectedCollection.collectionName) return;
+    setSelectedCollection('');
+    if (collectionSearch && !selectedCollection) {
       const fetchCollections = async () => {
         setCollectionIsLoading(true);
         try {
@@ -89,6 +97,13 @@ function AddBooksForm({ onClose }) {
     }
   }, [collectionSearch]);
 
+  const handleAuthorChange = (e) => {
+    setAuthorSearch(e.target.value);
+    if (!e.target.value) {
+      setSelectedAuthors(e.target.value)
+    }
+  };
+
   const handleAuthorSelect = (author) => {
     if (!selectedAuthors.some(a => a.id === author.id)) {
       setSelectedAuthors([...selectedAuthors, author]);
@@ -101,14 +116,22 @@ function AddBooksForm({ onClose }) {
     setSelectedAuthors(selectedAuthors.filter((_, i) => i !== index));
   };
 
+  const handleSerieChange = (e) => {
+    setSerieSearch(e.target.value);
+  };
+
   const handleSerieSelect = (serie) => {
-    setSelectedSerie(serie.id);
+    setSelectedSerie(serie);
     setSerieSearch(serie.serieName);
     setSerieOptions([]);
   };
 
+  const handleCollectionChange = (e) => {
+    setCollectionSearch(e.target.value);
+  };
+
   const handleCollectionSelect = (collection) => {
-    setSelectedCollection(collection.id);
+    setSelectedCollection(collection);
     setCollectionSearch(collection.collectionName);
     setCollectionOptions([]);
   };
@@ -140,10 +163,10 @@ function AddBooksForm({ onClose }) {
       }
     }
 
-    formData.append('author_id', selectedAuthors.map(author => author.id));
-    // console.log('The selected authors ids:', formData.author_id);
-    formData.append('serie_id', selectedSerie);
-    formData.append('collection_id', selectedCollection);
+    formData.append('author_id', selectedAuthors.map((author) => author.id).join(', '));
+    console.log('The selected authors ids:', formData.author_id);
+    formData.append('serie_id', selectedSerie.id);
+    formData.append('collection_id', selectedCollection.id);
 
     try {
       const response = await axiosUtils('/api/addBook', 'POST', formData, {
@@ -153,6 +176,15 @@ function AddBooksForm({ onClose }) {
       if (response.status !== 201) throw new Error('Failed to submit form');
 
       setIsLoading(false);
+      dispatch(setAuthor(''));
+      dispatch(setSerie(''));
+      dispatch(setCollection(''));
+      setAuthorSearch('');
+      setSerieSearch('');
+      setCollectionSearch('');
+      setSelectedAuthors('');
+      setSelectedSerie('');
+      setSelectedCollection('');
       if (onClose) {
         onClose(); // Call the onClose function to close the modal
       }
@@ -263,7 +295,7 @@ function AddBooksForm({ onClose }) {
                   </li>
                 ))}
               </ul>
-            ) : serieSearch && !serieIsLoading && (
+            ) : serieSearch && !serieIsLoading && !selectedSerie && (
               <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
                 <li
                   className="cursor-pointer px-4 py-2 hover:bg-gray-100"
@@ -299,7 +331,7 @@ function AddBooksForm({ onClose }) {
                   </li>
                 ))}
               </ul>
-            ) : collectionSearch && !collectionIsLoading && (
+            ) : collectionSearch && !collectionIsLoading && !selectedCollection && (
               <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
                 <li
                   className="cursor-pointer px-4 py-2 hover:bg-gray-100"

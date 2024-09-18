@@ -13,6 +13,7 @@ const addAuthor = async (req, res) => {
       authorName,
       nickname,
       dob,
+      dod,
       nationality,
       biography,
       awards,
@@ -22,7 +23,7 @@ const addAuthor = async (req, res) => {
       website,
       genres,
     } = req.body;
-    
+    console.log('The image req.file is:', req.file);
     const image = req.file ? await putImage('', req.file, 'authors') : null; // Await the function to resolve the promise
     console.log('The image key for Amazon is:', image);
 
@@ -44,16 +45,17 @@ const addAuthor = async (req, res) => {
     // Insert author data into the database with the unique ID
     const insertQuery = `
       INSERT INTO authors (
-        id, image, authorName, nickname, dob, nationality, biography, x, facebook, instagram, website, genres, awards
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, image, authorName, nickname, dob, dod, nationality, biography, x, facebook, instagram, website, genres, awards
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const insertValues = [
       uniqueId,
-      authorImageBlob,
+      image,
       authorName,
       nickname || null,
       dob || null,
+      dod || null,
       nationality || null,
       biography || null,
       x || null,
@@ -81,7 +83,7 @@ const addAuthor = async (req, res) => {
     const [authorData] = await pool.execute(fetchQuery, [uniqueId]);
 
     let url = null;
-    if (authorData[0].image) {
+    if (authorData[0].image && authorData[0].image !== 'null') {
       url = await getImageURL(authorData[0].image);
     }
     authorData[0].imageURL = url;

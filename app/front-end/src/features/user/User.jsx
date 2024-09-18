@@ -14,6 +14,7 @@ import SerieDetails from './detailsPages/SerieDetails';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 import Footer from './components/Footer';
 import CollectionDetails from './detailsPages/CollectionDetails';
+import NetworkErrorPage from '../../pages/NetworkErrorPage';
 
 function User() {
   const activeTab = useSelector((state) => state.user.activeTab);
@@ -89,6 +90,7 @@ function User() {
             <Route path='/authors/:authorId/:authorName?' element={<AuthorDetails />} />
             <Route path='/search' element={<SearchResults />} />
             <Route path='/about-us' element={<AboutUs />} />
+            <Route path='/error' element={<NetworkErrorPage />} />
             <Route path='*' element={<NotFoundPage />} />
           </Routes>
           <div
@@ -109,12 +111,12 @@ function User() {
                 </span>
               </div>
               <div>
-                <p className='mb-2 font-bold'>We're always looking to improve your experience on readrack. Please let us know your thoughts by:</p>
-                <ul className='mb-4'>
+                <p className='mb-1 font-bold'>We're always looking to improve your experience on readrack. Please let us know your thoughts by:</p>
+                <ul className='mb-8'>
                   <li>Suggesting new series or authors.</li>
                   <li>Reporting any issues.</li>
                 </ul>
-                <p className='mb-3 text-xs'>Leave any feedback about our website on our Insighto board</p>
+                <p className='mb-4 text-xs'>Leave any feedback about our website on our Insighto board</p>
                 <a
                   href='https://insigh.to/b/readrack-recommend-book-series-or-authors-or-report-an-issue'
                   target="_blank"

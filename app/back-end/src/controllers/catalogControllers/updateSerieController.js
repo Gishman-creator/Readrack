@@ -6,7 +6,7 @@ const updateSerie = async (req, res) => {
   const { serieName, numBooks, genres, link, author_id, related_collections, imageName } = req.body;
   console.log('The image name is:', imageName);
     
-  const image = req.file ? await putImage(id, req.file, 'series') || imageName : null; // Await the function to resolve the promise
+  const image = req.file ? await putImage(id, req.file, 'series') : imageName; // Await the function to resolve the promise
   console.log('The image key for Amazon is:', image);
 
   try {
@@ -37,7 +37,7 @@ const updateSerie = async (req, res) => {
     }
 
     let url = null;
-    if (serieRows[0].image) {
+    if (serieRows[0].image && serieRows[0].image !== 'null') {
       url = await getImageURL(serieRows[0].image);
     }
     serieRows[0].imageURL = url;

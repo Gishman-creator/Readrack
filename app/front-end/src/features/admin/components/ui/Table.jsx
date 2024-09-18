@@ -4,10 +4,11 @@ import { useNavigate } from "react-router-dom"; // Import useNavigate
 import axiosUtils from "../../../../utils/axiosUtils";
 import { capitalize, formatDate, spacesToHyphens } from "../../../../utils/stringUtils";
 import TableHeader from "./TableHeader";
-import { toggleRowSelection, selectAllRows, clearSelection, setTableTotalItems } from "../../slices/catalogSlice";
+import { toggleRowSelection, selectAllRows, clearSelection, setTableTotalItems, setSearchTerm } from "../../slices/catalogSlice";
 import { useSocket } from "../../../../context/SocketContext";
 import toast from "react-hot-toast";
 import NetworkErrorPage from "../../../../pages/NetworkErrorPage";
+import { debounce } from "lodash";
 
 function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, openEditCollectionsModal }) {
 
@@ -32,8 +33,21 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
     const navigate = useNavigate(); // Initialize navigate
 
     useEffect(() => {
+        setTableData('');
+        dispatch(setSearchTerm(''));
+    }, [activeTab]);
+
+    useEffect(() => {
+        console.log('the search term is:', searchTerm);
+    }, [searchTerm]);
+
+    useEffect(() => {
+
+
         const fetchData = async () => {
             setIsLoading(true);
+            setNetworkError(false);
+            setTableData('');
             if (!activeTab) return;
             try {
                 let response, data, totalCount;
@@ -42,6 +56,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                     // console.log('The search type is:', type);
                     const response = await axiosUtils(`/api/search?query=${searchTerm}&type=${type}&seriePageLimitStart=${limitStart}&seriePageLimitEnd=${limitEnd}&authorPageLimitStart=${limitStart}&authorPageLimitEnd=${limitEnd}&bookPageLimitStart=${limitStart}&bookPageLimitEnd=${limitEnd}`, 'GET');
                     data = response.data.results;
+                    console.log('The search results are:', data);
                     totalCount = response.data.totalBooksCount;
                 } else if (!searchTerm) {
                     if (activeTab === "Series") {
@@ -60,7 +75,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                     data = response.data.data;
                     totalCount = response.data.totalCount;
                 }
-                // console.log('Total data fetched:', data);
+                console.log('Total data fetched:', data);
                 setTableData(data);
                 dispatch(setTableTotalItems(totalCount));
                 // console.log('Total count of data:', totalCount)
@@ -69,13 +84,13 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                 setIsLoading(false);
             } catch (error) {
                 console.error(`Error fetching ${activeTab.toLowerCase()}:`, error);
-                if (error.message === "Network Error" || error.response.status === 500) {
+                if (error.message === "Network Error" || error.response.status === 500 || error.response.status === 501) {
                     setNetworkError(true);
                 }
             }
         };
 
-        fetchData();
+        fetchData(); // No debounce for non-search requests
 
         if (!socket) {
             console.error("Socket is not initialized");
@@ -349,8 +364,8 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                     <>
                         <td className="px-4 py-2">{capitalize(item.bookName)}</td>
                         <td className="px-4 py-2">{item.serie_name ? item.serie_name : item.collection_name}</td>
-                        <td className="px-4 py-2">{item.nickname ? item.nickname : item.author_name}</td>
-                        <td className="px-4 py-2">{formatDate(item.publishDate)}</td>
+                        <td className="px-4 py-2">{item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</td>
+                        <td className="px-4 py-2">{formatDate(item.publishDate) || item.customDate}</td>
                         <td className="px-4 py-2">
                             <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
                                 Link
@@ -378,10 +393,6 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
         ));
     };
 
-    if (networkError) {
-        return <NetworkErrorPage />
-    }
-
 
     return (
         <div className="rounded-lg max-h-custom overflow-hidden custom-drop-shadow2">
@@ -407,12 +418,20 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                         </tr>
                     </thead>
                     {isLoading ? (
-                        <tr className="">
-                            <td colSpan={7} className="space-x-2 text-center py-4">
-                                <span className="black-loader"></span>
-                                <span className="mb-1">loading {activeTab}...</span>
-                            </td>
-                        </tr>
+                        !networkError ?
+                            <tr className="">
+                                <td colSpan={7} className="space-x-2 text-center py-4">
+                                    <span className="black-loader"></span>
+                                    <span className="mb-1">loading {activeTab}...</span>
+                                </td>
+                            </tr>
+                            :
+                            <tr className="space-x-2">
+                                <td colSpan={7} className="text-center py-4">
+                                    Error connecting to the server.
+                                </td>
+                            </tr>
+
                     ) :
                         renderTableRows()
                     }

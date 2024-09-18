@@ -44,11 +44,21 @@ function EditBooksForm({ onClose }) {
             setBookImageURL(response.data.imageURL || '');
           }
 
+          const serie = {
+            id: response.data.serie_id,
+            serieName: response.data.serie_name
+          };
+
+          const colleciton = {
+            id: response.data.collection_id,
+            collectionName: response.data.collection_name
+          };
+
           setBookId(response.data.id);
           setSelectedAuthors(response.data.authors || '');
-          setSelectedSerie(response.data.serie_id || '');
+          setSelectedSerie(serie || '');
           setSerieSearch(response.data.serie_name || '');
-          setSelectedCollection(response.data.collection_id || '');
+          setSelectedCollection(colleciton || '');
           setCollectionSearch(response.data.collection_name || '');
         } catch (error) {
           console.error('Error fetching book details:', error);
@@ -82,7 +92,10 @@ function EditBooksForm({ onClose }) {
   }, [authorSearch]);
 
   useEffect(() => {
-    if (serieSearch) {
+    // console.log('Serie Search:', serieSearch);
+    if (selectedSerie && serieSearch === selectedSerie.serieName) return;
+    setSelectedSerie('');
+    if (serieSearch && !selectedSerie) {
       const fetchSeries = async () => {
         setSerieIsLoading(true);
         try {
@@ -103,7 +116,9 @@ function EditBooksForm({ onClose }) {
   }, [serieSearch]);
 
   useEffect(() => {
-    if (collectionSearch) {
+    if (selectedCollection && collectionSearch === selectedCollection.collectionName) return;
+    setSelectedCollection('');
+    if (collectionSearch && !selectedCollection) {
       const fetchCollections = async () => {
         setCollectionIsLoading(true);
         try {
@@ -152,13 +167,13 @@ function EditBooksForm({ onClose }) {
   };
 
   const handleSerieSelect = (serie) => {
-    setSelectedSerie(serie.id);
+    setSelectedSerie(serie);
     setSerieSearch(serie.serieName);
     setSerieOptions([]);
   };
 
   const handleCollectionSelect = (collection) => {
-    setSelectedCollection(collection.id);
+    setSelectedCollection(collection);
     setCollectionSearch(collection.collectionName);
     setCollectionOptions([]);
   };
@@ -170,6 +185,10 @@ function EditBooksForm({ onClose }) {
   const handleImageUpload = (file) => {
     setSelectedImageFile(file); // Track the uploaded file
   };
+
+  // useEffect(() => {
+  //   console.log('Selected Serie:', selectedSerie);
+  // }, [selectedSerie]);
 
   const handleSubmit = async (event) => {
     setIsLoading(true);
@@ -206,9 +225,11 @@ function EditBooksForm({ onClose }) {
 
     formData.append('imageName', imageName);
 
-    formData.append('author_id', selectedAuthors);
-    formData.append('serie_id', selectedSerie);
-    formData.append('collection_id', selectedCollection);
+    // console.log('The selected authors are:', selectedAuthors.map((author) => author.author_id).join(', '));
+    formData.append('author_id', selectedAuthors.map((author) => author.author_id).join(', '));
+    // console.log('The selected serie id is:', selectedSerie.id);
+    formData.append('serie_id', selectedSerie.id);
+    formData.append('collection_id', selectedCollection.id);
 
     // Log form data entries
     // for (let [key, value] of formData.entries()) {
@@ -344,7 +365,7 @@ function EditBooksForm({ onClose }) {
                   </li>
                 ))}
               </ul>
-            ) : serieSearch && !serieIsLoading && (
+            ) : serieSearch && !serieIsLoading && !selectedSerie && (
               <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
                 <li
                   className="cursor-pointer px-4 py-2 hover:bg-gray-100"
@@ -380,7 +401,7 @@ function EditBooksForm({ onClose }) {
                   </li>
                 ))}
               </ul>
-            ) : collectionSearch && !collectionIsLoading && (
+            ) : collectionSearch && !collectionIsLoading && !selectedCollection && (
               <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
                 <li
                   className="cursor-pointer px-4 py-2 hover:bg-gray-100"

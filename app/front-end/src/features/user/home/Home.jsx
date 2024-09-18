@@ -82,7 +82,7 @@ export default function Home() {
             } catch (error) {
                 setIsLoading(false);
                 console.error(`Error fetching ${activeTab} data:`, error);
-                if (error.message === "Network Error" || error.response.status === 500) {
+                if (error.message === "Network Error" || error.response.status === 500 || error.response.status === 501) {
                     setNetworkError(true);
                 } else if (error.response && error.response.status === 404) {
                     setNotFound(true);

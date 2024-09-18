@@ -123,7 +123,7 @@ function EditAuthorForm({ onClose }) {
             />
           </div>
           <div className="mb-2 flex space-x-2">
-            <div>
+            <div className='w-full'>
               <label className="block text-sm font-medium">Date of birth:</label>
               <input
                 type="date"
@@ -132,18 +132,27 @@ function EditAuthorForm({ onClose }) {
                 className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium">Nationality:</label>
+            <div className='w-full'>
+              <label className="block text-sm font-medium">Date of death:</label>
               <input
-                type="text"
-                name="nationality"
-                defaultValue={authorData.nationality || ''}
+                type="date"
+                name="dod"
+                defaultValue={authorData.dod?.split('T')[0] || ''}
                 className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
           </div>
+          <div className="mb-2">
+            <label className="block text-sm font-medium">Nationality:</label>
+            <input
+              type="text"
+              name="nationality"
+              defaultValue={authorData.nationality || ''}
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
+            />
+          </div>
           <div className="mb-2 flex space-x-2">
-            <div>
+            <div className='w-full'>
               <label className="block text-sm font-medium">Biography:</label>
               <textarea
                 name="biography"
@@ -151,7 +160,7 @@ function EditAuthorForm({ onClose }) {
                 className="w-full border border-gray-300 rounded-lg px-2 py-1"
               />
             </div>
-            <div>
+            <div className='w-full'>
               <label className="block text-sm font-medium">Awards:</label>
               <textarea
                 name="awards"

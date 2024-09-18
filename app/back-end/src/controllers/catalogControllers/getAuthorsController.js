@@ -23,7 +23,7 @@ exports.getAuthors = async (req, res) => {
         COUNT(DISTINCT b.id) AS numBooks
       FROM authors a
       LEFT JOIN series s ON a.id = s.author_id
-      LEFT JOIN books b ON a.id = b.author_id
+      LEFT JOIN books b ON FIND_IN_SET(a.id, b.author_id) > 0
     `;
     let countQuery = 'SELECT COUNT(*) AS totalCount FROM authors a';
     let queryParams = [];
@@ -54,7 +54,7 @@ exports.getAuthors = async (req, res) => {
     let url = null;
     for (const dataRow of dataRows) {
       url = null;
-      if (dataRow.image) {
+      if (dataRow.image && dataRow.image !== 'null') {
         url = await getImageURL(dataRow.image);
       }
       dataRow.imageURL = url;
@@ -79,18 +79,20 @@ exports.getAuthorById = async (req, res) => {
         COUNT(DISTINCT b.id) AS numBooks
       FROM authors a
       LEFT JOIN series s ON a.id = s.author_id
-      LEFT JOIN books b ON a.id = b.author_id
+      LEFT JOIN books b ON FIND_IN_SET(a.id, b.author_id) > 0
       WHERE a.id = ?
       GROUP BY a.id
       LIMIT ?
     `, [id, limit]);
+
+    console.log('Authors:', rows);
 
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Author not found' });
     }
 
     let url = null;
-    if (rows[0].image) {
+    if (rows[0].image && rows[0].image !== 'null') {
       url = await getImageURL(rows[0].image);
     }
     rows[0].imageURL = url;

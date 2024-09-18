@@ -53,7 +53,7 @@ const addCollections = async (req, res) => {
         );
 
         let url = null;
-        if (collectionData[0].image) {
+        if (collectionData[0].image && collectionData[0].image !== 'null') {
           url = await getImageURL(collectionData[0].image);
         }
         collectionData[0].imageURL = url;

@@ -42,7 +42,7 @@ exports.getCollections = async (req, res) => {
     let url = null;
     for (const dataRow of dataRows) {
       url = null;
-      if (dataRow.image) {
+      if (dataRow.image && dataRow.image !== 'null') {
         url = await getImageURL(dataRow.image);
       }
       dataRow.imageURL = url;
@@ -75,7 +75,7 @@ exports.getCollectionById = async (req, res) => {
     }
 
     let url = null;
-    if (collectionsRows[0].image) {
+    if (collectionsRows[0].image && collectionsRows[0].image !== 'null') {
       url = await getImageURL(collectionsRows[0].image);
     }
     collectionsRows[0].imageURL = url;
@@ -121,7 +121,7 @@ exports.getCollectionsByAuthorId = async (req, res) => {
     let url = null;
     for (const collection of collections) {
       url = null;
-      if (collection.image) {
+      if (collection.image && collection.image !== 'null') {
         url = await getImageURL(collection.image);
       }
       collection.imageURL = url;

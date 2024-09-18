@@ -124,7 +124,7 @@ const SearchResults = () => {
                 }
             } catch (error) {
                 console.error('Error fetching search results:', error);
-                if (error.message === "Network Error" || error.response.status === 500) {
+                if (error.message === "Network Error" || error.response.status === 500 || error.response.status === 501) {
                     setNetworkError(true);
                 }
             } finally {

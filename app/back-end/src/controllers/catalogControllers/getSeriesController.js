@@ -44,7 +44,7 @@ exports.getSeries = async (req, res) => {
     let url = null;
     for (const dataRow of dataRows) {
       url = null;
-      if (dataRow.image) {
+      if (dataRow.image && dataRow.image !== 'null') {
         url = await getImageURL(dataRow.image);
       }
       dataRow.imageURL = url;
@@ -77,7 +77,7 @@ exports.getSerieById = async (req, res) => {
     }
 
     let url = null;
-    if (seriesRows[0].image) {
+    if (seriesRows[0].image && seriesRows[0].image !== 'null') {
       url = await getImageURL(seriesRows[0].image);
     }
     seriesRows[0].imageURL = url;
@@ -123,7 +123,7 @@ exports.getSeriesByAuthorId = async (req, res) => {
     let url = null;
     for (const serie of series) {
       url = null;
-      if (serie.image) {
+      if (serie.image && serie.image !== 'null') {
         url = await getImageURL(serie.image);
       }
       serie.imageURL = url;

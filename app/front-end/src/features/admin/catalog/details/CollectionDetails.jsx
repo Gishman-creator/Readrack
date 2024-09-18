@@ -15,6 +15,7 @@ import blank_image from '../../../../assets/brand_blank_image.png';
 import NotFoundPage from '../../../../pages/NotFoundPage';
 import DeatailsPageSkeleton from '../../../../components/skeletons/DeatailsPageSkeleton';
 import NetworkErrorPage from '../../../../pages/NetworkErrorPage';
+import { sortByPublishDateAsc } from '../../../../utils/sortingUtils';
 
 function CollectionDetails() {
   const { collectionId, collectionName } = useParams();
@@ -28,6 +29,7 @@ function CollectionDetails() {
   const dispatch = useDispatch();
 
   const [booksLimit, setBooksLimit] = useState();
+  const [booksRange, setBooksRange] = useState();
   const [booksCount, SetBooksCount] = useState();
   const activeTab = useSelector((state) => state.catalog.activeTab);
 
@@ -39,8 +41,10 @@ function CollectionDetails() {
       const width = window.innerWidth;
       if (width >= 1024) {
         setBooksLimit(6);
+        setBooksRange(6);
       } else {
         setBooksLimit(5);
+        setBooksRange(5);
       }
     };
 
@@ -85,7 +89,7 @@ function CollectionDetails() {
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching collections data:', error);
-        if (error.message === "Network Error" || error.response.status === 500) {
+        if (error.message === "Network Error" || error.response.status === 500 || error.response.status === 501) {
           setNetworkError(true);
         } else if (error.response && error.response.status === 404) {
           setNotFound(true);
@@ -125,19 +129,28 @@ function CollectionDetails() {
         );
 
         // Sort the updatedData by date in ascending order (oldest first)
-        return updatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        return updatedData.sort(sortByPublishDateAsc);
       });
     });
 
     // Event listener for bookAdded
     socket.on('bookAdded', (bookData) => {
-      if (bookData.collection_name === collectionName) {
+      if (bookData.collection_id === parseInt(collectionId)) {
         setBooks((prevData) => {
           const updatedData = [...prevData, bookData];
 
           // Sort the updatedData by date in ascending order (oldest first)
-          return updatedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+          return updatedData.sort(sortByPublishDateAsc);
         });
+        SetBooksCount((prevCount) => prevCount + 1);
+      }
+    });
+
+    socket.on('dataDeleted', ({ ids, type }) => {
+      // console.log('Data deleted via socket:', { ids, type });
+      if (type = 'books') {
+        setBooks((prevData) => prevData.filter((item) => !ids.includes(item.id)));
+        SetBooksCount((prevCount) => prevCount - ids.length);
       }
     });
 
@@ -146,6 +159,7 @@ function CollectionDetails() {
       socket.off('collectionsUpdated');
       socket.off('booksUpdated');
       socket.off('bookAdded');
+      socket.off('dataDeleted');
     };
 
   }, [collectionId, collectionName, navigate, socket]);
@@ -272,7 +286,7 @@ function CollectionDetails() {
             </div>
           ))}
         </div>
-        {(booksCount > booksLimit || booksLimit > 6) && (
+        {(booksCount > booksLimit || booksLimit > booksRange) && (
           <span
             onClick={() => handleSetLimit()}
             className='text-sm max-w-fit mt-2 hover:underline text-green-700 font-semibold font-arima cursor-pointer'

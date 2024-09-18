@@ -26,6 +26,25 @@ export function formatDate(date) {
     return `${monthNames[month]} ${day}, ${year}`;
 }
 
+export function calculateAgeAtDeath (dob, dod) {
+    if (!dob || !dod) return null;
+
+    const birthDate = new Date(dob);
+    const deathDate = new Date(dod);
+
+    let age = deathDate.getFullYear() - birthDate.getFullYear();
+
+    // Adjust if the death date is before the birthday in the death year
+    const monthDiff = deathDate.getMonth() - birthDate.getMonth();
+    const dayDiff = deathDate.getDate() - birthDate.getDate();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+      age--;
+    }
+
+    return age;
+  };
+
 export function spacesToHyphens(str) {
     if (!str) return str;
     return str.split(' ').join('-');  // Replace spaces with hyphens

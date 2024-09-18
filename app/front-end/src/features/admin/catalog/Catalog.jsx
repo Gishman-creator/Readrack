@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { setActiveTab, setAuthor, setSerie, setTableLimitEnd, setTableLimitStart } from '../slices/catalogSlice';
+import { setActiveTab, setAuthor, setSearchTerm, setSerie, setTableLimitEnd, setTableLimitStart } from '../slices/catalogSlice';
 import SearchBar from '../components/ui/SearchBar';
 import FilterBtn from '../components/ui/FilterBtn';
 import Table from '../components/ui/Table';
@@ -33,13 +33,15 @@ function Catalog() {
     // console.log('The tab is:', formattedTab);
     dispatch(setActiveTab(formattedTab));
     navigate(`/admin/catalog?tab=${formattedTab.toLowerCase()}`, { replace: true });
-  }, [location.search, dispatch]);
+  }, [location.search, dispatch, activeTab]);
 
   const handleTabClick = (tab) => {
+    // console.log(tab);
     dispatch(setActiveTab(''));
     dispatch(setTableLimitStart(0));
     dispatch(setTableLimitEnd(50));
     navigate(`/admin/catalog?tab=${tab.toLowerCase()}`, { replace: true });
+    dispatch(setSearchTerm(''));
   };
 
   const openModal = (content) => {

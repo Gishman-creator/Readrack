@@ -40,7 +40,12 @@ function EditSeriesForm({ onClose }) {
           setSeriesImageURL(data.imageURL || '');
         }
 
-        setSelectedAuthor(data.author_id || '');
+        const author = {
+          id: data.author_id,
+          authorName: data.nickname || data.author_name
+        };
+
+        setSelectedAuthor(author || '');
         setAuthorSearch(data.nickname || data.author_name || '');
 
         // Fetch related collections
@@ -65,7 +70,9 @@ function EditSeriesForm({ onClose }) {
   }, [seriesId]);
 
   useEffect(() => {
-    if (authorSearch) {
+    if (selectedAuthor && authorSearch === selectedAuthor.authorName) return;
+    setSelectedAuthor('');
+    if (authorSearch && !selectedAuthor) {
       const fetchAuthors = async () => {
         setAuthorIsLoading(true);
         try {
@@ -110,7 +117,7 @@ function EditSeriesForm({ onClose }) {
   };
 
   const handleAuthorSelect = (author) => {
-    setSelectedAuthor(author.id);
+    setSelectedAuthor(author);
     setAuthorSearch(author.authorName);
     setAuthorOptions([]);
   };
@@ -166,7 +173,7 @@ function EditSeriesForm({ onClose }) {
 
     formData.append('imageName', imageName);
 
-    formData.append('author_id', selectedAuthor);
+    formData.append('author_id', selectedAuthor.id);
 
     try {
       const response = await axiosUtils(`/api/updateSerie/${seriesId}`, 'PUT', formData, {
@@ -225,7 +232,7 @@ function EditSeriesForm({ onClose }) {
                   </li>
                 ))}
               </ul>
-            ) : authorSearch && !authorIsLoading && (
+            ) : authorSearch && !authorIsLoading && !selectedAuthor && (
               <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
                 <li
                   className="cursor-pointer px-4 py-2 hover:bg-gray-100"

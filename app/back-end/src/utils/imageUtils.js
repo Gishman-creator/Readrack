@@ -24,13 +24,17 @@ const s3 = new S3Client({
 exports.putImage = async (id, file, table) => {
     let imageName = null;
 
+    console.log('The image id from put image is:', id);
+
     if (id) {
         const [rows] = await pool.query(`SELECT image FROM ${table} WHERE id = ?`, [id]);
         imageName = rows.length > 0 && rows[0].image ? rows[0].image : null; // Extract image field or set to null
-        console.log('The fetched image name is:', imageName);
+        // console.log('The fetched image name is:', imageName);
     }
 
-    const imageKey = imageName || randomImageName()
+    const imageKey = imageName && imageName !== 'null' ? imageName : randomImageName();
+
+    console.log('The image key is:', imageKey);
 
     const params = {
         Bucket: bucketName,
@@ -55,7 +59,7 @@ exports.getImageURL = async (image) => {
     const command = new GetObjectCommand(getObjectParams);
     const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
 
-    console.log('The image url is:', url);
+    // console.log('The image url is:', url);
 
     return url;
 }

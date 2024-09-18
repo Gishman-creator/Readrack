@@ -48,9 +48,9 @@ function Admin() {
                 }
             } catch (error) {
                 console.error('Token validation failed:', error);
-                if (error.message === "Network Error" || error.response.status === 500) {
+                if (error.message === "Network Error" || error.response.status === 500 || error.response.status === 501) {
                     setNetworkError(true);
-                    console.log("Network error networkError set to true");
+                    // console.log("Network error networkError set to true");
                 }
                 // setIsLoggedIn(false);
                 // dispatch(setLoginState(false));
@@ -67,7 +67,7 @@ function Admin() {
 
     // Return a loading indicator while checking login status
     if (isLoggedIn === null) {
-        return <div className='h-screen flex justify-center items-center'><span className='green-loader-lg'></span></div>; // You can replace this with a proper loading component
+        return; // You can replace this with a proper loading component
     }
 
     return (

@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const { getAuthorsByIds } = require('../../utils/getUtils');
 const { getImageURL } = require('../../utils/imageUtils');
 
 // Function to build the SQL for any-order search
@@ -39,7 +40,7 @@ exports.search = async (req, res) => {
     let seriesQuery = 'SELECT series.*, authors.nickname, authors.authorName AS author_name FROM series LEFT JOIN authors ON series.author_id = authors.id';
     let collectionsQuery = 'SELECT collections.*, authors.nickname, authors.authorName AS author_name FROM collections LEFT JOIN authors ON collections.author_id = authors.id';
     let authorsQuery = 'SELECT * FROM authors';
-    let booksQuery = 'SELECT * FROM books';
+    let booksQuery = 'SELECT books.*, series.serieName AS serie_name, collections.collectionName AS collection_name FROM books LEFT JOIN series ON books.serie_id = series.id LEFT JOIN collections ON books.collection_id = collections.id';
     let seriesCountQuery = 'SELECT COUNT(*) AS totalCount FROM series';
     let collectionsCountQuery = 'SELECT COUNT(*) AS totalCount FROM collections';
     let authorsCountQuery = 'SELECT COUNT(*) AS totalCount FROM authors';
@@ -104,6 +105,12 @@ exports.search = async (req, res) => {
     const [authorsRows] = await pool.query(authorsQuery, authorsQueryParams);
     const [booksRows] = await pool.query(booksQuery, booksQueryParams);
 
+    for (const book of booksRows) {
+      // Fetch authors for each book
+      const authors = await getAuthorsByIds(book.author_id);
+      book.authors = authors;
+    }
+
     // Log queries for debugging
     console.log(seriesQuery, seriesQueryParams);
     console.log(collectionsQuery, collectionsQueryParams);
@@ -143,7 +150,7 @@ exports.search = async (req, res) => {
     let url = null;
     for (const result of results) {
       url = null;
-      if (result.image) {
+      if (result.image && result.image !== 'null') {
         url = await getImageURL(result.image);
       }
       result.imageURL = url;

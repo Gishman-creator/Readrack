@@ -1,18 +1,6 @@
 const pool = require('../../config/db');
+const { getAuthorsByIds } = require('../../utils/getUtils');
 const { putImage, getImageURL } = require('../../utils/imageUtils');
-
-// Helper function to fetch authors based on their IDs
-const getAuthorsByIds = async (authorIds) => {
-  if (!authorIds) return [];
-
-  const idsArray = authorIds.split(',').map(id => id.trim()); // Split the string and trim any spaces
-  const placeholders = idsArray.map(() => '?').join(','); // Prepare placeholders for SQL IN clause
-
-  const query = `SELECT id AS author_id, authorName AS author_name, nickname FROM authors WHERE id IN (${placeholders})`;
-  const [authors] = await pool.query(query, idsArray);
-  
-  return authors;
-};
 
 const updateBook = async (req, res) => {
   const { id } = req.params;
@@ -21,7 +9,7 @@ const updateBook = async (req, res) => {
   console.log('The request body is:', req.body);
   const { bookName, serie_id, collection_id, author_id, publishDate, customDate, genres, link, imageName } = req.body;
     
-  const image = req.file ? await putImage(id, req.file, 'books') || imageName : null; // Await the function to resolve the promise
+  const image = req.file ? await putImage(id, req.file, 'books') : imageName; // Await the function to resolve the promise
   console.log('The image key for Amazon is:', image);
 
   if (image) {
@@ -62,7 +50,7 @@ const updateBook = async (req, res) => {
     book.authors = authors;
 
     let url = null;
-    if (bookRows[0].image) {
+    if (bookRows[0].image && bookRows[0].image !== 'null') {
       url = await getImageURL(bookRows[0].image);
     }
     bookRows[0].imageURL = url;

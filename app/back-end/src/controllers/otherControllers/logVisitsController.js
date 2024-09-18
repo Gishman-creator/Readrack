@@ -24,7 +24,7 @@ exports.getVisitsData = async (req, res) => {
         // Generate all 24 hours
         labels = Array.from({ length: 24 }, (_, i) => ({ label: i, visits: 0 }));
 
-        query = `SELECT HOUR(visit_time) AS label, COUNT(*) AS visits 
+        query = `SELECT HOUR(DATE_ADD(visit_time, INTERVAL 2 HOUR)) AS label, COUNT(*) AS visits 
                  FROM visits 
                  WHERE visit_time >= CURDATE() 
                  GROUP BY label`;

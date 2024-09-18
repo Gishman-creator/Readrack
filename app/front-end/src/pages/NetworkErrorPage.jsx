@@ -10,8 +10,8 @@ function NetworkErrorPage() {
   };
 
   return (
-    <div className='px-[4%] sm:px-[12%] mt-6 md:mt-0 pb-10 md:pb-0'>
-      <div className='h-screen-nonav flex flex-col md:flex-row justify-center md:justify-evenly items-center'>
+    <div className='px-[4%] sm:px-[12%] sm:mt-0 pb-10 md:pb-0'>
+      <div className='h-screen-nonav flex flex-col lg:flex-row justify-center lg:justify-evenly items-center'>
         <img src={logo} alt="Logo" className="w-[20rem] h-[20rem]" />
         <div className='flex flex-col justify-center items-center md:mt-6'>
           <p className='font-poppins font-semibold text-3xl text-center mb-2'>Oops!</p>

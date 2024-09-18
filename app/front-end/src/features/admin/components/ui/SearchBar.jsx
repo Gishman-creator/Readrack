@@ -1,15 +1,17 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { MagnifyingGlassIcon, ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSearchTerm, setTableLimitEnd, setTableLimitStart } from '../../slices/catalogSlice';
 
 const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     const searchTerm = useSelector((state) => state.catalog.searchTerm);
+    const [searchValue, setSearchValue] = useState(searchTerm);
     const searchBarRef = useRef(null);
     const inputRef = useRef(null); // Reference for the input
     const dispatch = useDispatch();
 
     useEffect(() => {
+        setSearchValue(searchTerm);
         const handleClickOutside = (event) => {
             if (
                 searchBarRef.current &&
@@ -39,6 +41,20 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
         }
     }, [isSearchOpen]);
 
+    useEffect(() => {
+        // Create a timeout for clearing the search term
+        const timeoutId = setTimeout(() => {
+            if (!searchValue) {
+                dispatch(setSearchTerm(''));
+                dispatch(setTableLimitStart(0));
+                dispatch(setTableLimitEnd(50));
+            }
+        }, 2000); // Adjust the delay time as needed (500ms here)
+    
+        // Clear the timeout if the component unmounts or searchValue changes before the timeout completes
+        return () => clearTimeout(timeoutId);
+    }, [searchValue, dispatch]);
+
     const handleSearchClick = () => {
         toggleSearch(true);
         if (!searchTerm) {
@@ -48,14 +64,16 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     };
 
     const handleInputChange = (e) => {
-        dispatch(setSearchTerm(e.target.value));
-        // console.log('The search term is:', e.target.value);
-        dispatch(setTableLimitStart(0));
-        dispatch(setTableLimitEnd(50));
+        if (e.key === 'Enter') {
+            dispatch(setSearchTerm(e.target.value));
+            // console.log('The search term is:', e.target.value);
+            dispatch(setTableLimitStart(0));
+            dispatch(setTableLimitEnd(50));
+        }
     };
 
     const clearSearch = () => {
-        dispatch(setSearchTerm(''));
+        setSearchValue('');
         inputRef.current.focus();
         if (searchTerm === '') {
             toggleSearch(false)
@@ -80,8 +98,9 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
                         <input
                             type="text"
                             placeholder="Search..."
-                            value={searchTerm}
-                            onChange={handleInputChange}
+                            value={searchValue}
+                            onChange={(e) => setSearchValue(e.target.value)}
+                            onKeyDown={handleInputChange}
                             className="p-1 w-full sm:w-60 ml-2 border-none outline-none rounded"
                             ref={inputRef} // Attach the ref to the input
                         />

@@ -10,7 +10,7 @@ function ImagePreview({ imageURL, onImageChange, onImageUpload }) {
 
   const handleURLChange = (event) => {
     const url = event.target.value;
-    console.log('The new image url is:', url);
+    // console.log('The new image url is:', url);
     setLocalImageURL(url);
     onImageChange(url); // Notify parent about the URL change
   };

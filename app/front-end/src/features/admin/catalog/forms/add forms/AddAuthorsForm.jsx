@@ -32,6 +32,7 @@ function AddAuthorsForm({ onClose }) {
     } else if (authorImageURL) {
       const file = await downloadImage(authorImageURL, lastName);
       if (file) {
+        // console.log('Image file downloaded:', file);
         formData.append('authorImage', file);
       } else {
         setIsLoading(false);
@@ -44,8 +45,12 @@ function AddAuthorsForm({ onClose }) {
       // console.log(`${key}:`, value);
     }
 
+    // console.log('Form data:', formData);
+
     try {
-      const response = await axiosUtils('/api/addAuthor', 'POST', formData);
+      const response = await axiosUtils('/api/addAuthor', 'POST', formData, {
+        'Content-Type': 'multipart/form-data',
+      });
 
       if (response.status !== 201) throw new Error('Failed to submit form');
       // console.log('Form submitted successfully');
@@ -89,22 +94,30 @@ function AddAuthorsForm({ onClose }) {
             />
           </div>
           {/* Other form fields */}
-          <div className="mb-2 flex space-x-2">
-            <div>
+          <div className="w-full mb-2 flex space-x-2">
+            <div className='w-full'>
               <label className="block text-sm font-medium">Date of birth:</label>
               <input type="date" name="dob" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
-            <div>
-              <label className="block text-sm font-medium">Nationality:</label>
-              <input type="text" name="nationality" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
+            <div className='w-full'>
+              <label className="block text-sm font-medium">Date of death:</label>
+              <input type="date" name="dod" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
           </div>
+          <div className="mb-2">
+            <label className="block text-sm font-medium">Nationality:</label>
+            <input
+              type="text"
+              name="nationality"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
+            />
+          </div>
           <div className="mb-2 flex space-x-2">
-            <div>
+            <div className='w-full'>
               <label className="block text-sm font-medium">Biography:</label>
               <textarea name="biography" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
-            <div>
+            <div className='w-full'>
               <label className="block text-sm font-medium">Awards:</label>
               <textarea name="awards" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>

@@ -1,18 +1,6 @@
 const pool = require('../../config/db');
+const { getAuthorsByIds } = require('../../utils/getUtils');
 const { getImageURL } = require('../../utils/imageUtils');
-
-// Helper function to fetch authors based on their IDs
-const getAuthorsByIds = async (authorIds) => {
-  if (!authorIds) return [];
-
-  const idsArray = authorIds.split(',').map(id => id.trim()); // Split the string and trim any spaces
-  const placeholders = idsArray.map(() => '?').join(','); // Prepare placeholders for SQL IN clause
-
-  const query = `SELECT id AS author_id, authorName AS author_name, nickname FROM authors WHERE id IN (${placeholders})`;
-  const [authors] = await pool.query(query, idsArray);
-  
-  return authors;
-};
 
 // Fetch all books with author details
 exports.getBooks = async (req, res) => {
@@ -48,7 +36,7 @@ exports.getBooks = async (req, res) => {
       book.authors = authors;
 
       // Fetch image URL if available
-      if (book.image) {
+      if (book.image && book.image !== 'null') {
         book.imageURL = await getImageURL(book.image);
       } else {
         book.imageURL = null;
@@ -94,7 +82,7 @@ exports.getBookById = async (req, res) => {
     book.authors = authors;
 
     // Fetch image URL if available
-    if (book.image) {
+    if (book.image && book.image !== 'null') {
       book.imageURL = await getImageURL(book.image);
     } else {
       book.imageURL = null;
@@ -145,7 +133,7 @@ exports.getBooksBySerieId = async (req, res) => {
 
       // Fetch image URL if available
       url = null;
-      if (book.image) {
+      if (book.image && book.image !== 'null') {
         url = await getImageURL(book.image);
       }
       book.imageURL = url;
@@ -196,7 +184,7 @@ exports.getBooksByCollectionId = async (req, res) => {
 
       // Fetch image URL if available
       url = null;
-      if (book.image) {
+      if (book.image && book.image !== 'null') {
         url = await getImageURL(book.image);
       }
       book.imageURL = url;
@@ -224,16 +212,16 @@ exports.getBooksByAuthorId = async (req, res) => {
       LEFT JOIN series ON books.serie_id = series.id
       LEFT JOIN collections ON books.collection_id = collections.id
       WHERE books.author_id like ?
-      AND books.serie_id is null
-      AND books.collection_id is null
+      AND (books.serie_id IS NULL OR books.serie_id = 0)
+      AND (books.collection_id IS NULL OR books.collection_id = 0)
       ORDER BY books.publishDate ASC
     `;
     let countQuery = `
       SELECT COUNT(*) AS totalCount 
       FROM books 
       WHERE author_id like ?
-      AND books.serie_id is null
-      AND books.collection_id is null
+      AND (books.serie_id IS NULL OR books.serie_id = 0)
+      AND (books.collection_id IS NULL OR books.collection_id = 0)
     `;
     const queryParams = [likePattern];
 
@@ -253,7 +241,7 @@ exports.getBooksByAuthorId = async (req, res) => {
 
       // Fetch image URL if available
       url = null;
-      if (book.image) {
+      if (book.image && book.image !== 'null') {
         url = await getImageURL(book.image);
       }
       book.imageURL = url;

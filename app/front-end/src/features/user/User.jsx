@@ -79,7 +79,7 @@ function User() {
   return (
     <div className='block bg-white'>
       <NavBar />
-      <div className='h-screen-nonav mt-[4rem] flex flex-col justify-between'>
+      <div className='h-screen-nonav mt-[3.5rem] flex flex-col justify-between'>
         <div>
           <Routes>
             <Route path='/' element={<Navigate to='/series' />} />

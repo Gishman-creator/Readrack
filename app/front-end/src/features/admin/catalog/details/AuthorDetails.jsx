@@ -222,7 +222,7 @@ function AuthorDetails() {
     socket.on('bookAdded', (bookData) => {
       // Split the author_id string into an array of individual author IDs
       const authorIds = bookData.author_id.split(',').map(id => id.trim());
-    
+
       // Check if the current authorId is one of the authorIds
       if (authorIds.includes(authorId)) {
         setBooks((prevData) => {

@@ -61,7 +61,7 @@ function GenreList() {
     );
 
     return (
-        <div className='bg-white sticky top-[4rem] z-10 px-[4%] sm:px-[12%]'>
+        <div className='bg-white sticky top-[3.5rem] z-10 px-[4%] sm:px-[12%]'>
             <div className='relative flex items-center'>
                 {/* Left Arrow Icon */}
                 <button
@@ -80,7 +80,7 @@ function GenreList() {
                     ) : (
                         <div
                             ref={scrollContainerRef}
-                            className='flex px-2 py-4 mx-0 sm:mx-0 space-x-2 text-sm font-poppins overflow-x-scroll whitespace-nowrap scrollbar-hidden'>
+                            className='flex px-2 mx-0 sm:mx-0 space-x-2 text-sm font-poppins overflow-x-scroll whitespace-nowrap scrollbar-hidden'>
                             {genres.map((genre, index) => (
                                 <p
                                     key={index}

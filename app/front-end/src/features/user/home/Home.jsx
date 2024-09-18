@@ -108,7 +108,7 @@ export default function Home() {
     return (
         <div className='bg-white pb-10'>
             <GenreList />
-            <div className={`mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-6 px-[4%] sm:px-[12%] ${activeTab === 'Series' ? 'gap-6 md:gap-0' : 'gap-5 md:gap-0'}`}>
+            <div className={`mt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-6 px-[4%] sm:px-[12%] ${activeTab === 'Series' ? 'gap-6 md:justify-between' : 'gap-5 md:justify-between'}`}>
                 {isLoading ? (
                     [...Array(pageLimitEnd)].map((_, index) => (
                         <SkeletonCard key={index} />

@@ -61,7 +61,7 @@ function GenreList() {
     );
 
     return (
-        <div className='bg-white sticky top-[3.5rem] z-10 px-[4%] sm:px-[12%]'>
+        <div className='bg-white sticky top-[3.5rem] z-10 py-1 px-[4%] sm:px-[12%]'>
             <div className='relative flex items-center'>
                 {/* Left Arrow Icon */}
                 <button

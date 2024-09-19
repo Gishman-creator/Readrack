@@ -20,7 +20,7 @@ const SearchResults = () => {
     // State variables for series, authors, loading state, and search term
     const [series, setSeries] = useState([]);
     const [authors, setAuthors] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [networkError, setNetworkError] = useState(false);
 
     const [seriePageLimitStart, setSeriePageLimitStart] = useState();
@@ -33,7 +33,13 @@ const SearchResults = () => {
     const [searchTerm, setSearchTerm] = useState(initialQuery);
 
     useEffect(() => {
+        console.log('The isloading state is:', isLoading);
+        console.log('The page interval is:', pageInterval);
+    }, [isLoading, pageInterval])
+
+    useEffect(() => {
         setSearchTerm(initialQuery);
+        console.log('Initial query:', initialQuery);
     }, [initialQuery]);
 
     useEffect(() => {
@@ -147,14 +153,14 @@ const SearchResults = () => {
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
-        // Update the query in the URL with the new search term
         navigate(`/search?q=${searchTerm}&type=${type}`);
+        // setInitialQuery(searchTerm);
     };
 
     const handleTypeChange = (selectedType) => {
         const formattedSelectedType = selectedType.toLowerCase();
-        setType(formattedSelectedType);
         navigate(`/search?q=${searchTerm}&type=${formattedSelectedType}`);
+        setType(formattedSelectedType);
     };
 
     if (networkError) {
@@ -179,65 +185,65 @@ const SearchResults = () => {
                 <Dropdown types={types} selectedType={type} onSelectType={handleTypeChange} />
             </div>
 
-            {/* Display series results */}
-            {series.length > 0 && (
-                <div>
-                    <h2 className="font-poppins font-semibold mb-3 mt-6">Series</h2>
-                    <div className='mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-6 gap-6 md:gap-0'>
-                        {isLoading ? (
-                            [...Array(pageInterval)].map((_, index) => (
-                                <SkeletonCard key={index} />
-                            ))
-                        ) : (
-                            series.map((result) => (
-                                <Card key={result.id} card={result} activeTab="Series" />
-                            ))
-                        )}
-                    </div>
-                    <Pagination
-                        pageLimitStart={seriePageLimitStart}
-                        pageLimitEnd={seriePageLimitEnd}
-                        pageInterval={pageInterval}
-                        totalItems={totalSeries}
-                        onPageChange={(newPageStart, newPageEnd) => handlePageChange(newPageStart, newPageEnd, true)}
-                        toTop={false}
-                    />
-                </div>
-            )}
-
-            {/* Display authors results */}
-            {authors.length > 0 && (
-                <div>
-                    <h2 className="font-poppins font-semibold mb-3 mt-10">Authors</h2>
-                    <div className='mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-6 gap-5 md:gap-0'>
-                        {isLoading ? (
-                            [...Array(pageInterval)].map((_, index) => (
-                                <SkeletonCard key={index} />
-                            ))
-                        ) : (
-                            authors.map((result) => (
-                                <Card key={result.id} card={result} activeTab="Authors" />
-                            ))
-                        )}
-                    </div>
-                    <Pagination
-                        pageLimitStart={authorPageLimitStart}
-                        pageLimitEnd={authorPageLimitEnd}
-                        pageInterval={pageInterval}
-                        totalItems={totalAuthors}
-                        onPageChange={(newPageStart, newPageEnd) => handlePageChange(newPageStart, newPageEnd, false)}
-                        toTop={false}
-                    />
-                </div>
-            )}
-
             {/* Handle case when no results are found */}
-            {series.length === 0 && authors.length === 0 && !isLoading && (
+            {series.length === 0 && authors.length === 0 && !isLoading ? (
                 <p className="font-arima my-10">
                     No results found for "{searchTerm}"
                     {type == 'all' ? '.' : ` in ${type}.`}
                 </p>
-            )}
+            ) : (isLoading ? (
+                <>
+                    <div className='mt-8 mb-4 bg-gray-200 h-5 w-[8rem] animate-pulse rounded-lg'></div>
+                    <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-6 gap-6 md:gap-0'>
+                        {[...Array(pageInterval)].map((_, index) => (
+                            <SkeletonCard key={index} />
+                        ))}
+                    </div>
+                </>
+            ) : (
+                <>
+                    {/* Display series results */}
+                    {series.length > 0 && (
+                        <div>
+                            <h2 className="font-poppins font-semibold mb-3 mt-6">Series</h2>
+                            <div className='mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-6 gap-6 md:gap-0'>
+                                {series.map((result) => (
+                                    <Card key={result.id} card={result} activeTab="Series" />
+                                ))}
+                            </div>
+                            <Pagination
+                                pageLimitStart={seriePageLimitStart}
+                                pageLimitEnd={seriePageLimitEnd}
+                                pageInterval={pageInterval}
+                                totalItems={totalSeries}
+                                onPageChange={(newPageStart, newPageEnd) => handlePageChange(newPageStart, newPageEnd, true)}
+                                toTop={false}
+                            />
+                        </div>
+                    )}
+
+                    {/* Display authors results */}
+                    {authors.length > 0 && (
+                        <div>
+                            <h2 className="font-poppins font-semibold mb-3 mt-10">Authors</h2>
+                            <div className='mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-6 gap-6 md:gap-0'>
+                                {authors.map((result) => (
+                                    <Card key={result.id} card={result} activeTab="Authors" />
+                                ))}
+                            </div>
+                            <Pagination
+                                pageLimitStart={authorPageLimitStart}
+                                pageLimitEnd={authorPageLimitEnd}
+                                pageInterval={pageInterval}
+                                totalItems={totalAuthors}
+                                onPageChange={(newPageStart, newPageEnd) => handlePageChange(newPageStart, newPageEnd, false)}
+                                toTop={false}
+                            />
+                        </div>
+                    )}
+                </>
+            ))}
+
         </div>
     );
 };

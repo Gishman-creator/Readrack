@@ -40,7 +40,7 @@ function User() {
     };
 
     logVisit();
-  }, [location]);
+  }, []);
 
   const createSessionId = () => {
     const sessionId = Math.random().toString(36).substr(2, 9);

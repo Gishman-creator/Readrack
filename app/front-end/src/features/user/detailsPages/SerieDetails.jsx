@@ -188,7 +188,7 @@ function SerieDetails() {
       <div className='md:flex md:flex-row pt-2 md:space-x-6 xl:space-x-8 pb-10'>
         <div className='w-full pt-2 md:w-[22rem] md:h-full md:sticky md:top-20 lg:top-[4.5rem] overflow-hidden'>
           <div className=' max-w-[13rem] mx-auto'>
-            <img src={serieData.imageURL || blank_image} alt="" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' />
+            <img src={serieData.imageURL || blank_image} alt="" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' loading="lazy" />
             <div className='w-full mx-auto'>
               <p
                 title={capitalize(serieData.serieName)}
@@ -235,6 +235,7 @@ function SerieDetails() {
                   src={item.imageURL || blank_image} // Fallback image if Blob URL is null
                   alt=''
                   className='bg-[rgba(3,149,60,0.08)] min-h-[9rem] w-[6rem] rounded-lg object-cover'
+                  loading="lazy"
                 />
                 <div className='min-h-full w-full flex flex-col'>
                   <div className='flex justify-between items-center'>

@@ -22,7 +22,7 @@ function NetworkErrorPage() {
           <p className='font-arima text-base text-center w-[20rem] mt-2'>
             Please check your internet connection or try again later.
           </p>
-          <div className='flex space-x-4 my-8 md:mb-0'>
+          <div className='my-8 '>
             <span
               onClick={reloadPage}
               className='py-2 px-4 bg-primary on-click-amzn max-w-fit rounded-lg cursor-pointer text-white text-sm font-semibold font-poppins'

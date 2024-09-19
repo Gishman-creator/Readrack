@@ -44,6 +44,7 @@ function Card({ card, activeTab, fixedWidth }) {
                     src={card.imageURL || blank_image}
                     alt=''
                     className="bg-[rgba(3,149,60,0.08)] h-48 w-full transform transition-transform duration-300 group-hover:scale-105 object-cover"
+                    loading="lazy"
                 />
                 {card.searchCount > 5 && (
                     <div

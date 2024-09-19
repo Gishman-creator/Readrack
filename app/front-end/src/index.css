@@ -84,7 +84,7 @@
 }
 
 .h-screen-nonav {
-  height: calc(100vh - 4rem);
+  min-height: calc(100vh - 4rem);
 }
 
 .custom-drop-shadow {

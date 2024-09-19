@@ -79,7 +79,7 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     const handleSearchSubmit = (e) => {
         // console.log('Handle search submit called');
         e.preventDefault(); // Prevent form submission
-        navigate(`/search?q=${spacesToHyphens(searchTerm)}&type=all`);
+        navigate(`/search?q=${decodeURIComponent(searchTerm)}&type=all`);
         setIsInputFocused(false);
         setSearchTerm('');
         toggleSearch(false);

@@ -14,7 +14,7 @@ dist-ssr
 
 # environmental variables
 
-# .env
+.env
 
 # Editor directories and files
 .vscode/*

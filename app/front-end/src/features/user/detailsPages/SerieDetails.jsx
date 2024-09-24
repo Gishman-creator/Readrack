@@ -15,7 +15,6 @@ import { sortByPublishDateAsc } from '../../../utils/sortingUtils';
 
 function SerieDetails() {
 
-  window.scrollTo({ top: 0 });
   const activeTab = useSelector((state) => state.user.activeTab);
   const { serieId, serieName } = useParams();
   const [serieData, setSerieData] = useState({});
@@ -209,7 +208,7 @@ function SerieDetails() {
                   <span
                     key={author.author_id}
                     className='hover:underline cursor-pointer'
-                    onClick={() => navigate(`/admin/catalog/authors/${author.author_id}/${spacesToHyphens(author.author_name)}`)}
+                    onClick={() => navigate(`/authors/${author.author_id}/${spacesToHyphens(author.author_name)}`)}
                   >
                     {capitalize(author.nickname || author.author_name)}
                   </span>
@@ -256,7 +255,7 @@ function SerieDetails() {
                   </div>
                   <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                   <p className='font-arima text-slate-400 text-sm mt-1'>
-                    #{index + 1}, published {formatDate(item.publishDate) || item.customDate}
+                    published {formatDate(item.publishDate) || item.customDate}
                   </p>
                   <a
                     href={item.link}

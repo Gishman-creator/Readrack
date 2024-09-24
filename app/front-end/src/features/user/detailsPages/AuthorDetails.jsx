@@ -17,7 +17,6 @@ import { sortByFirstBookYearAsc, sortByPublishDateAsc } from '../../../utils/sor
 
 function AuthorDetails() {
 
-  window.scrollTo({ top: 0 });
   const activeTab = useSelector((state) => state.user.activeTab);
   const { authorId, authorName } = useParams();
   const [authorData, setAuthorData] = useState({});
@@ -413,7 +412,7 @@ function AuthorDetails() {
                       </div>
                       <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                       <p className='font-arima text-gray-400 text-sm mt-1'>
-                        #{index + 1}, {item.first_book_year && item.last_book_year ? `from ${item.first_book_year} to ${item.last_book_year}` : 'Coming soon'}
+                        {item.first_book_year && item.last_book_year ? `from ${item.first_book_year} to ${item.last_book_year}` : 'Coming soon'}
                       </p>
                       {item.link &&
                         <a
@@ -474,7 +473,7 @@ function AuthorDetails() {
                       </div>
                       <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                       <p className='font-arima text-gray-400 text-sm mt-1'>
-                        #{index + 1}, {item.first_book_year && item.last_book_year ? `from ${item.first_book_year} to ${item.last_book_year}` : 'Coming soon'}
+                        {item.first_book_year && item.last_book_year ? `from ${item.first_book_year} to ${item.last_book_year}` : 'Coming soon'}
                       </p>
                       {item.link &&
                         <a
@@ -524,7 +523,7 @@ function AuthorDetails() {
                   </div>
                   <p className='font-arima text-sm'>by  {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                   <p className='font-arima text-slate-400 text-sm mt-1'>
-                    #{index + 1}, published {formatDate(item.publishDate) || item.customDate}
+                    published {formatDate(item.publishDate) || item.customDate}
                   </p>
                   <a
                     href={item.link}

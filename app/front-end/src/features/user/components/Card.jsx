@@ -28,10 +28,10 @@ function Card({ card, activeTab, fixedWidth }) {
         window.scrollTo({ top: 0 });
     };
 
-    const navigateToAuthor = (e, authorId) => {
+    const navigateToAuthor = (e, author) => {
         e.stopPropagation(); // Prevent the card's onClick from triggering
-        incrementSearchCount('author', authorId);
-        navigate(`/authors/${authorId}`);
+        incrementSearchCount('author', author.author_id);
+        navigate(`/authors/${author.author_id}/${spacesToHyphens(author.author_name)}`);
     };
 
     return (
@@ -80,7 +80,7 @@ function Card({ card, activeTab, fixedWidth }) {
                                     key={author.author_id}
                                     title={capitalize(author.author_name)}
                                     className='hover:underline cursor-pointer'
-                                    onClick={() => navigate(`/admin/catalog/authors/${author.author_id}/${spacesToHyphens(author.author_name)}`)}
+                                    onClick={(e) => navigateToAuthor(e, author)}
                                 >
                                     {capitalize(author.nickname || author.author_name)}
                                 </span>
@@ -102,7 +102,7 @@ function Card({ card, activeTab, fixedWidth }) {
                                         key={author.author_id}
                                         title={capitalize(author.author_name)}
                                         className="hover:underline cursor-pointer"
-                                        onClick={() => navigate(`/admin/catalog/authors/${author.author_id}/${spacesToHyphens(author.author_name)}`)}
+                                        onClick={(e) => navigateToAuthor(e, author)}
                                     >
                                         {capitalize(author.nickname || author.author_name)}
                                     </span>

@@ -18,8 +18,7 @@ import NetworkErrorPage from '../../../../pages/NetworkErrorPage';
 import { sortByPublishDateAsc } from '../../../../utils/sortingUtils';
 
 function SerieDetails() {
-  
-  window.scrollTo({ top: 0 });
+
   const { serieId, serieName } = useParams();
   const [serieData, setSerieData] = useState({});
   const [books, setBooks] = useState([]);
@@ -275,7 +274,7 @@ function SerieDetails() {
                 </div>
                 <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                 <p className='font-arima text-slate-400 text-sm mt-1'>
-                  #{index + 1}, published {formatDate(item.publishDate) || item.customDate}
+                  published {formatDate(item.publishDate) || item.customDate}
                 </p>
                 <a
                   href={item.link}

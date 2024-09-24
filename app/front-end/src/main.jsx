@@ -10,11 +10,10 @@ import { SocketProvider } from './context/SocketContext.jsx';
 import { Toaster } from 'react-hot-toast';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <SocketProvider>
-      <Provider store={Store}> {/* Wrap your app with the Provider */}
-        <App />
-        <Toaster />
-      </Provider></SocketProvider>
-  </React.StrictMode>
+  <SocketProvider>
+    <Provider store={Store}> {/* Wrap your app with the Provider */}
+      <App />
+      <Toaster />
+    </Provider>
+  </SocketProvider>
 );

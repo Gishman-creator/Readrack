@@ -282,7 +282,7 @@ function CollectionDetails() {
                   <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                 )}
                 <p className='font-arima text-slate-400 text-sm mt-1'>
-                  published {formatDate(item.publishDate) || item.customDate}
+                  #{index + 1}, published {formatDate(item.publishDate) || item.customDate}
                 </p>
                 <a
                   href={item.link}

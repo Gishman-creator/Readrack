@@ -4,18 +4,18 @@ const { putImage, getImageURL } = require('../../utils/imageUtils');
 
 const updateBook = async (req, res) => {
   const { id } = req.params;
-  console.log('Body', req.body);
-  console.log('File', req.file); // Log file information
-  console.log('The request body is:', req.body);
+  // console.log('Body', req.body);
+  // console.log('File', req.file); // Log file information
+  // console.log('The request body is:', req.body);
   const { bookName, serie_id, collection_id, author_id, publishDate, customDate, genres, link, imageName } = req.body;
     
   const image = req.file ? await putImage(id, req.file, 'books') : imageName; // Await the function to resolve the promise
-  console.log('The image key for Amazon is:', image);
+  // console.log('The image key for Amazon is:', image);
 
   if (image) {
-    console.log('Image is there');
+    // console.log('Image is there');
   } else {
-    console.log('No image uploaded');
+    // console.log('No image uploaded');
   }
 
   try {
@@ -60,9 +60,9 @@ const updateBook = async (req, res) => {
     // Emit the updated serie data
     if (req.io) {
       req.io.emit('booksUpdated', updatedBook);
-      console.log('Emitting updated books:', updatedBook);
+      // console.log('Emitting updated books:', updatedBook);
     } else {
-      console.log('Socket.IO is not initialized.');
+      // console.log('Socket.IO is not initialized.');
     }
 
     res.status(200).json({ message: 'Book updated successfully', updatedBook });

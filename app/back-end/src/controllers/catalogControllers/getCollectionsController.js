@@ -1,4 +1,5 @@
 const pool = require('../../config/db'); 
+const { getAuthorsByIds } = require('../../utils/getUtils');
 const { getImageURL } = require('../../utils/imageUtils');
 
 exports.getCollections = async (req, res) => {
@@ -14,9 +15,8 @@ exports.getCollections = async (req, res) => {
   try {
     // Base query for fetching collections with genre filter if applicable
     let dataQuery = `
-      SELECT collections.*, authors.nickname, authors.authorName AS author_name
+      SELECT collections.*
       FROM collections
-      LEFT JOIN authors ON collections.author_id = authors.id
       ORDER BY collections.searchCount DESC
     `;
     let countQuery = 'SELECT COUNT(*) AS totalCount FROM collections';
@@ -41,6 +41,10 @@ exports.getCollections = async (req, res) => {
 
     let url = null;
     for (const dataRow of dataRows) {
+      // Fetch authors for each dataRow
+      const authors = await getAuthorsByIds(dataRow.author_id);
+      dataRow.authors = authors;
+
       url = null;
       if (dataRow.image && dataRow.image !== 'null') {
         url = await getImageURL(dataRow.image);
@@ -63,9 +67,8 @@ exports.getCollectionById = async (req, res) => {
   try {
     // Query to retrieve the collections information with author name
     const [collectionsRows] = await pool.query(`
-      SELECT collections.*, authors.nickname, authors.authorName AS author_name
+      SELECT collections.*
       FROM collections
-      LEFT JOIN authors ON collections.author_id = authors.id
       WHERE collections.id = ?
       LIMIT ?
     `, [id, limit]);
@@ -73,6 +76,10 @@ exports.getCollectionById = async (req, res) => {
     if (collectionsRows.length === 0) {
       return res.status(404).json({ message: 'Collection not found' });
     }
+
+    // Fetch authors for the collectionsRows
+    const authors = await getAuthorsByIds(collectionsRows[0].author_id);
+    collectionsRows[0].authors = authors;
 
     let url = null;
     if (collectionsRows[0].image && collectionsRows[0].image !== 'null') {
@@ -92,23 +99,24 @@ exports.getCollectionsByAuthorId = async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || null;
 
   try {
+    // Create the pattern for the LIKE query by concatenating the wildcards
+    const likePattern = `%${author_id}%`;
+
     // Query for fetching collections by author_id with author_name, first and last book dates
     let collectionsQuery = `
-      SELECT collections.*, 
-             authors.nickname, 
-             authors.authorName AS author_name,
-             YEAR(MIN(books.publishDate)) AS first_book_year,
-             YEAR(MAX(books.publishDate)) AS last_book_year
+      SELECT collections.*,
+             YEAR(MIN(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS first_book_year,
+             YEAR(MAX(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS last_book_year
       FROM collections
-      LEFT JOIN authors ON collections.author_id = authors.id
       LEFT JOIN books ON books.collection_id = collections.id
-      WHERE collections.author_id = ?
-      GROUP BY collections.id, authors.nickname, authors.authorName
+      WHERE collections.author_id like ?
+      GROUP BY collections.id
     `;
-    let countQuery = 'SELECT COUNT(*) AS totalCount FROM collections WHERE author_id = ?';
+    let countQuery = 'SELECT COUNT(*) AS totalCount FROM collections WHERE author_id like ?';
 
     // Append LIMIT clause if a limit is provided
-    const queryParams = [author_id];
+    const queryParams = [likePattern];
+
     if (limit) {
       collectionsQuery += ` LIMIT ?`;
       queryParams.push(limit);
@@ -120,6 +128,10 @@ exports.getCollectionsByAuthorId = async (req, res) => {
 
     let url = null;
     for (const collection of collections) {
+      // Fetch authors for each collection
+      const authors = await getAuthorsByIds(collection.author_id);
+      collection.authors = authors;
+
       url = null;
       if (collection.image && collection.image !== 'null') {
         url = await getImageURL(collection.image);

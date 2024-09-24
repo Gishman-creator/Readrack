@@ -18,6 +18,8 @@ import NetworkErrorPage from '../../../../pages/NetworkErrorPage';
 import { sortByPublishDateAsc } from '../../../../utils/sortingUtils';
 
 function CollectionDetails() {
+  
+  window.scrollTo({ top: 0 });
   const { collectionId, collectionName } = useParams();
   const [collectionData, setCollectionData] = useState({});
   const [books, setBooks] = useState([]);
@@ -78,11 +80,10 @@ function CollectionDetails() {
         const booksResponse = await axiosUtils(`/api/getBooksByCollectionId/${fetchedCollection.id}`, 'GET');
         // console.log('Books response:', booksResponse.data); // Debugging
 
-        // for (const book of booksResponse.data.books) {
-        //   console.log("The book author is:", book.authors);
-        // }
+        // Sort the books by publish date or custom date
+        const sortedBooks = booksResponse.data.books.sort(sortByPublishDateAsc);
 
-        setBooks(booksResponse.data.books);
+        setBooks(sortedBooks);
         SetBooksCount(booksResponse.data.totalCount);
         // console.log('The total count is:', booksResponse.data.totalCount);
 
@@ -143,6 +144,7 @@ function CollectionDetails() {
           return updatedData.sort(sortByPublishDateAsc);
         });
         SetBooksCount((prevCount) => prevCount + 1);
+        if (booksLimit >= booksRange) setBooksLimit((prevCount) => prevCount + 1);
       }
     });
 
@@ -211,12 +213,20 @@ function CollectionDetails() {
             >
               {capitalize(collectionData.collectionName)}
             </p>
-            {collectionData.author_name && (
+            {collectionData.author_id && (
               <p
-                className='font-arima text-center md:text-left hover:underline cursor-pointer'
-                onClick={() => navigate(`/admin/catalog/authors/${collectionData.author_id}/${spacesToHyphens(collectionData.author_name)}`)}
+                className='font-arima text-center md:text-left'
               >
-                by {capitalize(collectionData.nickname || collectionData.author_name)}
+                <span>by </span>
+                {collectionData.authors.map(author => (
+                  <span
+                    key={author.author_id}
+                    className='hover:underline cursor-pointer'
+                    onClick={() => navigate(`/admin/catalog/authors/${author.author_id}/${spacesToHyphens(author.author_name)}`)}
+                  >
+                    {capitalize(author.nickname || author.author_name)}
+                  </span>
+                )).reduce((prev, curr) => [prev, ', ', curr])}
               </p>
             )}
             <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
@@ -238,7 +248,7 @@ function CollectionDetails() {
         }
       </div>
       <div className='w-full '>
-        <div className='flex justify-between items-center mt-8 md:mt-0'>
+        <div className='sticky top-[4rem] bg-[#f9f9f9] flex justify-between items-center py-2 md:pt-4 mt-6 md:mt-0'>
           <p className='font-poppins font-semibold text-xl 2xl:text-center'>
             {capitalize(collectionData.collectionName)} Books:
           </p>

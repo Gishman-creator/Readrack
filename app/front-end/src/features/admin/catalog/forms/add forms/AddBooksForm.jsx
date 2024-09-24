@@ -12,17 +12,16 @@ function AddBooksForm({ onClose }) {
   const detailsSerie = useSelector((state) => state.catalog.serie);
   const detailsCollection = useSelector((state) => state.catalog.collection);
   const serieDetailsAuthor = useSelector((state) => state.catalog.author);
-  console.log('serieDetailsAuthor', serieDetailsAuthor)
-  const detailsAuthor = { id: serieDetailsAuthor.author_id || serieDetailsAuthor.id, authorName: (serieDetailsAuthor.nickname || serieDetailsAuthor.author_name) || (serieDetailsAuthor.nickname || serieDetailsAuthor.authorName)};
+  const detailsAuthor = { id: serieDetailsAuthor.author_id || serieDetailsAuthor.id, authorName: (serieDetailsAuthor.nickname || serieDetailsAuthor.author_name) || (serieDetailsAuthor.nickname || serieDetailsAuthor.authorName) };
   const [authorSearch, setAuthorSearch] = useState('');
   const [serieSearch, setSerieSearch] = useState(detailsSerie ? detailsSerie.serieName : '');
   const [collectionSearch, setCollectionSearch] = useState(detailsCollection ? detailsCollection.collectionName : '');
   const [authorOptions, setAuthorOptions] = useState([]);
   const [serieOptions, setSerieOptions] = useState([]);
   const [collectionOptions, setCollectionOptions] = useState([]);
-  const [selectedAuthors, setSelectedAuthors] = useState(serieDetailsAuthor  ? [detailsAuthor] : []);
-  const [selectedSerie, setSelectedSerie] = useState(detailsSerie ? {id: detailsSerie.id, serieName: detailsSerie.serieName} : '');
-  const [selectedCollection, setSelectedCollection] = useState(detailsCollection ? {id: detailsCollection.id, collectionName: detailsCollection.collectionName} : '');
+  const [selectedAuthors, setSelectedAuthors] = useState(serieDetailsAuthor ? [detailsAuthor] : []);
+  const [selectedSerie, setSelectedSerie] = useState(detailsSerie ? { id: detailsSerie.id, serieName: detailsSerie.serieName } : '');
+  const [selectedCollection, setSelectedCollection] = useState(detailsCollection ? { id: detailsCollection.id, collectionName: detailsCollection.collectionName } : '');
   const [isLoading, setIsLoading] = useState(false);
   const [authorIsLoading, setAuthorIsLoading] = useState(false);
   const [serieIsLoading, setSerieIsLoading] = useState(false);
@@ -31,70 +30,92 @@ function AddBooksForm({ onClose }) {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (authorSearch) {
-      const fetchAuthors = async () => {
-        setAuthorIsLoading(true);
-        try {
-          const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
-          setAuthorOptions(response.data.results.map(author => ({
-            id: author.id,
-            authorName: author.nickname ? author.nickname : author.authorName
-          })));
-          setAuthorIsLoading(false);
-        } catch (error) {
-          console.error('Error fetching authors:', error);
-        }
-      };
-      fetchAuthors();
-    } else {
-      setAuthorOptions([]);
-    }
+    const delayDebounceFn = setTimeout(() => {
+      if (authorSearch === '' || selectedAuthors.some(author => author.authorName === authorSearch)) return;
+      setSelectedAuthors('');
+      if (authorSearch && !selectedAuthors) {
+        const fetchAuthors = async () => {
+          setAuthorIsLoading(true);
+          try {
+            const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
+            setAuthorOptions(response.data.results.map(author => ({
+              id: author.id,
+              authorName: author.nickname ? author.nickname : author.authorName
+            })));
+            setAuthorIsLoading(false);
+          } catch (error) {
+            console.error('Error fetching authors:', error);
+          }
+        };
+        fetchAuthors();
+      } else {
+        setAuthorOptions([]);
+      }
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(delayDebounceFn); // Clear timeout if authorSearch changes
+    };
+
   }, [authorSearch]);
 
   useEffect(() => {
-    if (selectedSerie && serieSearch === selectedSerie.serieName) return;
-    setSelectedSerie('');
-    if (serieSearch && !selectedSerie) {
-      const fetchSeries = async () => {
-        setSerieIsLoading(true);
-        try {
-          const response = await axiosUtils(`/api/search?query=${serieSearch}&type=series`, 'GET');
-          setSerieOptions(response.data.results.map(serie => ({
-            id: serie.id,
-            serieName: serie.serieName
-          })));
-          setSerieIsLoading(false);
-        } catch (error) {
-          console.error('Error fetching series:', error);
-        }
-      };
-      fetchSeries();
-    } else {
-      setSerieOptions([]);
-    }
+    const delayDebounceFn = setTimeout(() => {
+      // console.log('Selected authors:', selectedAuthors);
+      if (authorSearch && !selectedAuthors.some(author => author.author_name === authorSearch)) {
+        const fetchSeries = async () => {
+          setSerieIsLoading(true);
+          try {
+            const response = await axiosUtils(`/api/search?query=${serieSearch}&type=series`, 'GET');
+            setSerieOptions(response.data.results.map(serie => ({
+              id: serie.id,
+              serieName: serie.serieName
+            })));
+            setSerieIsLoading(false);
+          } catch (error) {
+            console.error('Error fetching series:', error);
+          }
+        };
+        fetchSeries();
+      } else {
+        setSerieOptions([]);
+      }
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(delayDebounceFn); // Clear timeout if authorSearch changes
+    };
+
   }, [serieSearch]);
 
   useEffect(() => {
-    if (selectedCollection && collectionSearch === selectedCollection.collectionName) return;
-    setSelectedCollection('');
-    if (collectionSearch && !selectedCollection) {
-      const fetchCollections = async () => {
-        setCollectionIsLoading(true);
-        try {
-          const response = await axiosUtils(`/api/search?query=${collectionSearch}&type=collections`, 'GET');
-          setCollectionOptions(response.data.results.map(collection => ({
-            id: collection.id,
-            collectionName: collection.collectionName
-          })));
-          setCollectionIsLoading(false);
-        } catch (error) {
-          console.error('Error fetching collections:', error);
-        }
-      };
-      fetchCollections();
-    } else {
-      setCollectionOptions([]);
-    }
+    const delayDebounceFn = setTimeout(() => {
+      if (selectedCollection && collectionSearch === selectedCollection.collectionName) return;
+      setSelectedCollection('');
+      if (collectionSearch && !selectedCollection) {
+        const fetchCollections = async () => {
+          setCollectionIsLoading(true);
+          try {
+            const response = await axiosUtils(`/api/search?query=${collectionSearch}&type=collections`, 'GET');
+            setCollectionOptions(response.data.results.map(collection => ({
+              id: collection.id,
+              collectionName: collection.collectionName
+            })));
+            setCollectionIsLoading(false);
+          } catch (error) {
+            console.error('Error fetching collections:', error);
+          }
+        };
+        fetchCollections();
+      } else {
+        setCollectionOptions([]);
+      }
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(delayDebounceFn); // Clear timeout if authorSearch changes
+    };
+
   }, [collectionSearch]);
 
   const handleAuthorChange = (e) => {
@@ -164,7 +185,7 @@ function AddBooksForm({ onClose }) {
     }
 
     formData.append('author_id', selectedAuthors.map((author) => author.id).join(', '));
-    console.log('The selected authors ids:', formData.author_id);
+    // console.log('The selected authors ids:', formData.author_id);
     formData.append('serie_id', selectedSerie.id);
     formData.append('collection_id', selectedCollection.id);
 
@@ -238,7 +259,7 @@ function AddBooksForm({ onClose }) {
                   </li>
                 ))}
               </ul>
-            ) : authorSearch && !authorIsLoading && (
+            ) : authorSearch && !authorIsLoading && !selectedAuthors && (
               <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
                 <li
                   className="cursor-pointer px-4 py-2 hover:bg-gray-100"
@@ -365,6 +386,7 @@ function AddBooksForm({ onClose }) {
               type="text"
               name="link"
               className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              onClick={(e) => e.target.select()}
               required
             />
           </div>

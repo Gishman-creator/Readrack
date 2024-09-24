@@ -4,6 +4,7 @@ import axiosUtils from '../../../../../utils/axiosUtils';
 import { bufferToBlobURL, downloadImage } from '../../../../../utils/imageUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
+import FormSkeleton from '../../../../../components/skeletons/FormSkeleton';
 
 function EditBooksForm({ onClose }) {
   const selectedRowBookId = useSelector((state) => state.catalog.selectedRowIds[0]);
@@ -25,6 +26,7 @@ function EditBooksForm({ onClose }) {
   const [authorIsLoading, setAuthorIsLoading] = useState(false);
   const [serieIsLoading, setSerieIsLoading] = useState(false);
   const [collectionIsLoading, setCollectionIsLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -33,6 +35,7 @@ function EditBooksForm({ onClose }) {
 
     if (bookId) {
       const fetchBookDetails = async () => {
+        setFetchLoading(true);
         try {
           const response = await axiosUtils(`/api/getBookById/${bookId}`, 'GET');
           setBookDetails(response.data);
@@ -55,13 +58,15 @@ function EditBooksForm({ onClose }) {
           };
 
           setBookId(response.data.id);
-          setSelectedAuthors(response.data.authors || '');
+          setSelectedAuthors(response.data.authors || []);
           setSelectedSerie(serie || '');
           setSerieSearch(response.data.serie_name || '');
           setSelectedCollection(colleciton || '');
           setCollectionSearch(response.data.collection_name || '');
+          setFetchLoading(false);
         } catch (error) {
           console.error('Error fetching book details:', error);
+          setFetchLoading(false);
         }
       };
 
@@ -70,72 +75,94 @@ function EditBooksForm({ onClose }) {
   }, [bookId]);
 
   useEffect(() => {
-    if (authorSearch) {
-      const fetchAuthors = async () => {
-        setAuthorIsLoading(true);
-        try {
-          const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
-          setAuthorOptions(response.data.results.map(author => ({
-            author_id: author.id,
-            author_name: author.nickname ? author.nickname : author.authorName
-          })));
-          // console.log(authorOptions);
-          setAuthorIsLoading(false);
-        } catch (error) {
-          console.error('Error fetching authors:', error);
-        }
-      };
-      fetchAuthors();
-    } else {
-      setAuthorOptions([]);
-    }
+    const delayDebounceFn = setTimeout(() => {
+      // console.log('Selected authors:', selectedAuthors);
+      if (authorSearch && !selectedAuthors.some(author => author.author_name === authorSearch)) {
+        const fetchAuthors = async () => {
+          setAuthorIsLoading(true);
+          try {
+            const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
+            setAuthorOptions(response.data.results.map(author => ({
+              author_id: author.id,
+              author_name: author.nickname ? author.nickname : author.authorName
+            })));
+            // console.log(authorOptions);
+            setAuthorIsLoading(false);
+          } catch (error) {
+            console.error('Error fetching authors:', error);
+          }
+        };
+        fetchAuthors();
+      } else {
+        setAuthorOptions([]);
+      }
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(delayDebounceFn); // Clear timeout if authorSearch changes
+    };
+
   }, [authorSearch]);
 
   useEffect(() => {
-    // console.log('Serie Search:', serieSearch);
-    if (selectedSerie && serieSearch === selectedSerie.serieName) return;
-    setSelectedSerie('');
-    if (serieSearch && !selectedSerie) {
-      const fetchSeries = async () => {
-        setSerieIsLoading(true);
-        try {
-          const response = await axiosUtils(`/api/search?query=${serieSearch}&type=series`, 'GET');
-          setSerieOptions(response.data.results.map(serie => ({
-            id: serie.id,
-            serieName: serie.serieName
-          })));
-          setSerieIsLoading(false);
-        } catch (error) {
-          console.error('Error fetching series:', error);
-        }
-      };
-      fetchSeries();
-    } else {
-      setSerieOptions([]);
-    }
+    const delayDebounceFn = setTimeout(() => {
+      // console.log('Serie Search:', serieSearch);
+      if (selectedSerie && serieSearch === selectedSerie.serieName) return;
+      setSelectedSerie('');
+      if (serieSearch && !selectedSerie) {
+        const fetchSeries = async () => {
+          setSerieIsLoading(true);
+          try {
+            const response = await axiosUtils(`/api/search?query=${serieSearch}&type=series`, 'GET');
+            setSerieOptions(response.data.results.map(serie => ({
+              id: serie.id,
+              serieName: serie.serieName
+            })));
+            setSerieIsLoading(false);
+          } catch (error) {
+            console.error('Error fetching series:', error);
+          }
+        };
+        fetchSeries();
+      } else {
+        setSerieOptions([]);
+      }
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(delayDebounceFn); // Clear timeout if authorSearch changes
+    };
+
   }, [serieSearch]);
 
   useEffect(() => {
-    if (selectedCollection && collectionSearch === selectedCollection.collectionName) return;
-    setSelectedCollection('');
-    if (collectionSearch && !selectedCollection) {
-      const fetchCollections = async () => {
-        setCollectionIsLoading(true);
-        try {
-          const response = await axiosUtils(`/api/search?query=${collectionSearch}&type=collections`, 'GET');
-          setCollectionOptions(response.data.results.map(collection => ({
-            id: collection.id,
-            collectionName: collection.collectionName
-          })));
-          setCollectionIsLoading(false);
-        } catch (error) {
-          console.error('Error fetching collections:', error);
-        }
-      };
-      fetchCollections();
-    } else {
-      setCollectionOptions([]);
-    }
+    const delayDebounceFn = setTimeout(() => {
+      if (selectedCollection && collectionSearch === selectedCollection.collectionName) return;
+      setSelectedCollection('');
+      if (collectionSearch && !selectedCollection) {
+        const fetchCollections = async () => {
+          setCollectionIsLoading(true);
+          try {
+            const response = await axiosUtils(`/api/search?query=${collectionSearch}&type=collections`, 'GET');
+            setCollectionOptions(response.data.results.map(collection => ({
+              id: collection.id,
+              collectionName: collection.collectionName
+            })));
+            setCollectionIsLoading(false);
+          } catch (error) {
+            console.error('Error fetching collections:', error);
+          }
+        };
+        fetchCollections();
+      } else {
+        setCollectionOptions([]);
+      }
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(delayDebounceFn); // Clear timeout if authorSearch changes
+    };
+
   }, [collectionSearch]);
 
   const handleAuthorChange = (e) => {
@@ -186,10 +213,6 @@ function EditBooksForm({ onClose }) {
     setSelectedImageFile(file); // Track the uploaded file
   };
 
-  // useEffect(() => {
-  //   console.log('Selected Serie:', selectedSerie);
-  // }, [selectedSerie]);
-
   const handleSubmit = async (event) => {
     setIsLoading(true);
     event.preventDefault();
@@ -200,11 +223,6 @@ function EditBooksForm({ onClose }) {
     }
 
     const formData = new FormData(event.target);
-
-    // Log form data entries
-    // for (let [key, value] of formData.entries()) {
-    //   console.log(`${key}: ${value}`);
-    // }
 
     const bookName = formData.get('bookName') || '';
     let imageName = bookDetails.image;
@@ -231,11 +249,6 @@ function EditBooksForm({ onClose }) {
     formData.append('serie_id', selectedSerie.id);
     formData.append('collection_id', selectedCollection.id);
 
-    // Log form data entries
-    // for (let [key, value] of formData.entries()) {
-    // console.log(`${key}: ${value}`);
-    // }
-
     try {
       const response = await axiosUtils(`/api/updateBook/${bookId}`, 'PUT', formData, {
         'Content-Type': 'multipart/form-data',
@@ -261,211 +274,216 @@ function EditBooksForm({ onClose }) {
   return (
     <div className=''>
       <h2 className="text-lg font-semibold">Edit Book</h2>
-      <form onSubmit={handleSubmit} className="flex flex-col md:flex-row max-h-custom2 md:max-h-fit overflow-y-auto md:overflow-hidden">
-        <ImagePreview
-          onImageChange={handleImageChange}
-          imageURL={bookImageURL} // Pass existing image URL to the ImagePreview component
-          onImageUpload={handleImageUpload}
-        />
-        <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[19rem] md:overflow-y-auto">
-          <div className="mb-4">
-            <label className="block text-sm font-medium">Book name:</label>
-            <input
-              type="text"
-              name="bookName"
-              defaultValue={bookDetails.bookName || ''}
-              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
-              required
-            />
-          </div>
-          <div className="mb-4 relative">
-            <label className="block text-sm font-medium">Author name:</label>
-            <div className='flex items-center border border-gray-300 rounded-lg'>
+      {fetchLoading ? (
+        <FormSkeleton />
+      ) : (
+        <form onSubmit={handleSubmit} className="flex flex-col md:flex-row max-h-custom2 md:max-h-fit overflow-y-auto md:overflow-hidden">
+          <ImagePreview
+            onImageChange={handleImageChange}
+            imageURL={bookImageURL} // Pass existing image URL to the ImagePreview component
+            onImageUpload={handleImageUpload}
+          />
+          <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[19rem] md:overflow-y-auto">
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Book name:</label>
               <input
                 type="text"
-                value={authorSearch}
-                onChange={handleAuthorChange}
-                className="w-full border-none outline-none px-2 py-1"
-                placeholder="Search author..."
+                name="bookName"
+                defaultValue={bookDetails.bookName || ''}
+                className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
+                required
               />
-              {authorIsLoading && (
-                <span className='px-2 mx-2 w-6 h-full green-loader'></span>
-              )}
             </div>
-            {authorOptions.length > 0 ? (
-              <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
-                {authorOptions.map((author) => (
-                  <li
-                    key={author.author_id}
-                    onClick={() => handleAuthorSelect(author)}
-                    className="cursor-pointer px-4 py-2 hover:bg-gray-100"
-                  >
-                    {author.author_name}
-                  </li>
-                ))}
-              </ul>
-            ) : authorSearch && !authorIsLoading && (
-              <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
-                <li
-                  className="cursor-pointer px-4 py-2 hover:bg-gray-100"
-                >
-                  No authors found
-                </li>
-              </ul>
-            )}
-          </div>
-          {/* Display selected authors */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium">Selected Authors:</label>
-            {selectedAuthors.length > 0 ? (
-              <div className="bg-green-700 rounded-lg my-2 flex flex-wrap gap-2 p-2">
-                {selectedAuthors.map((author, index) => (
-                  <span key={author.author_id} className="bg-[rgba(255,255,255,0.3)] flex items-center max-w-fit max-h-fit text-white font-poppins font-semibold px-2 py-1 rounded-lg text-sm space-x-1">
-                    <span>{author.nickname || author.author_name}</span>
-                    <span
-                      className='text-xl cursor-pointer'
-                      onClick={() => handleRemoveAuthor(author.author_id)}
+            <div className="mb-4 relative">
+              <label className="block text-sm font-medium">Author name:</label>
+              <div className='flex items-center border border-gray-300 rounded-lg'>
+                <input
+                  type="text"
+                  value={authorSearch}
+                  onChange={handleAuthorChange}
+                  className="w-full border-none outline-none px-2 py-1"
+                  placeholder="Search author..."
+                />
+                {authorIsLoading && (
+                  <span className='px-2 mx-2 w-6 h-full green-loader'></span>
+                )}
+              </div>
+              {authorOptions.length > 0 ? (
+                <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
+                  {authorOptions.map((author) => (
+                    <li
+                      key={author.author_id}
+                      onClick={() => handleAuthorSelect(author)}
+                      className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                     >
-                      &times;
+                      {author.author_name}
+                    </li>
+                  ))}
+                </ul>
+              ) : authorSearch && !authorIsLoading && !selectedAuthors && (
+                <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
+                  <li
+                    className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                  >
+                    No authors found
+                  </li>
+                </ul>
+              )}
+            </div>
+            {/* Display selected authors */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Selected Authors:</label>
+              {selectedAuthors.length > 0 ? (
+                <div className="bg-green-700 rounded-lg my-2 flex flex-wrap gap-2 p-2">
+                  {selectedAuthors.map((author, index) => (
+                    <span key={author.author_id} className="bg-[rgba(255,255,255,0.3)] flex items-center max-w-fit max-h-fit text-white font-poppins font-semibold px-2 py-1 rounded-lg text-sm space-x-1">
+                      <span>{author.nickname || author.author_name}</span>
+                      <span
+                        className='text-xl cursor-pointer'
+                        onClick={() => handleRemoveAuthor(author.author_id)}
+                      >
+                        &times;
+                      </span>
                     </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-green-700 rounded-lg my-2 flex flex-wrap gap-2 p-2">
+                  <span className="bg-[rgba(255,255,255,0.3)] flex items-center max-w-fit max-h-fit text-white font-poppins font-semibold px-2 py-1 rounded-lg text-sm space-x-1">
+                    No authors selected
                   </span>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-green-700 rounded-lg my-2 flex flex-wrap gap-2 p-2">
-                <span className="bg-[rgba(255,255,255,0.3)] flex items-center max-w-fit max-h-fit text-white font-poppins font-semibold px-2 py-1 rounded-lg text-sm space-x-1">
-                  No authors selected
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="mb-4 relative">
-            <label className="block text-sm font-medium">Serie name:</label>
-            <div className='flex items-center border border-gray-300 rounded-lg'>
-              <input
-                type="text"
-                value={serieSearch}
-                onChange={handleSerieChange}
-                className="w-full border-none outline-none px-2 py-1"
-                placeholder="Search series..."
-              />
-              {serieIsLoading && (
-                <span className='px-2 mx-2 w-6 h-full green-loader'></span>
+                </div>
               )}
             </div>
-            {serieOptions.length > 0 ? (
-              <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full top-12 z-10">
-                {serieOptions.map((serie) => (
+            <div className="mb-4 relative">
+              <label className="block text-sm font-medium">Serie name:</label>
+              <div className='flex items-center border border-gray-300 rounded-lg'>
+                <input
+                  type="text"
+                  value={serieSearch}
+                  onChange={handleSerieChange}
+                  className="w-full border-none outline-none px-2 py-1"
+                  placeholder="Search series..."
+                />
+                {serieIsLoading && (
+                  <span className='px-2 mx-2 w-6 h-full green-loader'></span>
+                )}
+              </div>
+              {serieOptions.length > 0 ? (
+                <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full top-12 z-10">
+                  {serieOptions.map((serie) => (
+                    <li
+                      key={serie.id}
+                      onClick={() => handleSerieSelect(serie)}
+                      className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                    >
+                      {serie.serieName}
+                    </li>
+                  ))}
+                </ul>
+              ) : serieSearch && !serieIsLoading && !selectedSerie && (
+                <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
                   <li
-                    key={serie.id}
-                    onClick={() => handleSerieSelect(serie)}
                     className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                   >
-                    {serie.serieName}
+                    No series found
                   </li>
-                ))}
-              </ul>
-            ) : serieSearch && !serieIsLoading && !selectedSerie && (
-              <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
-                <li
-                  className="cursor-pointer px-4 py-2 hover:bg-gray-100"
-                >
-                  No series found
-                </li>
-              </ul>
-            )}
-          </div>
-          <div className="mb-4 relative">
-            <label className="block text-sm font-medium">Collection name:</label>
-            <div className='flex items-center border border-gray-300 rounded-lg'>
-              <input
-                type="text"
-                value={collectionSearch}
-                onChange={handleCollectionChange}
-                className="w-full border-none outline-none px-2 py-1"
-                placeholder="Search collections..."
-              />
-              {collectionIsLoading && (
-                <span className='px-2 mx-2 w-6 h-full green-loader'></span>
+                </ul>
               )}
             </div>
-            {collectionOptions.length > 0 ? (
-              <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full top-12 z-10">
-                {collectionOptions.map((collection) => (
+            <div className="mb-4 relative">
+              <label className="block text-sm font-medium">Collection name:</label>
+              <div className='flex items-center border border-gray-300 rounded-lg'>
+                <input
+                  type="text"
+                  value={collectionSearch}
+                  onChange={handleCollectionChange}
+                  className="w-full border-none outline-none px-2 py-1"
+                  placeholder="Search collections..."
+                />
+                {collectionIsLoading && (
+                  <span className='px-2 mx-2 w-6 h-full green-loader'></span>
+                )}
+              </div>
+              {collectionOptions.length > 0 ? (
+                <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full top-12 z-10">
+                  {collectionOptions.map((collection) => (
+                    <li
+                      key={collection.id}
+                      onClick={() => handleCollectionSelect(collection)}
+                      className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                    >
+                      {collection.collectionName}
+                    </li>
+                  ))}
+                </ul>
+              ) : collectionSearch && !collectionIsLoading && !selectedCollection && (
+                <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
                   <li
-                    key={collection.id}
-                    onClick={() => handleCollectionSelect(collection)}
                     className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                   >
-                    {collection.collectionName}
+                    No collections found
                   </li>
-                ))}
-              </ul>
-            ) : collectionSearch && !collectionIsLoading && !selectedCollection && (
-              <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
-                <li
-                  className="cursor-pointer px-4 py-2 hover:bg-gray-100"
-                >
-                  No collections found
-                </li>
-              </ul>
-            )}
-          </div>
-          <div className="mb-2 flex space-x-2">
-            <div>
-              <label className="block text-sm font-medium">Publish date:</label>
-              <input
-                type="date"
-                name="publishDate"
-                defaultValue={bookDetails.publishDate?.split('T')[0] || ''}
-                className="w-full border border-gray-300 rounded-lg px-2 py-1"
-              />
+                </ul>
+              )}
             </div>
-            <div>
-              <label className="block text-sm font-medium">Genres:</label>
+            <div className="mb-2 flex space-x-2">
+              <div>
+                <label className="block text-sm font-medium">Publish date:</label>
+                <input
+                  type="date"
+                  name="publishDate"
+                  defaultValue={bookDetails.publishDate?.split('T')[0] || ''}
+                  className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Genres:</label>
+                <input
+                  type="text"
+                  name="genres"
+                  defaultValue={bookDetails.genres || ''}
+                  className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                />
+              </div>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Custom date:</label>
               <input
                 type="text"
-                name="genres"
-                defaultValue={bookDetails.genres || ''}
-                className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                name="customDate"
+                defaultValue={bookDetails.customDate || ''}
+                className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               />
             </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Amazon link:</label>
+              <input
+                type="text"
+                name="link"
+                defaultValue={bookDetails.link || ''}
+                className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
+                onClick={(e) => e.target.select()}
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              className={`bg-green-700 flex items-center space-x-2 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <span className='white-loader'></span>
+                  <span>Saving...</span>
+                </>
+              ) :
+                'Save Changes'
+              }
+            </button>
           </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium">Custom date:</label>
-            <input
-              type="text"
-              name="customDate"
-              defaultValue={bookDetails.customDate || ''}
-              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium">Amazon link:</label>
-            <input
-              type="text"
-              name="link"
-              defaultValue={bookDetails.link || ''}
-              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className={`bg-green-700 flex items-center space-x-2 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <span className='white-loader'></span>
-                <span>Saving...</span>
-              </>
-            ) :
-              'Save Changes'
-            }
-          </button>
-        </div>
-      </form>
+        </form>
+      )}
     </div>
   );
 }

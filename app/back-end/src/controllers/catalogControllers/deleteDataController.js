@@ -9,7 +9,7 @@ const pool = require('../../config/db'); // Adjust path as necessary
  */
 exports.deleteData = async (req, res) => {
     const { type, ids } = req.body;
-    console.log('The delete type is:', type);
+    // console.log('The delete type is:', type);
 
     if (!type || !ids || !Array.isArray(ids)) {
         return res.status(400).json({ error: "Invalid request. 'type' and 'ids' must be provided." });
@@ -34,9 +34,9 @@ exports.deleteData = async (req, res) => {
 
         if (req.io) {
             req.io.emit('dataDeleted', { ids, type });
-            console.log('Emitting deleted data ids:', ids, 'In', type);
+            // console.log('Emitting deleted data ids:', ids, 'In', type);
         } else {
-            console.log('Socket.Io is not initialized.');
+            // console.log('Socket.Io is not initialized.');
         }
 
         return res.status(200).json({ message: `${result.affectedRows} record(s) successfully deleted.` });

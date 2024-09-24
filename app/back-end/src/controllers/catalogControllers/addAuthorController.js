@@ -23,9 +23,9 @@ const addAuthor = async (req, res) => {
       website,
       genres,
     } = req.body;
-    console.log('The image req.file is:', req.file);
+    // console.log('The image req.file is:', req.file);
     const image = req.file ? await putImage('', req.file, 'authors') : null; // Await the function to resolve the promise
-    console.log('The image key for Amazon is:', image);
+    // console.log('The image key for Amazon is:', image);
 
     let uniqueId;
     let isUnique = false;
@@ -75,8 +75,8 @@ const addAuthor = async (req, res) => {
         COUNT(DISTINCT s.id) AS numSeries, 
         COUNT(DISTINCT b.id) AS numBooks
       FROM authors a
-      LEFT JOIN series s ON a.id = s.author_id
-      LEFT JOIN books b ON a.id = b.author_id
+      LEFT JOIN series s ON s.author_id LIKE CONCAT('%', a.id, '%')
+      LEFT JOIN books b ON b.author_id LIKE CONCAT('%', a.id, '%')
       WHERE a.id = ?
       GROUP BY a.id
     `;
@@ -91,14 +91,14 @@ const addAuthor = async (req, res) => {
     // Emit the newly added author data if Socket.IO is initialized
     if (req.io) {
       req.io.emit('authorAdded', authorData[0]);  // Emit the full author data
-      console.log('Emitting added author:', authorData[0]);
+      // console.log('Emitting added author:', authorData[0]);
     } else {
-      console.log('Socket.IO is not initialized.');
+      // console.log('Socket.IO is not initialized.');
     }
 
     // Respond with success message and the inserted author ID
     res.status(201).json({ message: 'Author added successfully', authorId: uniqueId });
-    console.log('Author added successfully');
+    // console.log('Author added successfully');
   } catch (error) {
     console.error('Error adding author:', error);
     res.status(500).json({ error: 'Failed to add author' });

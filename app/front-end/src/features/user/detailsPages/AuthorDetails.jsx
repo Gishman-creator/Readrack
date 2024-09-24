@@ -17,6 +17,7 @@ import { sortByFirstBookYearAsc, sortByPublishDateAsc } from '../../../utils/sor
 
 function AuthorDetails() {
 
+  window.scrollTo({ top: 0 });
   const activeTab = useSelector((state) => state.user.activeTab);
   const { authorId, authorName } = useParams();
   const [authorData, setAuthorData] = useState({});
@@ -78,7 +79,7 @@ function AuthorDetails() {
           ...authorResponse.data,
           age: calculateAgeAtDeath(authorResponse.data.dob, authorResponse.data.dod),
         };
-        console.log('Author age at death:', authorDataWithAge.age);
+        // console.log('Author age at death:', authorDataWithAge.age);
 
         setAuthorData(authorDataWithAge);
 
@@ -93,21 +94,28 @@ function AuthorDetails() {
         const seriesResponse = await axiosUtils(`/api/getSeriesByAuthorId/${authorResponse.data.id}`, 'GET');
         // console.log('Series response:', seriesResponse.data); // Debugging
 
-        setSeries(seriesResponse.data.series);
+        const sortedSeries = seriesResponse.data.series.sort(sortByFirstBookYearAsc);
+
+        setSeries(sortedSeries);
         SetSeriesCount(seriesResponse.data.totalCount);
 
         // Fetching collections by the author
         const collectionsResponse = await axiosUtils(`/api/getCollectionsByAuthorId/${authorResponse.data.id}`, 'GET');
         // console.log('Collections response:', collectionsResponse.data); // Debugging
 
-        setCollections(collectionsResponse.data.collections);
+        const sortedCollections = collectionsResponse.data.collections.sort(sortByFirstBookYearAsc);
+
+        setCollections(sortedCollections);
         SetCollectionsCount(collectionsResponse.data.totalCount);
 
         // Fetching books by the author
         const booksResponse = await axiosUtils(`/api/getBooksByAuthorId/${authorResponse.data.id}`, 'GET');
         // console.log('Books response:', booksResponse.data); // Debugging
 
-        setBooks(booksResponse.data.books);
+        // Sort the books by publish date or custom date
+        const sortedBooks = booksResponse.data.books.sort(sortByPublishDateAsc);
+
+        setBooks(sortedBooks);
         SetBooksCount(booksResponse.data.totalCount);
 
         setIsLoading(false);
@@ -194,6 +202,7 @@ function AuthorDetails() {
           return updatedData.sort(sortByFirstBookYearAsc);
         });
         SetSeriesCount((prevCount) => prevCount + 1);
+        if (seriesLimit >= groupRange) setSeriesLimit((prevCount) => prevCount + 1);
       }
     });
 
@@ -208,6 +217,7 @@ function AuthorDetails() {
           return updatedData.sort(sortByFirstBookYearAsc);
         });
         SetCollectionsCount((prevCount) => prevCount + 1);
+        if (collectionsLimit >= groupRange) setCollectionsLimit((prevCount) => prevCount + 1);
       }
     });
 
@@ -225,6 +235,7 @@ function AuthorDetails() {
           return updatedData.sort(sortByPublishDateAsc);
         });
         SetBooksCount((prevCount) => prevCount + 1);
+        if (booksLimit >= booksRange) setBooksLimit((prevCount) => prevCount + 1);
       }
     });
 
@@ -400,7 +411,7 @@ function AuthorDetails() {
                           {capitalize(item.serieName)}
                         </p>
                       </div>
-                      <p className='font-arima text-sm'>by {capitalize(item.nickname ? item.nickname : item.author_name)}</p>
+                      <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                       <p className='font-arima text-gray-400 text-sm mt-1'>
                         #{index + 1}, {item.first_book_year && item.last_book_year ? `from ${item.first_book_year} to ${item.last_book_year}` : 'Coming soon'}
                       </p>
@@ -461,7 +472,7 @@ function AuthorDetails() {
                           {capitalize(item.collectionName)}
                         </p>
                       </div>
-                      <p className='font-arima text-sm'>by {capitalize(item.nickname ? item.nickname : item.author_name)}</p>
+                      <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                       <p className='font-arima text-gray-400 text-sm mt-1'>
                         #{index + 1}, {item.first_book_year && item.last_book_year ? `from ${item.first_book_year} to ${item.last_book_year}` : 'Coming soon'}
                       </p>

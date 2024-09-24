@@ -2,7 +2,7 @@ const pool = require('../../config/db');
 
 exports.incrementSearchCount = async (req, res) => {
     const { type, id } = req.body;
-    console.log(`Incrementing search count for ${type} with id ${id}`);
+    // console.log(`Incrementing search count for ${type} with id ${id}`);
 
     try {
         let tableName;

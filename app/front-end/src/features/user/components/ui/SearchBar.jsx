@@ -55,7 +55,7 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
             } else {
                 setSearchResults([]);
             }
-        }, 300); // Adjust debounce timing as necessary
+        }, 500); // Adjust debounce timing as necessary
 
         return () => clearTimeout(delayDebounceFn);
     }, [searchTerm]);

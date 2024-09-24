@@ -10,7 +10,7 @@ exports.getRandomBufferByType = async (req, res) => {
   try {
     // Call the helper function to get a random buffer
     const buffer = getRandomBuffer(type);
-    console.log(buffer)
+    // console.log(buffer)
     res.send(buffer);
   } catch (error) {
     // Handle errors and send a proper response with an error message

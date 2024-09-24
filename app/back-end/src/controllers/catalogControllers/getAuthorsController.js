@@ -11,19 +11,19 @@ exports.getAuthors = async (req, res) => {
   const limitEnd = req.query.limitEnd ? validatePagination(parseInt(req.query.limitEnd, 10)) : null;
   const genre = req.query.genre ? req.query.genre.trim() : null; // Get genre from query params
 
-  console.log('The limitStart is:', limitStart);
-  console.log('The limitEnd is:', limitEnd);
-  console.log('The genre is:', genre);
+  // console.log('The limitStart is:', limitStart);
+  // console.log('The limitEnd is:', limitEnd);
+  // console.log('The genre is:', genre);
 
   try {
     // Base queries for fetching authors and counting total
     let dataQuery = `
       SELECT a.*, 
-        COUNT(DISTINCT s.id) AS numSeries, 
-        COUNT(DISTINCT b.id) AS numBooks
+       COUNT(DISTINCT s.id) AS numSeries, 
+       COUNT(DISTINCT b.id) AS numBooks
       FROM authors a
-      LEFT JOIN series s ON a.id = s.author_id
-      LEFT JOIN books b ON FIND_IN_SET(a.id, b.author_id) > 0
+      LEFT JOIN series s ON s.author_id LIKE CONCAT('%', a.id, '%')
+      LEFT JOIN books b ON b.author_id LIKE CONCAT('%', a.id, '%')
     `;
     let countQuery = 'SELECT COUNT(*) AS totalCount FROM authors a';
     let queryParams = [];
@@ -78,14 +78,14 @@ exports.getAuthorById = async (req, res) => {
         COUNT(DISTINCT s.id) AS numSeries, 
         COUNT(DISTINCT b.id) AS numBooks
       FROM authors a
-      LEFT JOIN series s ON a.id = s.author_id
-      LEFT JOIN books b ON FIND_IN_SET(a.id, b.author_id) > 0
+      LEFT JOIN series s ON s.author_id LIKE CONCAT('%', a.id, '%')
+      LEFT JOIN books b ON b.author_id LIKE CONCAT('%', a.id, '%')
       WHERE a.id = ?
       GROUP BY a.id
       LIMIT ?
     `, [id, limit]);
 
-    console.log('Authors:', rows);
+    // console.log('Authors:', rows);
 
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Author not found' });

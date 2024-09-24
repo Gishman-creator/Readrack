@@ -53,7 +53,7 @@ router.post('/addSeries', upload.single('seriesImage'), addSeries);
 router.post('/addCollections', upload.single('collectionsImage'), addCollections);
 router.post('/incrementSearchCount', searchCountController.incrementSearchCount);
 
-router.post('/log-visit', logVisitsController.logVisit);
+router.post('/visit', logVisitsController.logVisit);
 
 router.put('/updateAuthor/:id', upload.single('authorImage'), updateAuthorController.updateAuthor);
 router.put('/updateBook/:id', upload.single('bookImage'), updateBookController.updateBook);

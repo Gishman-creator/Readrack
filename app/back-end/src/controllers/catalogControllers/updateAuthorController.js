@@ -4,18 +4,18 @@ const { putImage, getImageURL } = require('../../utils/imageUtils');
 const updateAuthor = async (req, res) => {
 
     const { id } = req.params;
-    console.log('Body', req.body);
-    console.log('File', req.file); // Log file information
+    // console.log('Body', req.body);
+    // console.log('File', req.file); // Log file information
 
     const { authorName, nickname, dob, dod, nationality, biography, awards, x, instagram, facebook, website, genres, imageName } = req.body;
-    console.log(authorName, nickname, dob, dod, nationality, biography, awards, x, instagram, facebook, website, genres);
+    // console.log(authorName, nickname, dob, dod, nationality, biography, awards, x, instagram, facebook, website, genres);
 
     const image = req.file ? await putImage(id, req.file, 'authors') : imageName; // Await the function to resolve the promise
-    console.log('The image key for Amazon is:', image);
+    // console.log('The image key for Amazon is:', image);
 
-    if (image) {
-        console.log('Image is:', image);
-    }
+    // if (image) {
+    //     console.log('Image is:', image);
+    // }
 
     try {
         const [result] = await pool.query(
@@ -29,8 +29,8 @@ const updateAuthor = async (req, res) => {
               COUNT(DISTINCT s.id) AS numSeries, 
               COUNT(DISTINCT b.id) AS numBooks
             FROM authors a
-            LEFT JOIN series s ON a.id = s.author_id
-            LEFT JOIN books b ON a.id = b.author_id
+            LEFT JOIN series s ON s.author_id LIKE CONCAT('%', a.id, '%')
+            LEFT JOIN books b ON b.author_id LIKE CONCAT('%', a.id, '%')
             WHERE a.id = ?
             GROUP BY a.id
         `, [id]
@@ -50,9 +50,9 @@ const updateAuthor = async (req, res) => {
 
         if (req.io) {
             req.io.emit('authorsUpdated', updatedAuthors);
-            console.log('Emitting updated authors:', updatedAuthors);
+            // console.log('Emitting updated authors:', updatedAuthors);
         } else {
-            console.log('Socket.Io is not initialized.');
+            // console.log('Socket.Io is not initialized.');
         }
 
         res.status(200).json({ message: 'Author updated successfully', result });

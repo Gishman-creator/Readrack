@@ -24,6 +24,8 @@ import NetworkErrorPage from '../../../../pages/NetworkErrorPage';
 import { sortByFirstBookYearAsc, sortByPublishDateAsc } from '../../../../utils/sortingUtils';
 
 function AuthorDetails() {
+  
+  window.scrollTo({ top: 0 });
   const { authorId, authorName } = useParams();
   const [authorData, setAuthorData] = useState({});
   const [series, setSeries] = useState([]);
@@ -86,7 +88,7 @@ function AuthorDetails() {
           ...authorResponse.data,
           age: calculateAgeAtDeath(authorResponse.data.dob, authorResponse.data.dod),
         };
-        console.log('Author age at death:', authorDataWithAge.age);
+        // console.log('Author age at death:', authorDataWithAge.age);
 
         setAuthorData(authorDataWithAge);
 
@@ -99,23 +101,30 @@ function AuthorDetails() {
 
         // Fetching series by the author
         const seriesResponse = await axiosUtils(`/api/getSeriesByAuthorId/${authorResponse.data.id}`, 'GET');
-        console.log('Series response:', seriesResponse.data); // Debugging
+        // console.log('Series response:', seriesResponse.data); // Debugging
 
-        setSeries(seriesResponse.data.series);
+        const sortedSeries = seriesResponse.data.series.sort(sortByFirstBookYearAsc);
+
+        setSeries(sortedSeries);
         SetSeriesCount(seriesResponse.data.totalCount);
 
         // Fetching collections by the author
         const collectionsResponse = await axiosUtils(`/api/getCollectionsByAuthorId/${authorResponse.data.id}`, 'GET');
         // console.log('Collections response:', collectionsResponse.data); // Debugging
 
-        setCollections(collectionsResponse.data.collections);
+        const sortedCollections = collectionsResponse.data.collections.sort(sortByFirstBookYearAsc);
+
+        setCollections(sortedCollections);
         SetCollectionsCount(collectionsResponse.data.totalCount);
 
         // Fetching books by the author
         const booksResponse = await axiosUtils(`/api/getBooksByAuthorId/${authorResponse.data.id}`, 'GET');
-        console.log('Books response:', booksResponse.data); // Debugging
+        // console.log('Books response:', booksResponse.data); // Debugging
+            
+        // Sort the books by publish date or custom date
+        const sortedBooks = booksResponse.data.books.sort(sortByPublishDateAsc);
 
-        setBooks(booksResponse.data.books);
+        setBooks(sortedBooks);
         SetBooksCount(booksResponse.data.totalCount);
 
         setIsLoading(false);
@@ -201,6 +210,7 @@ function AuthorDetails() {
           return updatedData.sort(sortByFirstBookYearAsc);
         });
         SetSeriesCount((prevCount) => prevCount + 1);
+        if (seriesLimit >= groupRange) setSeriesLimit((prevCount) => prevCount + 1);
       }
     });
 
@@ -215,6 +225,7 @@ function AuthorDetails() {
           return updatedData.sort(sortByFirstBookYearAsc);
         });
         SetCollectionsCount((prevCount) => prevCount + 1);
+        if (collectionsLimit >= groupRange) setCollectionsLimit((prevCount) => prevCount + 1);
       }
     });
 
@@ -232,6 +243,7 @@ function AuthorDetails() {
           return updatedData.sort(sortByPublishDateAsc);
         });
         SetBooksCount((prevCount) => prevCount + 1);
+        if (booksLimit >= booksRange) setBooksLimit((prevCount) => prevCount + 1);
       }
     });
 
@@ -410,7 +422,7 @@ function AuthorDetails() {
         {/* Author series */}
         {series.length > 0 && (
           <>
-            <div className='flex justify-between items-center mt-8 md:mt-6'>
+            <div className='sticky top-[4rem] bg-[#f9f9f9] flex justify-between items-center py-2 md:pt-4 mt-6 md:mt-4'>
               <p className='font-poppins font-semibold text-lg 2xl:text-center'>
                 {capitalize(authorData.nickname || authorData.authorName)} Series:
               </p>
@@ -448,7 +460,7 @@ function AuthorDetails() {
                         onClick={(e) => { e.stopPropagation(); handleEditClick('serie', item) }}  // Handle click to open modal
                       />
                     </div>
-                    <p className='font-arima text-sm'>by {capitalize(item.nickname ? item.nickname : item.author_name)}</p>
+                    <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                     <p className='font-arima text-gray-400 text-sm mt-1'>
                       #{index + 1}, {item.first_book_year && item.last_book_year ? `from ${item.first_book_year} to ${item.last_book_year}` : 'Coming soon'}
                     </p>
@@ -480,7 +492,7 @@ function AuthorDetails() {
         {/* Author collections */}
         {collections.length > 0 && (
           <>
-            <div className='flex justify-between items-center mt-8 md:mt-6'>
+            <div className='sticky top-[4rem] bg-[#f9f9f9] flex justify-between items-center py-2 md:pt-4 mt-6 md:mt-4'>
               <p className='font-poppins font-semibold text-lg 2xl:text-center'>
                 {capitalize(authorData.nickname || authorData.authorName)} Collections:
               </p>
@@ -518,7 +530,7 @@ function AuthorDetails() {
                         onClick={(e) => { e.stopPropagation(); handleEditClick('collection', item) }}  // Handle click to open modal
                       />
                     </div>
-                    <p className='font-arima text-sm'>by {capitalize(item.nickname ? item.nickname : item.author_name)}</p>
+                    <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                     <p className='font-arima text-gray-400 text-sm mt-1'>
                       #{index + 1}, {item.first_book_year && item.last_book_year ? `from ${item.first_book_year} to ${item.last_book_year}` : 'Coming soon'}
                     </p>
@@ -548,7 +560,7 @@ function AuthorDetails() {
         )}
 
         {/* Author Books */}
-        <div className='flex justify-between items-center mt-8 md:mt-6'>
+        <div className='sticky top-[4rem] bg-[#f9f9f9] flex justify-between items-center py-2 md:pt-4 mt-6 md:mt-4'>
           <p className='font-poppins font-semibold text-lg 2xl:text-center'>
             Other {capitalize(authorData.nickname || authorData.authorName)} Books:
           </p>

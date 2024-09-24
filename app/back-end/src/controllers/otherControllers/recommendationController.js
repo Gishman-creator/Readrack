@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const { getAuthorsByIds } = require('../../utils/getUtils');
 const { getImageURL } = require('../../utils/imageUtils');
 
 /**
@@ -23,8 +24,8 @@ exports.recommendAuthors = async (req, res) => {
               COUNT(DISTINCT s.id) AS numSeries, 
               COUNT(DISTINCT b.id) AS numBooks
             FROM authors a
-            LEFT JOIN series s ON a.id = s.author_id
-            LEFT JOIN books b ON FIND_IN_SET(a.id, b.author_id) > 0
+            LEFT JOIN series s ON s.author_id LIKE CONCAT('%', a.id, '%')
+            LEFT JOIN books b ON b.author_id LIKE CONCAT('%', a.id, '%')
             WHERE (${userGenres.map(() => `a.genres LIKE ?`).join(' OR ')})
             AND a.id != ?
             GROUP BY a.id
@@ -66,9 +67,8 @@ exports.recommendSeries = async (req, res) => {
         const userGenres = genres.split(',');
 
         const query = `
-            SELECT series.*, authors.nickname, authors.authorName AS author_name
+            SELECT series.*
             FROM series
-            LEFT JOIN authors ON series.author_id = authors.id
             WHERE (${userGenres.map(() => `series.genres LIKE ?`).join(' OR ')})
             AND series.id != ?
             ORDER BY series.searchCount DESC
@@ -82,6 +82,10 @@ exports.recommendSeries = async (req, res) => {
 
         let url = null;
         for (const result of results) {
+          // Fetch authors for each result
+          const authors = await getAuthorsByIds(result.author_id);
+          result.authors = authors;
+
           url = null;
           if (result.image) {
             url = await getImageURL(result.image);

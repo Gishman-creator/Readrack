@@ -24,7 +24,7 @@ const s3 = new S3Client({
 exports.putImage = async (id, file, table) => {
     let imageName = null;
 
-    console.log('The image id from put image is:', id);
+    // console.log('The image id from put image is:', id);
 
     if (id) {
         const [rows] = await pool.query(`SELECT image FROM ${table} WHERE id = ?`, [id]);
@@ -34,7 +34,7 @@ exports.putImage = async (id, file, table) => {
 
     const imageKey = imageName && imageName !== 'null' ? imageName : randomImageName();
 
-    console.log('The image key is:', imageKey);
+    // console.log('The image key is:', imageKey);
 
     const params = {
         Bucket: bucketName,

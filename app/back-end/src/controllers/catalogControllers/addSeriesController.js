@@ -12,7 +12,7 @@ const addSeries = async (req, res) => {
     const { serieName, author_id, numBooks, genres, link } = req.body;
 
     const image = req.file ? await putImage('', req.file, 'series') : null; // Await the function to resolve the promise
-    console.log('The image key for Amazon is:', image);
+    // console.log('The image key for Amazon is:', image);
 
     try {
         let uniqueId;
@@ -38,19 +38,20 @@ const addSeries = async (req, res) => {
 
         const [serieData] = await pool.query(`
             SELECT 
-                series.*, 
-                authors.nickname, 
-                authors.authorName AS author_name,
-                YEAR(MIN(books.publishDate)) AS first_book_year,
-                YEAR(MAX(books.publishDate)) AS last_book_year
+                series.*,
+                YEAR(MIN(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS first_book_year,
+                YEAR(MAX(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS last_book_year
             FROM series
-            LEFT JOIN authors ON series.author_id = authors.id
             LEFT JOIN books ON books.serie_id = series.id
             WHERE series.id = ?
-            GROUP BY series.id, authors.nickname, authors.authorName
+            GROUP BY series.id
             ORDER BY books.publishDate ASC;
             `, [uniqueId]
         );
+
+        // Fetch authors for the serieData
+        const authors = await getAuthorsByIds(serieData[0].author_id);
+        serieData[0].authors = authors;
 
         let url = null;
         if (serieData[0].image && serieData[0].image !== 'null') {
@@ -61,9 +62,9 @@ const addSeries = async (req, res) => {
         // Emit the newly added series data if Socket.IO is initialized
         if (req.io) {
             req.io.emit('serieAdded', serieData[0]);  // Emit the full series data
-            console.log('Emitting added series:', serieData[0]);
+            // console.log('Emitting added series:', serieData[0]);
         } else {
-            console.log('Socket.IO is not initialized.');
+            // console.log('Socket.IO is not initialized.');
         }
 
         res.status(201).json({ message: 'Series added successfully', seriesId: uniqueId });

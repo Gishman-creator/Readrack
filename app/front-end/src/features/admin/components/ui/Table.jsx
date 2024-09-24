@@ -38,10 +38,6 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
     }, [activeTab]);
 
     useEffect(() => {
-        console.log('the search term is:', searchTerm);
-    }, [searchTerm]);
-
-    useEffect(() => {
 
 
         const fetchData = async () => {
@@ -56,7 +52,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                     // console.log('The search type is:', type);
                     const response = await axiosUtils(`/api/search?query=${searchTerm}&type=${type}&seriePageLimitStart=${limitStart}&seriePageLimitEnd=${limitEnd}&authorPageLimitStart=${limitStart}&authorPageLimitEnd=${limitEnd}&bookPageLimitStart=${limitStart}&bookPageLimitEnd=${limitEnd}`, 'GET');
                     data = response.data.results;
-                    console.log('The search results are:', data);
+                    // console.log('The search results are:', data);
                     totalCount = response.data.totalBooksCount;
                 } else if (!searchTerm) {
                     if (activeTab === "Series") {
@@ -75,10 +71,9 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                     data = response.data.data;
                     totalCount = response.data.totalCount;
                 }
-                console.log('Total data fetched:', data);
+                // console.log('Total data fetched:', data);
                 setTableData(data);
                 dispatch(setTableTotalItems(totalCount));
-                // console.log('Total count of data:', totalCount)
                 setSelectAllChecked(false); // Reset select all checkbox
                 dispatch(clearSelection()); // Clear selections when data changes
                 setIsLoading(false);
@@ -331,7 +326,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                 {activeTab === "Series" && (
                     <>
                         <td className="px-4 py-2">{capitalize(item.serieName)}</td>
-                        <td className="px-4 py-2">{item.nickname ? item.nickname : item.author_name}</td>
+                        <td className="px-4 py-2">{item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</td>
                         <td className="px-4 py-2">{item.numBooks}</td>
                         <td className="px-4 py-2 overflow-hidden whitespace-nowrap text-ellipsis">
                             {`${item.genres.substring(0, 15)}...`}
@@ -347,7 +342,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                 {activeTab === "Collections" && (
                     <>
                         <td className="px-4 py-2">{capitalize(item.collectionName)}</td>
-                        <td className="px-4 py-2">{item.nickname ? item.nickname : item.author_name}</td>
+                        <td className="px-4 py-2">{item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</td>
                         <td className="px-4 py-2">{item.numBooks}</td>
                         <td className="px-4 py-2 overflow-hidden whitespace-nowrap text-ellipsis">
                             {`${item.genres.substring(0, 15)}...`}

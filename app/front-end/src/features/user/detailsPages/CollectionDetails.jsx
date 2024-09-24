@@ -14,6 +14,7 @@ import { sortByPublishDateAsc } from '../../../utils/sortingUtils';
 
 function CollectionDetails() {
 
+  window.scrollTo({ top: 0 });
   const activeTab = useSelector((state) => state.user.activeTab);
   const { collectionId, collectionName } = useParams();
   const [collectionData, setCollectionData] = useState({});
@@ -64,7 +65,10 @@ function CollectionDetails() {
         const booksResponse = await axiosUtils(`/api/getBooksByCollectionId/${collectionResponse.data.id}`, 'GET');
         // console.log('Books response:', booksResponse.data); // Debugging
 
-        setBooks(booksResponse.data.books);
+        // Sort the books by publish date or custom date
+        const sortedBooks = booksResponse.data.books.sort(sortByPublishDateAsc);
+
+        setBooks(sortedBooks);
         SetBooksCount(booksResponse.data.totalCount);
         // console.log('The total count is:', booksResponse.data.totalCount);
 
@@ -125,6 +129,7 @@ function CollectionDetails() {
           return updatedData.sort(sortByPublishDateAsc);
         });
         SetBooksCount((prevCount) => prevCount + 1);
+        if (booksLimit >= booksRange) setBooksLimit((prevCount) => prevCount + 1);
       }
     });
 
@@ -177,14 +182,20 @@ function CollectionDetails() {
               >
                 {capitalize(collectionData.collectionName)}
               </p>
-              {collectionData.author_name && (
+              {collectionData.author_id && (
                 <p
-                  className='font-arima text-center md:text-left hover:underline cursor-pointer'
-                  onClick={() => {
-                    navigate(`/authors/${collectionData.author_id}/${spacesToHyphens(collectionData.author_name)}`);
-                  }}
+                  className='font-arima text-center md:text-left'
                 >
-                  by {collectionData.nickname ? capitalize(collectionData.nickname) : capitalize(collectionData.author_name)}
+                  <span>by </span>
+                  {collectionData.authors.map(author => (
+                    <span
+                      key={author.author_id}
+                      className='hover:underline cursor-pointer'
+                      onClick={() => navigate(`/admin/catalog/authors/${author.author_id}/${spacesToHyphens(author.author_name)}`)}
+                    >
+                      {capitalize(author.nickname || author.author_name)}
+                    </span>
+                  )).reduce((prev, curr) => [prev, ', ', curr])}
                 </p>
               )}
               <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>

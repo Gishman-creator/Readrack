@@ -32,14 +32,14 @@ exports.search = async (req, res) => {
   const bookPageLimitStart = validatePagination(parseInt(req.query.bookPageLimitStart, 10));
   const bookPageLimitEnd = validatePagination(parseInt(req.query.bookPageLimitEnd, 10));
 
-  console.log('The query is:', query);
-  console.log('The type is:', type);
+  // console.log('The query is:', query);
+  // console.log('The type is:', type);
 
   try {
     // Initialize queries
-    let seriesQuery = 'SELECT series.*, authors.nickname, authors.authorName AS author_name FROM series LEFT JOIN authors ON series.author_id = authors.id';
-    let collectionsQuery = 'SELECT collections.*, authors.nickname, authors.authorName AS author_name FROM collections LEFT JOIN authors ON collections.author_id = authors.id';
-    let authorsQuery = 'SELECT * FROM authors';
+    let seriesQuery = 'SELECT * FROM series';
+    let collectionsQuery = 'SELECT * FROM collections';
+    let authorsQuery = 'SELECT a.*, COUNT(DISTINCT s.id) AS numSeries, COUNT(DISTINCT b.id) AS numBooks FROM authors a LEFT JOIN series s ON s.author_id LIKE CONCAT("%", a.id, "%") LEFT JOIN books b ON b.author_id LIKE CONCAT("%", a.id, "%")';
     let booksQuery = 'SELECT books.*, series.serieName AS serie_name, collections.collectionName AS collection_name FROM books LEFT JOIN series ON books.serie_id = series.id LEFT JOIN collections ON books.collection_id = collections.id';
     let seriesCountQuery = 'SELECT COUNT(*) AS totalCount FROM series';
     let collectionsCountQuery = 'SELECT COUNT(*) AS totalCount FROM collections';
@@ -104,6 +104,18 @@ exports.search = async (req, res) => {
     const [collectionsRows] = await pool.query(collectionsQuery, collectionsQueryParams);
     const [authorsRows] = await pool.query(authorsQuery, authorsQueryParams);
     const [booksRows] = await pool.query(booksQuery, booksQueryParams);
+    
+    for (const serie of seriesRows) {
+      // Fetch authors for each serie
+      const authors = await getAuthorsByIds(serie.author_id);
+      serie.authors = authors;
+    }
+    
+    for (const collection of collectionsRows) {
+      // Fetch authors for each collection
+      const authors = await getAuthorsByIds(collection.author_id);
+      collection.authors = authors;
+    }
 
     for (const book of booksRows) {
       // Fetch authors for each book
@@ -112,10 +124,10 @@ exports.search = async (req, res) => {
     }
 
     // Log queries for debugging
-    console.log(seriesQuery, seriesQueryParams);
-    console.log(collectionsQuery, collectionsQueryParams);
-    console.log(authorsQuery, authorsQueryParams);
-    console.log(booksQuery, booksQueryParams);
+    // console.log(seriesQuery, seriesQueryParams);
+    // console.log(collectionsQuery, collectionsQueryParams);
+    // console.log(authorsQuery, authorsQueryParams);
+    // console.log(booksQuery, booksQueryParams);
 
     // Execute count queries
     const [[{ totalCount: totalSeries }]] = await pool.query(seriesCountQuery, countQueryParams);
@@ -124,10 +136,10 @@ exports.search = async (req, res) => {
     const [[{ totalCount: totalBooks }]] = await pool.query(booksCountQuery, countQueryParams);
 
     // Log the total counts before sending the response
-    console.log('Total series count:', totalSeries);
-    console.log('Total collections count:', totalCollections);
-    console.log('Total authors count:', totalAuthors);
-    console.log('Total books count:', totalBooks);
+    // console.log('Total series count:', totalSeries);
+    // console.log('Total collections count:', totalCollections);
+    // console.log('Total authors count:', totalAuthors);
+    // console.log('Total books count:', totalBooks);
 
     // Combine results
     let results = [];

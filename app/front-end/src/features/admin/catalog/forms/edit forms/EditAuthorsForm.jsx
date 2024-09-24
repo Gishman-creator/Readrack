@@ -4,6 +4,7 @@ import axiosUtils from '../../../../../utils/axiosUtils';
 import { bufferToBlobURL, downloadImage } from '../../../../../utils/imageUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
+import FormSkeleton from '../../../../../components/skeletons/FormSkeleton';
 
 function EditAuthorForm({ onClose }) {
   const initialAuthorId = useSelector((state) => state.catalog.selectedRowIds[0]); // Assuming only one author is selected
@@ -12,12 +13,14 @@ function EditAuthorForm({ onClose }) {
   const [authorImageURL, setAuthorImageURL] = useState('');
   const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(false);
 
   const dispatch = useDispatch();
 
   useEffect(() => {
     // Fetch author data when the component mounts
     const fetchAuthorData = async () => {
+      setFetchLoading(true);
       try {
         const response = await axiosUtils(`/api/getAuthorById/${authorId}`, 'GET');
         // console.log('Author data fetched:', response.data); // Log the entire response data
@@ -32,8 +35,10 @@ function EditAuthorForm({ onClose }) {
         }
 
         setAuthorId(response.data.id);
+        setFetchLoading(false);
       } catch (error) {
         console.error('Error fetching author data:', error);
+        setFetchLoading(false);
       }
     };
 
@@ -100,140 +105,145 @@ function EditAuthorForm({ onClose }) {
   return (
     <div className=''>
       <h2 className="text-lg font-semibold">Edit Author</h2>
-      <form onSubmit={handleSubmit} className="flex flex-col md:flex-row max-h-custom2 md:max-h-fit overflow-y-auto md:overflow-hidden">
-        <ImagePreview imageURL={authorImageURL} onImageChange={handleImageChange} onImageUpload={handleImageUpload} />
-        <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[19rem] md:overflow-y-auto">
-          <div className="mb-2">
-            <label className="block text-sm font-medium">Author name:</label>
-            <input
-              type="text"
-              name="authorName"
-              defaultValue={authorData.authorName || ''}
-              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
-              required
-            />
-          </div>
-          <div className="mb-2">
-            <label className="block text-sm font-medium">Author nickname:</label>
-            <input
-              type="text"
-              name="nickname"
-              defaultValue={authorData.nickname || ''}
-              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
-            />
-          </div>
-          <div className="mb-2 flex space-x-2">
-            <div className='w-full'>
-              <label className="block text-sm font-medium">Date of birth:</label>
-              <input
-                type="date"
-                name="dob"
-                defaultValue={authorData.dob?.split('T')[0] || ''}
-                className="w-full border border-gray-300 rounded-lg px-2 py-1"
-              />
-            </div>
-            <div className='w-full'>
-              <label className="block text-sm font-medium">Date of death:</label>
-              <input
-                type="date"
-                name="dod"
-                defaultValue={authorData.dod?.split('T')[0] || ''}
-                className="w-full border border-gray-300 rounded-lg px-2 py-1"
-              />
-            </div>
-          </div>
-          <div className="mb-2">
-            <label className="block text-sm font-medium">Nationality:</label>
-            <input
-              type="text"
-              name="nationality"
-              defaultValue={authorData.nationality || ''}
-              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
-            />
-          </div>
-          <div className="mb-2 flex space-x-2">
-            <div className='w-full'>
-              <label className="block text-sm font-medium">Biography:</label>
-              <textarea
-                name="biography"
-                defaultValue={authorData.biography || ''}
-                className="w-full border border-gray-300 rounded-lg px-2 py-1"
-              />
-            </div>
-            <div className='w-full'>
-              <label className="block text-sm font-medium">Awards:</label>
-              <textarea
-                name="awards"
-                defaultValue={authorData.awards || ''}
-                className="w-full border border-gray-300 rounded-lg px-2 py-1"
-              />
-            </div>
-          </div>
-          <div className="mb-2 flex space-x-2">
-            <div>
-              <label className="block text-sm font-medium">X:</label>
+      {fetchLoading ? (
+        <FormSkeleton />
+      ) : (
+        <form onSubmit={handleSubmit} className="flex flex-col md:flex-row max-h-custom2 md:max-h-fit overflow-y-auto md:overflow-hidden">
+          <ImagePreview imageURL={authorImageURL} onImageChange={handleImageChange} onImageUpload={handleImageUpload} />
+          <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[19rem] md:overflow-y-auto">
+            <div className="mb-2">
+              <label className="block text-sm font-medium">Author name:</label>
               <input
                 type="text"
-                name="x"
-                defaultValue={authorData.x || ''}
-                className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                name="authorName"
+                defaultValue={authorData.authorName || ''}
+                className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
+                required
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium">Instagram:</label>
+            <div className="mb-2">
+              <label className="block text-sm font-medium">Author nickname:</label>
               <input
                 type="text"
-                name="instagram"
-                defaultValue={authorData.instagram || ''}
-                className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                name="nickname"
+                defaultValue={authorData.nickname || ''}
+                className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium">Facebook:</label>
+            <div className="mb-2 flex space-x-2">
+              <div className='w-full'>
+                <label className="block text-sm font-medium">Date of birth:</label>
+                <input
+                  type="date"
+                  name="dob"
+                  defaultValue={authorData.dob?.split('T')[0] || ''}
+                  className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                />
+              </div>
+              <div className='w-full'>
+                <label className="block text-sm font-medium">Date of death:</label>
+                <input
+                  type="date"
+                  name="dod"
+                  defaultValue={authorData.dod?.split('T')[0] || ''}
+                  className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                />
+              </div>
+            </div>
+            <div className="mb-2">
+              <label className="block text-sm font-medium">Nationality:</label>
               <input
                 type="text"
-                name="facebook"
-                defaultValue={authorData.facebook || ''}
-                className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                name="nationality"
+                defaultValue={authorData.nationality || ''}
+                className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               />
             </div>
+            <div className="mb-2 flex space-x-2">
+              <div className='w-full'>
+                <label className="block text-sm font-medium">Biography:</label>
+                <textarea
+                  name="biography"
+                  defaultValue={authorData.biography || ''}
+                  className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                />
+              </div>
+              <div className='w-full'>
+                <label className="block text-sm font-medium">Awards:</label>
+                <textarea
+                  name="awards"
+                  defaultValue={authorData.awards || ''}
+                  className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                />
+              </div>
+            </div>
+            <div className="mb-2 flex space-x-2">
+              <div>
+                <label className="block text-sm font-medium">X:</label>
+                <input
+                  type="text"
+                  name="x"
+                  defaultValue={authorData.x || ''}
+                  className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Instagram:</label>
+                <input
+                  type="text"
+                  name="instagram"
+                  defaultValue={authorData.instagram || ''}
+                  className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Facebook:</label>
+                <input
+                  type="text"
+                  name="facebook"
+                  defaultValue={authorData.facebook || ''}
+                  className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                />
+              </div>
+            </div>
+            <div className="mb-4 flex space-x-2">
+              <div>
+                <label className="block text-sm font-medium">Website:</label>
+                <input
+                  type="text"
+                  name="website"
+                  defaultValue={authorData.website || ''}
+                  className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                  onClick={(e) => e.target.select()}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Genres:</label>
+                <input
+                  type="text"
+                  name="genres"
+                  defaultValue={authorData.genres || ''}
+                  className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                />
+              </div>
+            </div>
+            <button
+              type="submit"
+              className={`bg-green-700 flex items-center space-x-2 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <span className='white-loader'></span>
+                  <span>Saving...</span>
+                </>
+              ) :
+                'Save Changes'
+              }
+            </button>
           </div>
-          <div className="mb-4 flex space-x-2">
-            <div>
-              <label className="block text-sm font-medium">Website:</label>
-              <input
-                type="text"
-                name="website"
-                defaultValue={authorData.website || ''}
-                className="w-full border border-gray-300 rounded-lg px-2 py-1"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Genres:</label>
-              <input
-                type="text"
-                name="genres"
-                defaultValue={authorData.genres || ''}
-                className="w-full border border-gray-300 rounded-lg px-2 py-1"
-              />
-            </div>
-          </div>
-          <button
-            type="submit"
-            className={`bg-green-700 flex items-center space-x-2 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <span className='white-loader'></span>
-                <span>Saving...</span>
-              </>
-            ) :
-              'Save Changes'
-            }
-          </button>
-        </div>
-      </form>
+        </form>
+      )}
     </div>
   );
 }

@@ -18,6 +18,8 @@ import NetworkErrorPage from '../../../../pages/NetworkErrorPage';
 import { sortByPublishDateAsc } from '../../../../utils/sortingUtils';
 
 function SerieDetails() {
+  
+  window.scrollTo({ top: 0 });
   const { serieId, serieName } = useParams();
   const [serieData, setSerieData] = useState({});
   const [books, setBooks] = useState([]);
@@ -69,9 +71,12 @@ function SerieDetails() {
         }
 
         const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}`, 'GET');
-        console.log('Books response:', booksResponse.data); // Debugging
+        // console.log('Books response:', booksResponse.data); // Debugging
+            
+        // Sort the books by publish date or custom date
+        const sortedBooks = booksResponse.data.books.sort(sortByPublishDateAsc);
 
-        setBooks(booksResponse.data.books);
+        setBooks(sortedBooks);
         SetBooksCount(booksResponse.data.totalCount);
         // console.log('The total count is:', booksResponse.data.totalCount);
 
@@ -111,7 +116,7 @@ function SerieDetails() {
 
     // Event listener for booksUpdated
     socket.on('booksUpdated', (updatedBooks) => {
-      console.log('Books updated via socket:', updatedBooks);
+      // console.log('Books updated via socket:', updatedBooks);
       setBooks((prevData) => {
         const updatedData = prevData.map((book) =>
           book.id === updatedBooks.id ? updatedBooks : book
@@ -124,18 +129,19 @@ function SerieDetails() {
 
     // Event listener for bookAdded
     socket.on('bookAdded', (bookData) => {
-      console.log('Book added via socket:', bookData.serie_id);
-      console.log('Serie ID:', serieId);
+      // console.log('Book added via socket:', bookData.serie_id);
+      // console.log('Serie ID:', serieId);
       if (bookData.serie_id === parseInt(serieId)) {
         setBooks((prevData) => {
-          console.log('Previous data:', prevData);
+          // console.log('Previous data:', prevData);
           const updatedData = [...prevData, bookData];
 
           // Sort the updatedData by date in ascending order (oldest first)
           return updatedData.sort(sortByPublishDateAsc);
         });
-        console.log('Book added successfully');
+        // console.log('Book added successfully');
         SetBooksCount((prevCount) => prevCount + 1);
+        if (booksLimit >= booksRange) setBooksLimit((prevCount) => prevCount + 1);
       }
     });
 
@@ -204,10 +210,18 @@ function SerieDetails() {
               {capitalize(serieData.serieName)}
             </p>
             <p
-              className='font-arima text-center md:text-left hover:underline cursor-pointer'
-              onClick={() => navigate(`/admin/catalog/authors/${serieData.author_id}/${spacesToHyphens(serieData.author_name)}`)}
+              className='font-arima text-center md:text-left'
             >
-              by {capitalize(serieData.nickname || serieData.author_name)}
+              <span>by </span>
+              {serieData.authors.map(author => (
+                <span
+                  key={author.author_id}
+                  className='hover:underline cursor-pointer'
+                  onClick={() => navigate(`/admin/catalog/authors/${author.author_id}/${spacesToHyphens(author.author_name)}`)}
+                >
+                  {capitalize(author.nickname || author.author_name)}
+                </span>
+              )).reduce((prev, curr) => [prev, ', ', curr])}
             </p>
             <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
               <p className='md:inline font-medium font-poppins text-center md:text-left text-sm'>Genres:</p>
@@ -228,7 +242,7 @@ function SerieDetails() {
         }
       </div>
       <div className='w-full '>
-        <div className='flex justify-between items-center mt-8 md:mt-0'>
+        <div className='sticky top-[4rem] bg-[#f9f9f9] flex justify-between items-center py-2 md:pt-4 mt-6 md:mt-0'>
           <p className='font-poppins font-semibold text-xl 2xl:text-center'>
             {capitalize(serieData.serieName)} Books:
           </p>

@@ -29,7 +29,7 @@ function User() {
   useEffect(() => {
     const logVisit = async () => {
       try {
-        await axiosUtils('/api/log-visit', 'POST', {
+        await axiosUtils('/api/visit', 'POST', {
           pageVisited: location.pathname,
           sessionId: sessionStorage.getItem('sessionId') || createSessionId(),
         });
@@ -90,8 +90,8 @@ function User() {
             <Route path='/authors/:authorId/:authorName?' element={<AuthorDetails />} />
             <Route path='/search' element={<SearchResults />} />
             <Route path='/about-us' element={<AboutUs />} />
-            <Route path='/error' element={<NetworkErrorPage />} />
-            <Route path='*' element={<NotFoundPage />} />
+            <Route path='/404' element={<NotFoundPage />} />
+            <Route path='*' element={<Navigate to="/404" />} />
           </Routes>
           <div
             ref={divRef} // Attach the ref to this div

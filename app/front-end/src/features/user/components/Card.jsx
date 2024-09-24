@@ -72,11 +72,19 @@ function Card({ card, activeTab, fixedWidth }) {
                 {activeTab === 'Series' ? (
                     <>
                         <p
-                            title={`${capitalize(card.author_name)} Series`}
-                            className="font-arima text-sm overflow-hidden whitespace-nowrap text-ellipsis hover:underline"
-                            onClick={(e) => navigateToAuthor(e, card.author_id)}
+                            className='text-sm font-arima overflow-hidden whitespace-nowrap text-ellipsis '
                         >
-                            by {card.nickname ? capitalize(card.nickname) : capitalize(card.author_name)}
+                            <span>by </span>
+                            {card.authors.map(author => (
+                                <span
+                                    key={author.author_id}
+                                    title={capitalize(author.author_name)}
+                                    className='hover:underline cursor-pointer'
+                                    onClick={() => navigate(`/admin/catalog/authors/${author.author_id}/${spacesToHyphens(author.author_name)}`)}
+                                >
+                                    {capitalize(author.nickname || author.author_name)}
+                                </span>
+                            )).reduce((prev, curr) => [prev, ', ', curr])}
                         </p>
                         <p className="font-arima font-bold text-xs text-green-700 mt-4">
                             {card.numBooks} books
@@ -84,13 +92,21 @@ function Card({ card, activeTab, fixedWidth }) {
                     </>
                 ) : activeTab === 'Collections' ? (
                     <>
-                        {card.author_name ? (
+                        {card.author_id ? (
                             <p
-                                title={`${capitalize(card.author_name)} Collection`}
-                                className="font-arima text-sm overflow-hidden whitespace-nowrap text-ellipsis hover:underline"
-                                onClick={(e) => navigateToAuthor(e, card.author_id)}
+                                className='text-sm font-arima overflow-hidden whitespace-nowrap text-ellipsis '
                             >
-                                by {card.nickname ? capitalize(card.nickname) : capitalize(card.author_name)}
+                                <span>by </span>
+                                {card.authors.map(author => (
+                                    <span
+                                        key={author.author_id}
+                                        title={capitalize(author.author_name)}
+                                        className="hover:underline cursor-pointer"
+                                        onClick={() => navigate(`/admin/catalog/authors/${author.author_id}/${spacesToHyphens(author.author_name)}`)}
+                                    >
+                                        {capitalize(author.nickname || author.author_name)}
+                                    </span>
+                                )).reduce((prev, curr) => [prev, ', ', curr])}
                             </p>
                         ) : (
                             <p className='mt-9'></p>

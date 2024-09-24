@@ -8,50 +8,71 @@ import { setAuthor } from '../../../slices/catalogSlice';
 
 function AddSeriesForm({ onClose }) {
   const authorDetailsAuthor = useSelector((state) => state.catalog.author);
-  const detailsAuthor = {id: authorDetailsAuthor.id, authorName: authorDetailsAuthor.nickname || authorDetailsAuthor.authorName}
+  const detailsAuthor = { id: authorDetailsAuthor.id, authorName: authorDetailsAuthor.nickname || authorDetailsAuthor.authorName }
   const [seriesImageURL, setSeriesImageURL] = useState('');
   const [selectedImageFile, setSelectedImageFile] = useState(null);
 
-  const [authorSearch, setAuthorSearch] = useState(authorDetailsAuthor.authorName || '');
+  const [authorSearch, setAuthorSearch] = useState('');
   const [authorOptions, setAuthorOptions] = useState([]);
-  const [selectedAuthor, setSelectedAuthor] = useState(detailsAuthor || '');
+  const [selectedAuthors, setSelectedAuthors] = useState([detailsAuthor] || []);
   const [isLoading, setIsLoading] = useState(false);
   const [authorIsLoading, setAuthorIsLoading] = useState(false);
 
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (selectedAuthor && authorSearch === selectedAuthor.authorName) return;
-    setSelectedAuthor('');
-    if (authorSearch && !selectedAuthor) {
-      const fetchAuthors = async () => {
-        setAuthorIsLoading(true);
-        try {
-          const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
-          setAuthorOptions(response.data.results.map(author => ({
-            id: author.id,
-            authorName: author.nickname ? author.nickname : author.authorName
-          })));
-          setAuthorIsLoading(false);
-        } catch (error) {
-          console.error('Error fetching authors:', error);
-        }
-      };
-      fetchAuthors();
-    } else {
-      setAuthorOptions([]);
-    }
+    // console.log('The author search is:', authorSearch);
+    // console.log('The selected authors set to:', selectedAuthors)
+  }, [authorSearch, selectedAuthors])
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      // console.log('Selected authors:', selectedAuthors);
+      if (authorSearch && !selectedAuthors.some(author => author.author_name === authorSearch)) {
+        const fetchAuthors = async () => {
+          setAuthorIsLoading(true);
+          try {
+            const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
+            setAuthorOptions(response.data.results.map(author => ({
+              id: author.id,
+              authorName: author.nickname ? author.nickname : author.authorName
+            })));
+            setAuthorIsLoading(false);
+          } catch (error) {
+            console.error('Error fetching authors:', error);
+          }
+        };
+        fetchAuthors();
+      } else {
+        setAuthorOptions([]);
+      }
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(delayDebounceFn); // Clear timeout if authorSearch changes
+    };
+
   }, [authorSearch]);
 
   const handleAuthorChange = (e) => {
     setAuthorSearch(e.target.value);
+    if (!e.target.value) {
+      setSelectedAuthors(e.target.value)
+    }
   };
 
   const handleAuthorSelect = (author) => {
-    setSelectedAuthor(author);
-    setAuthorSearch(author.authorName); // Set the selected author in the input
+    if (!selectedAuthors.some(a => a.id === author.id)) {
+      setSelectedAuthors([...selectedAuthors, author]);
+    }
+    setAuthorSearch('');
     setAuthorOptions([]);
   };
+
+  const handleAuthorRemove = (index) => {
+    setSelectedAuthors(selectedAuthors.filter((_, i) => i !== index));
+  };
+
 
   const handleImageChange = (url) => {
     setSeriesImageURL(url);
@@ -80,14 +101,8 @@ function AddSeriesForm({ onClose }) {
       }
     }
 
-    formData.append('author_id', selectedAuthor.id);
+    formData.append('author_id', selectedAuthors.map((author) => author.id).join(', '));
 
-    // Debug output
-    // for (let [key, value] of formData.entries()) {
-    //   console.log(`${key}:`, value);
-    // }
-
-    // Process form data (e.g., send to server)
     try {
       const response = await axiosUtils('/api/addSeries', 'POST', formData, {
         'Content-Type': 'multipart/form-data',
@@ -100,7 +115,7 @@ function AddSeriesForm({ onClose }) {
       setIsLoading(false);
       dispatch(setAuthor(''));
       setAuthorSearch('');
-      setSelectedAuthor('');
+      setSelectedAuthors('');
       if (onClose) {
         onClose(); // Call the onClose function to close the modal
       }
@@ -154,7 +169,7 @@ function AddSeriesForm({ onClose }) {
                   </li>
                 ))}
               </ul>
-            ) : authorSearch && !authorIsLoading && !selectedAuthor && (
+            ) : authorSearch && !authorIsLoading && !selectedAuthors && (
               <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
                 <li
                   className="cursor-pointer px-4 py-2 hover:bg-gray-100"
@@ -164,6 +179,27 @@ function AddSeriesForm({ onClose }) {
               </ul>
             )}
           </div>
+          {selectedAuthors.length > 0 ? (
+            <div className="bg-green-700 rounded-lg my-2 flex flex-wrap gap-2 p-2">
+              {selectedAuthors.map((author, index) => (
+                <span key={index} className="bg-[rgba(255,255,255,0.3)] flex items-center max-w-fit max-h-fit text-white font-poppins font-semibold px-2 py-1 rounded-lg text-sm space-x-1">
+                  <span>{author.authorName}</span>
+                  <span
+                    className='text-xl cursor-pointer'
+                    onClick={() => handleAuthorRemove(index)}
+                  >
+                    &times;
+                  </span>
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-green-700 rounded-lg my-2 flex flex-wrap gap-2 p-2">
+              <span className="bg-[rgba(255,255,255,0.3)] flex items-center max-w-fit max-h-fit text-white font-poppins font-semibold px-2 py-1 rounded-lg text-sm space-x-1">
+                No authors selected
+              </span>
+            </div>
+          )}
           <div className="mb-2 flex space-x-2">
             <div>
               <label className="block text-sm font-medium">Number of Books:</label>
@@ -180,6 +216,7 @@ function AddSeriesForm({ onClose }) {
               type="text"
               name="link"
               className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              onClick={(e) => e.target.select()}
             />
           </div>
           <button

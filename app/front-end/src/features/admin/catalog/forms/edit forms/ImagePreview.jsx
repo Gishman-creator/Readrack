@@ -45,6 +45,7 @@ function ImagePreview({ imageURL, onImageChange, onImageUpload }) {
           placeholder="Enter image link"
           value={localImageURL}
           onChange={handleURLChange}
+          onClick={(e) => e.target.select()}
           className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-[#37643B] focus:ring-[#37643B]"
         />
         <label className="block text-sm font-medium mt-2">Upload Image:</label>

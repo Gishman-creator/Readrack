@@ -24,12 +24,12 @@ const addBook = async (req, res) => {
       link,
     } = req.body;
 
-    console.log('the received author ids are:', author_id);
+    // console.log('the received author ids are:', author_id);
 
-    console.log('The added book info:', req.body);
+    // console.log('The added book info:', req.body);
     
     const image = req.file ? await putImage('', req.file, 'books') : null; // Await the function to resolve the promise
-    console.log('The image key for Amazon is:', image);
+    // console.log('The image key for Amazon is:', image);
 
     let uniqueId;
     let isUnique = false;
@@ -71,7 +71,7 @@ const addBook = async (req, res) => {
       link || null,
     ];
 
-    console.log('The values are:', values)
+    // console.log('The values are:', values)
 
     await pool.execute(query, values);
 
@@ -98,13 +98,13 @@ const addBook = async (req, res) => {
     // Emit the newly added book data if Socket.IO is initialized
     if (req.io) {
       req.io.emit('bookAdded', bookData[0]);  // Emit the full book data
-      console.log('Emitting added book:', bookData[0]);
+      // console.log('Emitting added book:', bookData[0]);
     } else {
-      console.log('Socket.IO is not initialized.');
+      // console.log('Socket.IO is not initialized.');
     }
 
     res.status(201).json({ message: 'Book added successfully', bookId: uniqueId });
-    console.log('Book added successfully');
+    // console.log('Book added successfully');
   } catch (error) {
     console.error('Error adding book:', error);
     res.status(500).json({ error: 'Failed to add book' });

@@ -1,6 +1,7 @@
 // src/controllers/catalogControllers/addCollectionsController.js
 
 const pool = require('../../config/db');
+const { getAuthorsByIds } = require('../../utils/getUtils');
 const { putImage, getImageURL } = require('../../utils/imageUtils');
 
 // Function to generate a random ID
@@ -12,7 +13,7 @@ const addCollections = async (req, res) => {
     const { collectionName, author_id, numBooks, genres, link } = req.body;
     
     const image = req.file ? await putImage('', req.file, 'collections') : null; // Await the function to resolve the promise
-    console.log('The image key for Amazon is:', image);
+    // console.log('The image key for Amazon is:', image);
 
     try {
         let uniqueId;
@@ -38,19 +39,19 @@ const addCollections = async (req, res) => {
 
         const [collectionData] = await pool.query(`
             SELECT 
-                collections.*, 
-                authors.nickname, 
-                authors.authorName AS author_name,
-                YEAR(MIN(books.publishDate)) AS first_book_year,
-                YEAR(MAX(books.publishDate)) AS last_book_year
+                collections.*,
+                YEAR(MIN(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS first_book_year,
+                YEAR(MAX(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS last_book_year
             FROM collections
-            LEFT JOIN authors ON collections.author_id = authors.id
             LEFT JOIN books ON books.collection_id = collections.id
             WHERE collections.id = ?
-            GROUP BY collections.id, authors.nickname, authors.authorName
+            GROUP BY collections.id
             ORDER BY books.publishDate ASC;
             `, [uniqueId]
         );
+        // Fetch authors for the collectionData
+        const authors = await getAuthorsByIds(collectionData[0].author_id);
+        collectionData[0].authors = authors;
 
         let url = null;
         if (collectionData[0].image && collectionData[0].image !== 'null') {
@@ -61,9 +62,9 @@ const addCollections = async (req, res) => {
         // Emit the newly added collections data if Socket.IO is initialized
         if (req.io) {
             req.io.emit('collectionAdded', collectionData[0]);  // Emit the full collections data
-            console.log('Emitting added collections:', collectionData[0]);
+            // console.log('Emitting added collections:', collectionData[0]);
         } else {
-            console.log('Socket.IO is not initialized.');
+            // console.log('Socket.IO is not initialized.');
         }
 
         res.status(201).json({ message: 'Collections added successfully', collectionsId: uniqueId });

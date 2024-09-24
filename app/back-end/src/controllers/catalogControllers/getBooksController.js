@@ -149,7 +149,7 @@ exports.getBooksBySerieId = async (req, res) => {
 exports.getBooksByCollectionId = async (req, res) => {
   const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
   let { collection_id } = req.params;
-  console.log('The collection id:', collection_id);
+  // console.log('The collection id:', collection_id);
 
   try {
     // Fetch books by collection_id and join with authors and collections to get their names

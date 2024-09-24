@@ -1,7 +1,7 @@
 const pool = require('../config/db');
 
 exports.getAuthorsByIds = async (authorIds) => {
-    console.log('authorIds:', authorIds);
+    // console.log('authorIds:', authorIds);
     if (!authorIds) return [];
 
     const idsArray = authorIds.split(',').map(id => id.trim()); // Split the string and trim any spaces
@@ -15,7 +15,7 @@ exports.getAuthorsByIds = async (authorIds) => {
             authors.push(rows[0]);
         }
     }
-    console.log('authors:', authors);
+    // console.log('authors:', authors);
 
     return authors;
 };

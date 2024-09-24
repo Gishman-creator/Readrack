@@ -33,13 +33,13 @@ const SearchResults = () => {
     const [searchTerm, setSearchTerm] = useState(initialQuery);
 
     useEffect(() => {
-        console.log('The isloading state is:', isLoading);
-        console.log('The page interval is:', pageInterval);
+        // console.log('The isloading state is:', isLoading);
+        // console.log('The page interval is:', pageInterval);
     }, [isLoading, pageInterval])
 
     useEffect(() => {
         setSearchTerm(initialQuery);
-        console.log('Initial query:', initialQuery);
+        // console.log('Initial query:', initialQuery);
     }, [initialQuery]);
 
     useEffect(() => {

@@ -7,7 +7,7 @@ const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
 exports.verifyCode = async (req, res) => {
     const { email, code } = req.body;
-    console.log("Body:", req.body);
+    // console.log("Body:", req.body);
 
     try {
         // Check if the verification code matches

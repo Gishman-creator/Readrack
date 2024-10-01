@@ -8,13 +8,15 @@ import { setAuthor } from '../../../slices/catalogSlice';
 
 function AddCollectionsForm({ onClose }) {
   const authorDetailsAuthor = useSelector((state) => state.catalog.author);
-  const detailsAuthor = { id: authorDetailsAuthor.id, authorName: authorDetailsAuthor.nickname || authorDetailsAuthor.authorName }
+  const detailsAuthor = authorDetailsAuthor ? { id: authorDetailsAuthor.id, authorName: authorDetailsAuthor.nickname || authorDetailsAuthor.authorName } : {};
   const [collectionsImageURL, setCollectionsImageURL] = useState('');
   const [selectedImageFile, setSelectedImageFile] = useState(null);
 
   const [authorSearch, setAuthorSearch] = useState('');
   const [authorOptions, setAuthorOptions] = useState([]);
-  const [selectedAuthors, setSelectedAuthors] = useState([detailsAuthor] || '');
+  const [selectedAuthors, setSelectedAuthors] = useState(
+    detailsAuthor && Object.keys(detailsAuthor).length ? [detailsAuthor] : []
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [authorIsLoading, setAuthorIsLoading] = useState(false);
 
@@ -23,7 +25,7 @@ function AddCollectionsForm({ onClose }) {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       // console.log('Selected authors:', selectedAuthors);
-      if (authorSearch && !selectedAuthors.some(author => author.author_name === authorSearch)) {
+      if (authorSearch && !selectedAuthors.some(author => author.authorName === authorSearch)) {
         const fetchAuthors = async () => {
           setAuthorIsLoading(true);
           try {
@@ -51,9 +53,6 @@ function AddCollectionsForm({ onClose }) {
 
   const handleAuthorChange = (e) => {
     setAuthorSearch(e.target.value);
-    if (!e.target.value) {
-      setSelectedAuthors(e.target.value)
-    }
   };
 
   const handleAuthorSelect = (author) => {
@@ -221,10 +220,10 @@ function AddCollectionsForm({ onClose }) {
             {isLoading ? (
               <>
                 <span className='white-loader'></span>
-                <span>Saving...</span>
+                <span>Adding...</span>
               </>
             ) :
-              'Save Changes'
+              'Add Collection'
             }
           </button>
         </div>

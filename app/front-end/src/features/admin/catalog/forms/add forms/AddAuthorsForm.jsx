@@ -104,6 +104,14 @@ function AddAuthorsForm({ onClose }) {
               <input type="date" name="dod" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
           </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium">Custom date of birth:</label>
+            <input
+              type="text"
+              name="customDob"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
+            />
+          </div>
           <div className="mb-2">
             <label className="block text-sm font-medium">Nationality:</label>
             <input
@@ -125,15 +133,15 @@ function AddAuthorsForm({ onClose }) {
           <div className="mb-2 flex space-x-2">
             <div>
               <label className="block text-sm font-medium">X:</label>
-              <input type="text" name="x" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
+              <input type="text" name="x" className="w-full border border-gray-300 rounded-lg px-2 py-1" onClick={(e) => e.target.select()} />
             </div>
             <div>
               <label className="block text-sm font-medium">Instagram:</label>
-              <input type="text" name="instagram" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
+              <input type="text" name="instagram" className="w-full border border-gray-300 rounded-lg px-2 py-1" onClick={(e) => e.target.select()} />
             </div>
             <div>
               <label className="block text-sm font-medium">Facebook:</label>
-              <input type="text" name="facebook" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
+              <input type="text" name="facebook" className="w-full border border-gray-300 rounded-lg px-2 py-1" onClick={(e) => e.target.select()} />
             </div>
           </div>
           <div className="mb-4 flex space-x-2">
@@ -154,10 +162,10 @@ function AddAuthorsForm({ onClose }) {
             {isLoading ? (
               <>
                 <span className='white-loader'></span>
-                <span>Saving...</span>
+                <span>Adding...</span>
               </>
             ) :
-              'Save Changes'
+              'Add Author'
             }
           </button>
         </div>

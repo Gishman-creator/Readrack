@@ -167,9 +167,6 @@ function EditBooksForm({ onClose }) {
 
   const handleAuthorChange = (e) => {
     setAuthorSearch(e.target.value);
-    if (!e.target.value) {
-      setSelectedAuthors(e.target.value)
-    }
   };
 
   const handleAuthorSelect = (author) => {
@@ -248,6 +245,11 @@ function EditBooksForm({ onClose }) {
     // console.log('The selected serie id is:', selectedSerie.id);
     formData.append('serie_id', selectedSerie.id);
     formData.append('collection_id', selectedCollection.id);
+
+    // To log the form data:
+    // for (let pair of formData.entries()) {
+    //     console.log(`${pair[0]}: ${pair[1]}`);
+    // }
 
     try {
       const response = await axiosUtils(`/api/updateBook/${bookId}`, 'PUT', formData, {

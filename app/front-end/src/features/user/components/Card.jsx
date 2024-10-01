@@ -59,13 +59,13 @@ function Card({ card, activeTab, fixedWidth }) {
             <div className="flex-col justify-center items-center py-1">
                 <p
                     title={`
-                        ${activeTab === 'Series' ? `${capitalize(card.serieName)} Serie` : ''}
+                        ${activeTab === 'Series' ? `${capitalize(card.serieName)} Series` : ''}
                         ${activeTab === 'Authors' ? (card.nickname ? capitalize(card.nickname) : capitalize(card.authorName)) : ''}
                         ${activeTab === 'Collections' ? capitalize(card.collectionName) : ''}
                     `}
                     className="font-poppins font-medium overflow-hidden whitespace-nowrap text-ellipsis"
                 >
-                    {activeTab === 'Series' && `${capitalize(card.serieName)} Serie`}
+                    {activeTab === 'Series' && `${capitalize(card.serieName)} Series`}
                     {activeTab === 'Authors' && (card.nickname ? capitalize(card.nickname) : capitalize(card.authorName))}
                     {activeTab === 'Collections' && capitalize(card.collectionName)}
                 </p>

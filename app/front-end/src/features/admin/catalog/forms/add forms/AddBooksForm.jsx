@@ -4,7 +4,7 @@ import axiosUtils from '../../../../../utils/axiosUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { downloadImage } from '../../../../../utils/imageUtils';
-import { setAuthor, setCollection, setSerie } from '../../../slices/catalogSlice';
+import { setAuthor, setCollection, setSerie, setSerieBookCount } from '../../../slices/catalogSlice';
 
 function AddBooksForm({ onClose }) {
   const [bookImageURL, setBookImageURL] = useState('');
@@ -12,35 +12,64 @@ function AddBooksForm({ onClose }) {
   const detailsSerie = useSelector((state) => state.catalog.serie);
   const detailsCollection = useSelector((state) => state.catalog.collection);
   const serieDetailsAuthor = useSelector((state) => state.catalog.author);
-  const detailsAuthor = { id: serieDetailsAuthor.author_id || serieDetailsAuthor.id, authorName: (serieDetailsAuthor.nickname || serieDetailsAuthor.author_name) || (serieDetailsAuthor.nickname || serieDetailsAuthor.authorName) };
+  const detailsAuthors = useSelector((state) => state.catalog.authors);
+  const serieBookCount = useSelector((state) => state.catalog.serieBookCount);
+  console.log('The serie book count:', serieBookCount + 1);
+  
+  // Safely access properties of serieDetailsAuthor
+  const detailsAuthor = serieDetailsAuthor
+    ? {
+      author_id: serieDetailsAuthor.author_id || serieDetailsAuthor.id,
+      author_name: serieDetailsAuthor.nickname || serieDetailsAuthor.author_name || serieDetailsAuthor.authorName
+    }
+    : {}; // Fallback to an empty object if serieDetailsAuthor is null or undefined
+
+    console.log(detailsAuthors)
   const [authorSearch, setAuthorSearch] = useState('');
   const [serieSearch, setSerieSearch] = useState(detailsSerie ? detailsSerie.serieName : '');
   const [collectionSearch, setCollectionSearch] = useState(detailsCollection ? detailsCollection.collectionName : '');
   const [authorOptions, setAuthorOptions] = useState([]);
   const [serieOptions, setSerieOptions] = useState([]);
   const [collectionOptions, setCollectionOptions] = useState([]);
-  const [selectedAuthors, setSelectedAuthors] = useState(serieDetailsAuthor ? [detailsAuthor] : []);
+  const [selectedAuthors, setSelectedAuthors] = useState(serieDetailsAuthor ? [detailsAuthor] : (detailsAuthors || []));
   const [selectedSerie, setSelectedSerie] = useState(detailsSerie ? { id: detailsSerie.id, serieName: detailsSerie.serieName } : '');
   const [selectedCollection, setSelectedCollection] = useState(detailsCollection ? { id: detailsCollection.id, collectionName: detailsCollection.collectionName } : '');
   const [isLoading, setIsLoading] = useState(false);
   const [authorIsLoading, setAuthorIsLoading] = useState(false);
   const [serieIsLoading, setSerieIsLoading] = useState(false);
   const [collectionIsLoading, setCollectionIsLoading] = useState(false);
-
+  
   const dispatch = useDispatch();
+  const [bookName, setBookName] = useState();
+  const [bookNameCount, setBookNameCount] = useState(0);
+
+  useEffect(() => {
+    const fetchBookNames = async () => {
+      if(!bookName.trim()) return;
+      try{
+        const response = await axiosUtils(`/api/getBookNames?bookName=${bookName}`, 'GET');
+        console.log('The book names response is:', response);
+        setBookNameCount(response.data.bookNameCount);
+        console.log('The book name count is:', response.data.bookNameCount)
+      } catch (error) {
+        console.error('Error fetching book names:', error);
+      }
+    }
+
+    fetchBookNames();
+  }, [bookName])
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      if (authorSearch === '' || selectedAuthors.some(author => author.authorName === authorSearch)) return;
-      setSelectedAuthors('');
-      if (authorSearch && !selectedAuthors) {
+      // console.log('Selected authors:', selectedAuthors);
+      if (authorSearch && !selectedAuthors.some(author => author.authorName === authorSearch)) {
         const fetchAuthors = async () => {
           setAuthorIsLoading(true);
           try {
             const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
             setAuthorOptions(response.data.results.map(author => ({
-              id: author.id,
-              authorName: author.nickname ? author.nickname : author.authorName
+              author_id: author.id,
+              author_name: author.nickname ? author.nickname : author.authorName
             })));
             setAuthorIsLoading(false);
           } catch (error) {
@@ -61,8 +90,9 @@ function AddBooksForm({ onClose }) {
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      // console.log('Selected authors:', selectedAuthors);
-      if (authorSearch && !selectedAuthors.some(author => author.author_name === authorSearch)) {
+      if (selectedSerie && serieSearch === selectedSerie.serieName) return;
+      setSelectedSerie('');
+      if (serieSearch && !selectedSerie) {
         const fetchSeries = async () => {
           setSerieIsLoading(true);
           try {
@@ -120,13 +150,10 @@ function AddBooksForm({ onClose }) {
 
   const handleAuthorChange = (e) => {
     setAuthorSearch(e.target.value);
-    if (!e.target.value) {
-      setSelectedAuthors(e.target.value)
-    }
   };
 
   const handleAuthorSelect = (author) => {
-    if (!selectedAuthors.some(a => a.id === author.id)) {
+    if (!selectedAuthors.some(a => a.author_id === author.author_id)) {
       setSelectedAuthors([...selectedAuthors, author]);
     }
     setAuthorSearch('');
@@ -184,10 +211,11 @@ function AddBooksForm({ onClose }) {
       }
     }
 
-    formData.append('author_id', selectedAuthors.map((author) => author.id).join(', '));
+    formData.append('author_id', selectedAuthors.map((author) => author.author_id).join(', '));
     // console.log('The selected authors ids:', formData.author_id);
     formData.append('serie_id', selectedSerie.id);
     formData.append('collection_id', selectedCollection.id);
+    formData.append('serieIndex', serieBookCount + 1);
 
     try {
       const response = await axiosUtils('/api/addBook', 'POST', formData, {
@@ -229,9 +257,12 @@ function AddBooksForm({ onClose }) {
             <input
               type="text"
               name="bookName"
+              value={bookName}
+              onChange={(e) => setBookName(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
+            <p className={`${bookNameCount > 0 && bookName.trim() ? 'block' : 'hidden'} text-red-800 mt-1 text-xs font-semibold`}>Book named "{bookName}" already exists.</p>
           </div>
           <div className="mb-4 relative">
             <label className="block text-sm font-medium">Author name:</label>
@@ -251,11 +282,11 @@ function AddBooksForm({ onClose }) {
               <ul className="border border-gray-300 rounded-lg max-h-60 overflow-auto bg-white absolute w-full top-14 z-10">
                 {authorOptions.map((author) => (
                   <li
-                    key={author.id}
+                    key={author.author_id}
                     onClick={() => handleAuthorSelect(author)}
                     className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                   >
-                    {author.authorName}
+                    {author.author_name}
                   </li>
                 ))}
               </ul>
@@ -273,7 +304,7 @@ function AddBooksForm({ onClose }) {
             <div className="bg-green-700 rounded-lg my-2 flex flex-wrap gap-2 p-2">
               {selectedAuthors.map((author, index) => (
                 <span key={index} className="bg-[rgba(255,255,255,0.3)] flex items-center max-w-fit max-h-fit text-white font-poppins font-semibold px-2 py-1 rounded-lg text-sm space-x-1">
-                  <span>{author.authorName}</span>
+                  <span>{author.nickname || author.author_name}</span>
                   <span
                     className='text-xl cursor-pointer'
                     onClick={() => handleAuthorRemove(index)}
@@ -398,10 +429,10 @@ function AddBooksForm({ onClose }) {
             {isLoading ? (
               <>
                 <span className='white-loader'></span>
-                <span>Saving...</span>
+                <span>Adding...</span>
               </>
             ) :
-              'Save Changes'
+              'Add Book'
             }
           </button>
         </div>

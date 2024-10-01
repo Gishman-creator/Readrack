@@ -126,9 +126,6 @@ function EditSeriesForm({ onClose }) {
 
   const handleAuthorChange = (e) => {
     setAuthorSearch(e.target.value);
-    if (!e.target.value) {
-      setSelectedAuthors(e.target.value)
-    }
   };
 
   const handleAuthorSelect = (author) => {

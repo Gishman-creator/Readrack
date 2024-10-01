@@ -46,3 +46,18 @@ export function sortByPublishDateAsc(a, b) {
     return dateA - dateB;
 }
 
+export const sortByNumBooks = (data, ascending) => {
+    return [...data].sort((a, b) => {
+        if (ascending) {
+            return a.numBooks - b.numBooks; // Ascending order
+        } else {
+            return b.numBooks - a.numBooks; // Descending order
+        }
+    });
+};
+
+export function sortBySerieIndexAsc(a, b) {
+    const indexA = a.serieIndex || Infinity;  // Use a large value for nulls
+    const indexB = b.serieIndex || Infinity;  // Use a large value for nulls
+    return indexA - indexB;  // Ascending order
+}

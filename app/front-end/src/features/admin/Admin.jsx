@@ -12,6 +12,7 @@ import { setLoginState } from '../authentication/slices/authSlice';
 import Login from '../authentication/components/Login';
 import NotFoundPage from '../../pages/NotFoundPage';
 import NetworkErrorPage from '../../pages/NetworkErrorPage';
+import logo from '../../assets/logo1.jpg';
 
 function Admin() {
     const [isLoggedIn, setIsLoggedIn] = useState(null);  // Manage local login state
@@ -68,7 +69,7 @@ function Admin() {
 
     // Return a loading indicator while checking login status
     if (isLoggedIn === null) {
-        return <div className='h-screen flex justify-center items-center'><span className='green-loader-lg'></span></div>; // You can replace this with a proper loading component
+        return <div className='h-screen flex justify-center items-center'><img src={logo} alt="Logo" className="w-[7rem] h-[7rem]" /></div>; // You can replace this with a proper loading component
     }
 
     return (

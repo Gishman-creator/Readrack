@@ -11,7 +11,10 @@ const catalogSlice = createSlice({
     collectionId: null,
     serie: null,
     collection: null,
+    serieBookCount: null,
+    collectionBookCount: null,
     author: null,
+    authors: [],
     tableLimitStart: 0,
     tableLimitEnd: 50,
     tableTotalItems: null,
@@ -54,6 +57,15 @@ const catalogSlice = createSlice({
     setAuthor: (state, action) => {
       state.author = action.payload;
     },
+    setAuthors: (state, action) => {
+      state.authors = action.payload;
+    },
+    setSerieBookCount: (state, action) => {
+      state.serieBookCount = action.payload;
+    },
+    setCollectionBookCount: (state, action) => {
+      state.collectionBookCount = action.payload;
+    },
     setTableLimitStart: (state, action) => {
       state.tableLimitStart = action.payload;
     },
@@ -69,5 +81,5 @@ const catalogSlice = createSlice({
   },
 });
 
-export const { setActiveTab, toggleRowSelection, clearSelection, selectAllRows, setBookId, setSerie, setAuthor, setTableLimitStart, setTableLimitEnd, setTableTotalItems, setSearchTerm, setSerieId, setCollectionId, setCollection } = catalogSlice.actions;
+export const { setActiveTab, toggleRowSelection, clearSelection, selectAllRows, setBookId, setSerie, setAuthor, setAuthors, setTableLimitStart, setTableLimitEnd, setTableTotalItems, setSearchTerm, setSerieId, setCollectionId, setCollection, setSerieBookCount, setCollectionBookCount } = catalogSlice.actions;
 export default catalogSlice.reducer;

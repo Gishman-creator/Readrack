@@ -1,6 +1,6 @@
 the author prompt:
 
-Please provide a detailed summary on Peter Straub, including the following information with headers for each section:
+Please provide a detailed summary on Brian James Freeman, including the following information with headers for each section:
 
 Total Number of Book Series: The total number of book series the author has written.
 Total Number of Books: The total number of books the author has written.
@@ -9,4 +9,10 @@ Awards: The awards received.
 Social Media Links: Links to all author's social media profiles.
 Website Link: The link to her official website.
 Genres: The genres the author has written in.
-Mini Bio: A short bio lessthan 4 lines of her achievements and notable works.
+Mini Bio: A short bio lessthan 4 lines of the author inluding his full name.
+
+the books prompt:
+
+list all book series and collections written Richard Chizma
+and their books and all his Standalone books
+and add full genres for each book

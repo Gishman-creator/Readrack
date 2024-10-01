@@ -7,7 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { PencilSquareIcon, PlusIcon } from '@heroicons/react/24/outline';
 import Modal from '../../components/Modal';  // Assuming you have a reusable Modal component
 import EditBooksForm from '../forms/edit forms/EditBooksForm'; // Import the EditBooksForm component
-import { setAuthor, setBookId, setCollection, toggleRowSelection } from '../../slices/catalogSlice';
+import { setAuthor, setAuthors, setBookId, setCollection, setCollectionBookCount, toggleRowSelection } from '../../slices/catalogSlice';
 import AddAuthorsForm from '../forms/add forms/AddAuthorsForm';
 import AddBooksForm from '../forms/add forms/AddBooksForm';
 import { useSocket } from '../../../../context/SocketContext';
@@ -31,7 +31,7 @@ function CollectionDetails() {
 
   const [booksLimit, setBooksLimit] = useState();
   const [booksRange, setBooksRange] = useState();
-  const [booksCount, SetBooksCount] = useState();
+  const [booksCount, setBooksCount] = useState(0);
   const activeTab = useSelector((state) => state.catalog.activeTab);
 
   const navigate = useNavigate();
@@ -61,7 +61,7 @@ function CollectionDetails() {
     const fetchCollectionsData = async () => {
       try {
         const collectionResponse = await axiosUtils(`/api/getCollectionById/${collectionId}`, 'GET');
-        // console.log('The colleciton response is:', collectionResponse);
+        console.log('The colleciton response is:', collectionResponse);
 
         // Handle case where collectionResponse.data.collections is an array with one item
         const fetchedCollection = Array.isArray(collectionResponse.data)
@@ -83,7 +83,7 @@ function CollectionDetails() {
         const sortedBooks = booksResponse.data.books.sort(sortByPublishDateAsc);
 
         setBooks(sortedBooks);
-        SetBooksCount(booksResponse.data.totalCount);
+        setBooksCount(booksResponse.data.totalCount);
         // console.log('The total count is:', booksResponse.data.totalCount);
 
         setIsLoading(false);
@@ -142,8 +142,22 @@ function CollectionDetails() {
           // Sort the updatedData by date in ascending order (oldest first)
           return updatedData.sort(sortByPublishDateAsc);
         });
-        SetBooksCount((prevCount) => prevCount + 1);
-        if (booksLimit >= booksRange) setBooksLimit((prevCount) => prevCount + 1);
+        // console.log('Book added successfully');
+        console.log('Books count is:', booksCount);
+
+        // Use a functional update to ensure you're working with the most up-to-date state
+        setBooksCount((prevCount) => {
+          const newCount = prevCount + 1;
+          console.log('Books count set to:', newCount);
+
+          // Adjust booksLimit only after booksCount is incremented
+          if (booksLimit <= newCount) {
+            setBooksLimit((prevLimit) => prevLimit + 1);
+          }
+
+          return newCount; // Return the updated booksCount value
+        });
+        console.log('Books count 2 set to:', booksCount);
       }
     });
 
@@ -151,7 +165,7 @@ function CollectionDetails() {
       // console.log('Data deleted via socket:', { ids, type });
       if (type = 'books') {
         setBooks((prevData) => prevData.filter((item) => !ids.includes(item.id)));
-        SetBooksCount((prevCount) => prevCount - ids.length);
+        setBooksCount((prevCount) => prevCount - ids.length);
       }
     });
 
@@ -182,7 +196,8 @@ function CollectionDetails() {
 
   const handelAddClick = (collection) => {
     dispatch(setCollection(collection));
-    dispatch(setAuthor(collection));
+    dispatch(setAuthors(collection.authors));
+    dispatch(setCollectionBookCount(booksCount));
     setModalType('addBook');
     setIsModalOpen(true);
   }

@@ -253,3 +253,23 @@ exports.getBooksByAuthorId = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+exports.getBookNames = async (req, res) => {
+  const bookName = req.query.bookName;
+
+  let books = [];
+  try {
+    [books] = await pool.query('SELECT count(*)as bookNameCount FROM books WHERE bookName LIKE ?', ['%' + bookName + '%']);
+  } catch (error) {
+    console.error('Error fetching books by name:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+
+  // If no books are found, return a message indicating that
+  if (books.length === 0) {
+    return res.status(404).json({ message: 'No books found with that name' });
+  }
+
+  res.json(books[0]);  // Return the first book found
+};
+

@@ -1,6 +1,7 @@
 // src/controllers/catalogControllers/addSeriesController.js
 
 const pool = require('../../config/db');
+const { getAuthorsByIds } = require('../../utils/getUtils');
 const { putImage, getImageURL } = require('../../utils/imageUtils');
 
 // Function to generate a random ID

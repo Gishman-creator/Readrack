@@ -312,7 +312,11 @@ function AuthorDetails() {
               >
                 {authorData.nickname ? capitalize(authorData.nickname) : capitalize(authorData.authorName)}
               </p>
-              <p className='font-arima text-sm text-center md:text-left'>{capitalize(authorData.nationality)}, Born on {formatDate(authorData.dob)}</p>
+              <div className='font-arima font-medium text-sm text-center md:text-left'>
+                <span>{capitalize(authorData.nationality)}</span>
+                <span className={`${authorData.dob || authorData.customDob  ? 'inline' : 'hidden'}`}>,</span>
+                <span className={`${authorData.dob || authorData.customDob  ? 'block' : 'hidden'}`}>Born on {formatDate(authorData.dob) || authorData.customDob}</span>
+              </div>
               {authorData.dod && (
                 <>
                   <p className='font-arima font-medium text-sm text-center md:text-left'>Died on {formatDate(authorData.dod)},</p>
@@ -370,7 +374,7 @@ function AuthorDetails() {
           <div className='mt-6 md:mt-0'>
             <p className='font-poppins font-semibold text-lg 2xl:text-center mb-2'>About {authorData.nickname ? capitalize(authorData.nickname) : capitalize(authorData.authorName)}:</p>
             <p className='font-arima'>{authorData.biography}</p>
-            <div className='mt-2'>
+            <div className={`${authorData.awards ? 'block' : 'hidden'} mt-2`}>
               <p className='inline font-medium font-poppinstext-left text-sm'>Awards:</p>
               <div className='inline ml-1 text-sm font-arima  w-[90%] mx-auto'>
                 {authorData.awards}

@@ -9,6 +9,7 @@ import { useSocket } from "../../../../context/SocketContext";
 import toast from "react-hot-toast";
 import NetworkErrorPage from "../../../../pages/NetworkErrorPage";
 import { debounce } from "lodash";
+import { sortByNumBooks } from "../../../../utils/sortingUtils";
 
 function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, openEditCollectionsModal }) {
 
@@ -22,12 +23,14 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
 
     const [hasShadow, setHasShadow] = useState(false);
     const containerRef = useRef(null);
+    const controllerRef = useRef(null);
 
     const [tableData, setTableData] = useState([]);
     const [totalCount, setTotalCount] = useState();
     const [selectAllChecked, setSelectAllChecked] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [networkError, setNetworkError] = useState(false);
+    const [isNumBooksAscending, setIsNumBooksAscending] = useState(true); // State for sorting order
 
 
     const navigate = useNavigate(); // Initialize navigate
@@ -39,53 +42,99 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
 
     useEffect(() => {
 
-
         const fetchData = async () => {
+            // Clean up the previous fetch if it exists
+            if (controllerRef.current) {
+                console.log("Aborting previous fetch");
+                controllerRef.current.abort();
+            }
+
+            // Initialize a new AbortController for the current fetch
+            const controller = new AbortController();
+            const signal = controller.signal;
+            controllerRef.current = controller;
+
             setIsLoading(true);
             setNetworkError(false);
             setTableData('');
+
             if (!activeTab) return;
+
             try {
                 let response, data, totalCount;
                 if (searchTerm) {
                     const type = activeTab.toLowerCase();
-                    // console.log('The search type is:', type);
-                    const response = await axiosUtils(`/api/search?query=${searchTerm}&type=${type}&seriePageLimitStart=${limitStart}&seriePageLimitEnd=${limitEnd}&authorPageLimitStart=${limitStart}&authorPageLimitEnd=${limitEnd}&bookPageLimitStart=${limitStart}&bookPageLimitEnd=${limitEnd}`, 'GET');
+                    response = await axiosUtils(
+                        `/api/search?query=${searchTerm}&type=${type}&seriePageLimitStart=${limitStart}&seriePageLimitEnd=${limitEnd}&authorPageLimitStart=${limitStart}&authorPageLimitEnd=${limitEnd}&bookPageLimitStart=${limitStart}&bookPageLimitEnd=${limitEnd}`,
+                        'GET',
+                        {}, {}, {}, signal  // Pass signal here
+                    );
                     data = response.data.results;
-                    // console.log('The search results are:', data);
                     totalCount = response.data.totalBooksCount;
-                } else if (!searchTerm) {
+                } else {
                     if (activeTab === "Series") {
-                        // console.log('Getting series');
-                        response = await axiosUtils(`/api/getSeries?limitStart=${limitStart}&limitEnd=${limitEnd}`, 'GET');
+                        response = await axiosUtils(
+                            `/api/getSeries?limitStart=${limitStart}&limitEnd=${limitEnd}`,
+                            'GET',
+                            {}, {}, {}, signal  // Pass signal here
+                        );
                     } else if (activeTab === "Collections") {
-                        // console.log('Getting collections');
-                        response = await axiosUtils(`/api/getCollections?limitStart=${limitStart}&limitEnd=${limitEnd}`, 'GET');
+                        response = await axiosUtils(
+                            `/api/getCollections?limitStart=${limitStart}&limitEnd=${limitEnd}`,
+                            'GET',
+                            {}, {}, {}, signal  // Pass signal here
+                        );
                     } else if (activeTab === "Books") {
-                        // console.log('Getting books');
-                        response = await axiosUtils(`/api/getBooks?limitStart=${limitStart}&limitEnd=${limitEnd}`, 'GET');
+                        console.log('Calling books');
+                        response = await axiosUtils(
+                            `/api/getBooks?limitStart=${limitStart}&limitEnd=${limitEnd}`,
+                            'GET',
+                            {}, {}, {}, signal  // Pass signal here
+                        );
+                        console.log('Books response:', response);
                     } else if (activeTab === "Authors") {
-                        // console.log('Getting authors');
-                        response = await axiosUtils(`/api/getAuthors?limitStart=${limitStart}&limitEnd=${limitEnd}`, 'GET');
+                        console.log('Calling authors');
+                        response = await axiosUtils(
+                            `/api/getAuthors?limitStart=${limitStart}&limitEnd=${limitEnd}`,
+                            'GET',
+                            {}, {}, {}, signal  // Pass signal here
+                        );
+                        console.log('Authors response:', response);
                     }
                     data = response.data.data;
                     totalCount = response.data.totalCount;
                 }
-                // console.log('Total data fetched:', data);
+
                 setTableData(data);
                 dispatch(setTableTotalItems(totalCount));
-                setSelectAllChecked(false); // Reset select all checkbox
-                dispatch(clearSelection()); // Clear selections when data changes
+                setSelectAllChecked(false);
+                dispatch(clearSelection());
                 setIsLoading(false);
             } catch (error) {
-                console.error(`Error fetching ${activeTab.toLowerCase()}:`, error);
-                if (error.message === "Network Error" || error.response.status === 500 || error.response.status === 501) {
-                    setNetworkError(true);
+                if (error.name === "AbortError") {
+                    console.log("Fetch aborted successfully");
+                } else {
+                    console.error(`Error fetching ${activeTab.toLowerCase()}:`, error);
+                    if (error.message === "Network Error" || error.response?.status === 500 || error.response?.status === 501) {
+                        setNetworkError(true);
+                    }
                 }
             }
         };
 
-        fetchData(); // No debounce for non-search requests
+        fetchData();
+
+        // Clean up the fetch if activeTab or other dependencies change
+        return () => {
+            if (controllerRef.current) {
+                console.log("Cleaning up and aborting fetch");
+                controllerRef.current.abort();
+            }
+        };
+
+    }, [activeTab, limitStart, limitEnd, searchTerm, dispatch]);
+
+    useEffect(() => {
 
         if (!socket) {
             console.error("Socket is not initialized");
@@ -174,8 +223,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
             socket.off('bookAdded');
             socket.off('dataDeleted');
         };
-
-    }, [activeTab, limitStart, limitEnd, searchTerm, dispatch, socket]);
+    }, [socket]);
 
     useEffect(() => {
         const container = containerRef.current;
@@ -234,6 +282,12 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
         }
     };
 
+    const handleSortByNumBooks = () => {
+        const sortedData = sortByNumBooks(tableData, isNumBooksAscending);
+        setTableData(sortedData);
+        setIsNumBooksAscending(!isNumBooksAscending); // Toggle sorting order
+    };
+
     const renderTableHeaders = () => {
         if (activeTab === "Series") {
             return (
@@ -271,7 +325,12 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
             return (
                 <>
                     <th className="px-4 py-2 text-slate-500">Author Name</th>
-                    <th className="px-4 py-2 text-slate-500">Number of Books</th>
+                    <th
+                        className="px-4 py-2 text-slate-500 cursor-pointer"
+                        onClick={handleSortByNumBooks} // Attach sorting function
+                    >
+                        Number of Books {isNumBooksAscending ? "↑" : "↓"} {/* Indicate sort direction */}
+                    </th>
                     <th className="px-4 py-2 text-slate-500">Date of Birth</th>
                     <th className="px-4 py-2 text-slate-500">Nationality</th>
                     <th className="px-4 py-2 text-slate-500">Website</th>
@@ -372,7 +431,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                     <>
                         <td className="px-4 py-2">{item.nickname ? capitalize(item.nickname) : capitalize(item.authorName)}</td>
                         <td className="px-4 py-2">{item.numBooks}</td>
-                        <td className="px-4 py-2">{formatDate(item.dob)}</td>
+                        <td className="px-4 py-2">{formatDate(item.dob) || item.customDob}</td>
                         <td className="px-4 py-2">
                             {item.nationality}
                         </td>

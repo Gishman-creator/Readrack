@@ -8,13 +8,15 @@ import { setAuthor } from '../../../slices/catalogSlice';
 
 function AddSeriesForm({ onClose }) {
   const authorDetailsAuthor = useSelector((state) => state.catalog.author);
-  const detailsAuthor = { id: authorDetailsAuthor.id, authorName: authorDetailsAuthor.nickname || authorDetailsAuthor.authorName }
+  const detailsAuthor = authorDetailsAuthor ? { id: authorDetailsAuthor.id, authorName: authorDetailsAuthor.nickname || authorDetailsAuthor.authorName } : {};
   const [seriesImageURL, setSeriesImageURL] = useState('');
   const [selectedImageFile, setSelectedImageFile] = useState(null);
 
   const [authorSearch, setAuthorSearch] = useState('');
   const [authorOptions, setAuthorOptions] = useState([]);
-  const [selectedAuthors, setSelectedAuthors] = useState([detailsAuthor] || []);
+  const [selectedAuthors, setSelectedAuthors] = useState(
+    detailsAuthor && Object.keys(detailsAuthor).length ? [detailsAuthor] : []
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [authorIsLoading, setAuthorIsLoading] = useState(false);
 
@@ -22,13 +24,13 @@ function AddSeriesForm({ onClose }) {
 
   useEffect(() => {
     // console.log('The author search is:', authorSearch);
-    // console.log('The selected authors set to:', selectedAuthors)
+    console.log('The selected authors set to:', selectedAuthors)
   }, [authorSearch, selectedAuthors])
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       // console.log('Selected authors:', selectedAuthors);
-      if (authorSearch && !selectedAuthors.some(author => author.author_name === authorSearch)) {
+      if (authorSearch && !selectedAuthors.some(author => author.authorName === authorSearch)) {
         const fetchAuthors = async () => {
           setAuthorIsLoading(true);
           try {
@@ -56,9 +58,6 @@ function AddSeriesForm({ onClose }) {
 
   const handleAuthorChange = (e) => {
     setAuthorSearch(e.target.value);
-    if (!e.target.value) {
-      setSelectedAuthors(e.target.value)
-    }
   };
 
   const handleAuthorSelect = (author) => {
@@ -150,7 +149,7 @@ function AddSeriesForm({ onClose }) {
                 type="text"
                 value={authorSearch}
                 onChange={handleAuthorChange}
-                className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                className="w-full outline-none rounded-lg px-2 py-1"
                 placeholder="Search author..."
               />
               {authorIsLoading && (
@@ -227,10 +226,10 @@ function AddSeriesForm({ onClose }) {
             {isLoading ? (
               <>
                 <span className='white-loader'></span>
-                <span>Saving...</span>
+                <span>Adding...</span>
               </>
             ) :
-              'Save Changes'
+              'Add Serie'
             }
           </button>
         </div>

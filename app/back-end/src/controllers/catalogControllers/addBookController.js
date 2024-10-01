@@ -20,6 +20,7 @@ const addBook = async (req, res) => {
       collection_id,
       publishDate,
       customDate,
+      serieIndex,
       genres,
       link,
     } = req.body;
@@ -54,8 +55,8 @@ const addBook = async (req, res) => {
     // Insert book data into the database with the unique ID
     const query = `
       INSERT INTO books (
-        id, image, bookName, author_id, serie_id, collection_id, genres, publishDate, customDate, link
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, image, bookName, author_id, serie_id, collection_id, genres, publishDate, customDate, serieIndex, link
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -68,6 +69,7 @@ const addBook = async (req, res) => {
       genres || null,
       publishDate || null,
       customDate || null,
+      serieIndex || 0,
       link || null,
     ];
 

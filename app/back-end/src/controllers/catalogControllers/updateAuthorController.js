@@ -7,7 +7,7 @@ const updateAuthor = async (req, res) => {
     // console.log('Body', req.body);
     // console.log('File', req.file); // Log file information
 
-    const { authorName, nickname, dob, dod, nationality, biography, awards, x, instagram, facebook, website, genres, imageName } = req.body;
+    const { authorName, nickname, dob, dod, customDob, nationality, biography, awards, x, instagram, facebook, website, genres, imageName } = req.body;
     // console.log(authorName, nickname, dob, dod, nationality, biography, awards, x, instagram, facebook, website, genres);
 
     const image = req.file ? await putImage(id, req.file, 'authors') : imageName; // Await the function to resolve the promise
@@ -19,8 +19,8 @@ const updateAuthor = async (req, res) => {
 
     try {
         const [result] = await pool.query(
-            'UPDATE authors SET authorName = ?, nickname = ?, dob = ?, dod = ?, nationality = ?, biography = ?, awards = ?, x = ?, instagram = ?, facebook = ?, website = ?, genres = ?, image = ? WHERE id = ?',
-            [authorName, nickname || null, dob, dod || null, nationality, biography, awards, x, instagram, facebook, website, genres, image, id]
+            'UPDATE authors SET authorName = ?, nickname = ?, dob = ?, dod = ?, customDob = ?, nationality = ?, biography = ?, awards = ?, x = ?, instagram = ?, facebook = ?, website = ?, genres = ?, image = ? WHERE id = ?',
+            [authorName, nickname || null, dob, dod || null, customDob || null, nationality, biography, awards, x, instagram, facebook, website, genres, image, id]
         );
 
         // Fetch the updated author data

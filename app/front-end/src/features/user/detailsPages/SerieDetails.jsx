@@ -11,7 +11,7 @@ import DeatailsPageSkeleton from '../../../components/skeletons/DeatailsPageSkel
 import { useSocket } from '../../../context/SocketContext';
 import RelatedCollections from '../related_collections/RelatedCollections';
 import NetworkErrorPage from '../../../pages/NetworkErrorPage';
-import { sortByPublishDateAsc } from '../../../utils/sortingUtils';
+import { sortByPublishDateAsc, sortBySerieIndexAsc } from '../../../utils/sortingUtils';
 
 function SerieDetails() {
 
@@ -84,7 +84,7 @@ function SerieDetails() {
         // console.log('Books response:', booksResponse.data); // Debugging
 
         // Sort the books by publish date or custom date
-        const sortedBooks = booksResponse.data.books.sort(sortByPublishDateAsc);
+        const sortedBooks = booksResponse.data.books.sort(sortBySerieIndexAsc);
 
         setBooks(sortedBooks);
         SetBooksCount(booksResponse.data.totalCount);
@@ -133,7 +133,7 @@ function SerieDetails() {
         );
 
         // Sort the updatedData by date in ascending order (oldest first)
-        return updatedData.sort(sortByPublishDateAsc);
+        return updatedData.sort(sortBySerieIndexAsc);
       });
     });
 
@@ -144,7 +144,7 @@ function SerieDetails() {
           const updatedData = [...prevData, bookData];
 
           // Sort the updatedData by date in ascending order (oldest first)
-          return updatedData.sort(sortByPublishDateAsc);
+          return updatedData.sort(sortBySerieIndexAsc);
         });
         SetBooksCount((prevCount) => prevCount + 1);
         if (booksLimit >= booksRange) setBooksLimit((prevCount) => prevCount + 1);
@@ -255,7 +255,7 @@ function SerieDetails() {
                   </div>
                   <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                   <p className='font-arima text-slate-400 text-sm mt-1'>
-                    #{index + 1}, published {formatDate(item.publishDate) || item.customDate}
+                    #{item.serieIndex}, published {formatDate(item.publishDate) || item.customDate}
                   </p>
                   <a
                     href={item.link}

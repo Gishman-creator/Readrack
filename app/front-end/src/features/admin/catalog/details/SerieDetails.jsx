@@ -3,11 +3,11 @@ import axiosUtils from '../../../../utils/axiosUtils';
 import { capitalize, formatDate, spacesToHyphens } from '../../../../utils/stringUtils';
 import { bufferToBlobURL } from '../../../../utils/imageUtils';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { PencilSquareIcon, PlusIcon } from '@heroicons/react/24/outline';
 import Modal from '../../components/Modal';  // Assuming you have a reusable Modal component
 import EditBooksForm from '../forms/edit forms/EditBooksForm'; // Import the EditBooksForm component
-import { setAuthor, setBookId, setSerie, toggleRowSelection } from '../../slices/catalogSlice';
+import { setAuthor, setAuthors, setBookId, setSerie, setSerieBookCount, toggleRowSelection } from '../../slices/catalogSlice';
 import AddAuthorsForm from '../forms/add forms/AddAuthorsForm';
 import AddBooksForm from '../forms/add forms/AddBooksForm';
 import { useSocket } from '../../../../context/SocketContext';
@@ -15,7 +15,7 @@ import blank_image from '../../../../assets/brand_blank_image.png';
 import DeatailsPageSkeleton from '../../../../components/skeletons/DeatailsPageSkeleton';
 import NotFoundPage from '../../../../pages/NotFoundPage';
 import NetworkErrorPage from '../../../../pages/NetworkErrorPage';
-import { sortByPublishDateAsc } from '../../../../utils/sortingUtils';
+import { sortByPublishDateAsc, sortBySerieIndexAsc } from '../../../../utils/sortingUtils';
 
 function SerieDetails() {
 
@@ -28,14 +28,26 @@ function SerieDetails() {
   const [modalType, setModalType] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);  // Manage modal visibility
   const dispatch = useDispatch();
+  const location = useLocation();
 
   const [booksLimit, setBooksLimit] = useState();
   const [booksRange, setBooksRange] = useState();
-  const [booksCount, SetBooksCount] = useState();
+  const [booksCount, setBooksCount] = useState(0);
   const activeTab = useSelector((state) => state.catalog.activeTab);
 
   const navigate = useNavigate();
   const socket = useSocket();
+
+  useEffect(() => {
+    console.log('Serie book count is reset');
+    dispatch(setSerieBookCount(null));
+  }, [location]);
+
+  useEffect(() => {
+    console.log("The book's limit is:", booksLimit);
+    console.log("The book's count is:", booksCount);
+  }, [booksLimit])
+  
 
   useEffect(() => {
     const updatePageLimitAndInterval = () => {
@@ -70,13 +82,13 @@ function SerieDetails() {
         }
 
         const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}`, 'GET');
-        // console.log('Books response:', booksResponse.data); // Debugging
+        console.log('Books response:', booksResponse.data); // Debugging
             
         // Sort the books by publish date or custom date
-        const sortedBooks = booksResponse.data.books.sort(sortByPublishDateAsc);
+        const sortedBooks = booksResponse.data.books.sort(sortBySerieIndexAsc);
 
         setBooks(sortedBooks);
-        SetBooksCount(booksResponse.data.totalCount);
+        setBooksCount(booksResponse.data.totalCount);
         // console.log('The total count is:', booksResponse.data.totalCount);
 
         setIsLoading(false);
@@ -122,13 +134,13 @@ function SerieDetails() {
         );
 
         // Sort the updatedData by date in ascending order (oldest first)
-        return updatedData.sort(sortByPublishDateAsc);
+        return updatedData.sort(sortBySerieIndexAsc);
       });
     });
 
     // Event listener for bookAdded
     socket.on('bookAdded', (bookData) => {
-      // console.log('Book added via socket:', bookData.serie_id);
+      console.log('Book added via socket:', bookData.serie_id);
       // console.log('Serie ID:', serieId);
       if (bookData.serie_id === parseInt(serieId)) {
         setBooks((prevData) => {
@@ -136,11 +148,24 @@ function SerieDetails() {
           const updatedData = [...prevData, bookData];
 
           // Sort the updatedData by date in ascending order (oldest first)
-          return updatedData.sort(sortByPublishDateAsc);
+          return updatedData.sort(sortBySerieIndexAsc);
         });
         // console.log('Book added successfully');
-        SetBooksCount((prevCount) => prevCount + 1);
-        if (booksLimit >= booksRange) setBooksLimit((prevCount) => prevCount + 1);
+        console.log('Books count is:', booksCount);
+
+        // Use a functional update to ensure you're working with the most up-to-date state
+        setBooksCount((prevCount) => {
+          const newCount = prevCount + 1;
+          console.log('Books count set to:', newCount);
+    
+          // Adjust booksLimit only after booksCount is incremented
+          if (booksLimit <= newCount) {
+            setBooksLimit((prevLimit) => prevLimit + 1);
+          }
+    
+          return newCount; // Return the updated booksCount value
+        });
+        console.log('Books count 2 set to:', booksCount);
       }
     });
 
@@ -148,7 +173,7 @@ function SerieDetails() {
       // console.log('Data deleted via socket:', { ids, type });
       if (type = 'books') {
         setBooks((prevData) => prevData.filter((item) => !ids.includes(item.id)));
-        SetBooksCount((prevCount) => prevCount - ids.length);
+        setBooksCount((prevCount) => prevCount - ids.length);
       }
     });
 
@@ -178,7 +203,8 @@ function SerieDetails() {
 
   const handelAddClick = (serie) => {
     dispatch(setSerie(serie));
-    dispatch(setAuthor(serie));
+    dispatch(setAuthors(serie.authors));
+    dispatch(setSerieBookCount(booksCount));
     setModalType('addBook');
     setIsModalOpen(true);
   }
@@ -274,7 +300,7 @@ function SerieDetails() {
                 </div>
                 <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                 <p className='font-arima text-slate-400 text-sm mt-1'>
-                  #{index + 1}, published {formatDate(item.publishDate) || item.customDate}
+                  #{item.serieIndex}, published {formatDate(item.publishDate) || item.customDate}
                 </p>
                 <a
                   href={item.link}

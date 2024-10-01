@@ -15,9 +15,10 @@ exports.getCollections = async (req, res) => {
   try {
     // Base query for fetching collections with genre filter if applicable
     let dataQuery = `
-      SELECT collections.*
+      SELECT collections.*,
+       COUNT(DISTINCT books.id) AS numBooks
       FROM collections
-      ORDER BY collections.searchCount DESC
+      LEFT JOIN books ON books.collection_id = collections.id
     `;
     let countQuery = 'SELECT COUNT(*) AS totalCount FROM collections';
     let queryParams = [];
@@ -28,6 +29,12 @@ exports.getCollections = async (req, res) => {
       countQuery += ' WHERE genres LIKE ?';
       queryParams.push(`%${genre}%`);
     }
+
+    // Add GROUP BY to ensure collections are grouped correctly
+    dataQuery += ' GROUP BY collections.id';
+
+    // Add ORDER BY for sorting the collections by search count
+    dataQuery += ' ORDER BY collections.searchCount DESC';
 
     // Add limit clause to the data query
     if (typeof limitStart === 'number' && typeof limitEnd === 'number') {
@@ -67,8 +74,10 @@ exports.getCollectionById = async (req, res) => {
   try {
     // Query to retrieve the collections information with author name
     const [collectionsRows] = await pool.query(`
-      SELECT collections.*
+      SELECT collections.*,
+       COUNT(DISTINCT books.id) AS numBooks
       FROM collections
+      LEFT JOIN books ON books.collection_id = collections.id
       WHERE collections.id = ?
       LIMIT ?
     `, [id, limit]);
@@ -105,8 +114,9 @@ exports.getCollectionsByAuthorId = async (req, res) => {
     // Query for fetching collections by author_id with author_name, first and last book dates
     let collectionsQuery = `
       SELECT collections.*,
-             YEAR(MIN(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS first_book_year,
-             YEAR(MAX(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS last_book_year
+       YEAR(MIN(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS first_book_year,
+       YEAR(MAX(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS last_book_year,
+       COUNT(DISTINCT books.id) AS numBooks
       FROM collections
       LEFT JOIN books ON books.collection_id = collections.id
       WHERE collections.author_id like ?

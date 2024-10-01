@@ -22,8 +22,9 @@ const updateCollection = async (req, res) => {
     // Fetch the updated collection data
     const [collectionRows] = await pool.query(`
       SELECT collections.*,
-             YEAR(MIN(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS first_book_year,
-             YEAR(MAX(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS last_book_year
+       YEAR(MIN(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS first_book_year,
+       YEAR(MAX(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS last_book_year,
+       COUNT(DISTINCT books.id) AS numBooks
       FROM collections
       LEFT JOIN books ON books.collection_id = collections.id
       WHERE collections.id = ?

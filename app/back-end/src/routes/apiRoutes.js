@@ -71,6 +71,7 @@ router.get('/getCount', getCountController.getCount);
 router.get('/getSeries', getSeriesController.getSeries);
 router.get('/getCollections', getCollectionsController.getCollections);
 router.get('/getBooks', getBooksController.getBooks);
+router.get('/getBookNames', getBooksController.getBookNames);
 router.get('/getAuthors', getAuthorsController.getAuthors);
 
 router.get('/getAuthorById/:id', getAuthorsController.getAuthorById);

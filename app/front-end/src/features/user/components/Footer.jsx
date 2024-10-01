@@ -3,6 +3,9 @@ import logo from '../../../assets/logo1.jpg'
 import { Link } from 'react-router-dom'
 
 function Footer() {
+
+    const currentYear = new Date().getFullYear();
+
     return (
         <div className='px-[4%] sm:px-[12%]'>
             <div className='flex flex-col sm:flex-row items-center justify-between border-t border-gray-300 pt-4'>
@@ -23,7 +26,7 @@ function Footer() {
                     <Link to='/about-us' className='font-poppins text-sm' >About us</Link>
                 </div>
             </div>
-            <span className='block py-2 text-xs text-center font-bold text-gray-500 mb-1 mt-4 sm:mt-0'>© 2024 readrack. All Rights Reserved.</span>
+            <span className='block py-2 text-xs text-center font-bold text-gray-500 mb-1 mt-4 sm:mt-0'>© {currentYear} readrack. All Rights Reserved.</span>
         </div>
     )
 }

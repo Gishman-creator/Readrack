@@ -41,9 +41,9 @@ function AuthorDetails() {
   const [groupRange, setGroupRange] = useState();
   const [booksLimit, setBooksLimit] = useState();
   const [booksRange, setBooksRange] = useState();
-  const [seriesCount, SetSeriesCount] = useState();
-  const [collectionsCount, SetCollectionsCount] = useState();
-  const [booksCount, SetBooksCount] = useState();
+  const [seriesCount, setSeriesCount] = useState();
+  const [collectionsCount, setCollectionsCount] = useState();
+  const [booksCount, setBooksCount] = useState();
   const activeTab = useSelector((state) => state.catalog.activeTab);
 
   const dispatch = useDispatch();
@@ -105,7 +105,7 @@ function AuthorDetails() {
         const sortedSeries = seriesResponse.data.series.sort(sortByFirstBookYearAsc);
 
         setSeries(sortedSeries);
-        SetSeriesCount(seriesResponse.data.totalCount);
+        setSeriesCount(seriesResponse.data.totalCount);
 
         // Fetching collections by the author
         const collectionsResponse = await axiosUtils(`/api/getCollectionsByAuthorId/${authorResponse.data.id}`, 'GET');
@@ -114,7 +114,7 @@ function AuthorDetails() {
         const sortedCollections = collectionsResponse.data.collections.sort(sortByFirstBookYearAsc);
 
         setCollections(sortedCollections);
-        SetCollectionsCount(collectionsResponse.data.totalCount);
+        setCollectionsCount(collectionsResponse.data.totalCount);
 
         // Fetching books by the author
         const booksResponse = await axiosUtils(`/api/getBooksByAuthorId/${authorResponse.data.id}`, 'GET');
@@ -124,7 +124,7 @@ function AuthorDetails() {
         const sortedBooks = booksResponse.data.books.sort(sortByPublishDateAsc);
 
         setBooks(sortedBooks);
-        SetBooksCount(booksResponse.data.totalCount);
+        setBooksCount(booksResponse.data.totalCount);
 
         setIsLoading(false);
       } catch (error) {
@@ -201,30 +201,40 @@ function AuthorDetails() {
 
     // New event listener for serieAdded
     socket.on('serieAdded', (serieData) => {
-      if (serieData.author_id === parseInt(authorId)) {
+      console.log('Series updated via socket:', serieData);
+      // Split the author_id string into an array of individual author IDs
+      const authorIds = serieData.author_id.split(',').map(id => id.trim());
+
+      // Check if the current authorId is one of the authorIds
+      if (authorIds.includes(authorId)) {
         setSeries((prevData) => {
           const updatedData = [...prevData, serieData];
 
           // Sort the updatedData by date in ascending order (oldest first)
           return updatedData.sort(sortByFirstBookYearAsc);
         });
-        SetSeriesCount((prevCount) => prevCount + 1);
-        if (seriesLimit >= groupRange) setSeriesLimit((prevCount) => prevCount + 1);
+        console.log('Serie count is:', seriesCount);
+        setSeriesCount(seriesCount + 1);
+        console.log('Serie count set to:', seriesCount);
+        if (seriesLimit >= seriesCount) {setSeriesLimit(seriesLimit + 1)};
       }
     });
 
     // New event listener for collectionAdded
     socket.on('collectionAdded', (collectionData) => {
-      // console.log('New collection added via socket:', collectionData);
-      if (collectionData.author_id === parseInt(authorId)) {
+      // Split the author_id string into an array of individual author IDs
+      const authorIds = collectionData.author_id.split(',').map(id => id.trim());
+
+      // Check if the current authorId is one of the authorIds
+      if (authorIds.includes(authorId)) {
         setCollections((prevData) => {
           const updatedData = [...prevData, collectionData];
 
           // Sort the updatedData by date in ascending order (oldest first)
           return updatedData.sort(sortByFirstBookYearAsc);
         });
-        SetCollectionsCount((prevCount) => prevCount + 1);
-        if (collectionsLimit >= groupRange) setCollectionsLimit((prevCount) => prevCount + 1);
+        setCollectionsCount(collectionsCount + 1);
+        if (collectionsLimit >= collectionsCount) {setCollectionsLimit(collectionsLimit + 1)};
       }
     });
 
@@ -241,8 +251,8 @@ function AuthorDetails() {
           // Sort the updatedData by date in ascending order (oldest first)
           return updatedData.sort(sortByPublishDateAsc);
         });
-        SetBooksCount((prevCount) => prevCount + 1);
-        if (booksLimit >= booksRange) setBooksLimit((prevCount) => prevCount + 1);
+        setBooksCount(booksCount + 1);
+        if (booksLimit >= booksCount) {setBooksLimit(booksLimit + 1)};
       }
     });
 
@@ -250,13 +260,13 @@ function AuthorDetails() {
       // console.log('Data deleted via socket:', { ids, type });
       if (type = 'series') {
         setSeries((prevData) => prevData.filter((item) => !ids.includes(item.id)));
-        SetSeriesCount((prevCount) => prevCount - ids.length);
+        setSeriesCount((prevCount) => prevCount - ids.length);
       } else if (type = 'collections') {
         setCollections((prevData) => prevData.filter((item) => !ids.includes(item.id)));
-        SetCollectionsCount((prevCount) => prevCount - ids.length);
+        setCollectionsCount((prevCount) => prevCount - ids.length);
       } else if (type = 'books') {
         setBooks((prevData) => prevData.filter((item) => !ids.includes(item.id)));
-        SetBooksCount((prevCount) => prevCount - ids.length);
+        setBooksCount((prevCount) => prevCount - ids.length);
       }
     });
 
@@ -352,7 +362,11 @@ function AuthorDetails() {
             >
               {capitalize(authorData.nickname || authorData.authorName)}
             </p>
-            <p className='font-arima font-medium text-sm text-center md:text-left'>{capitalize(authorData.nationality)}, Born on {formatDate(authorData.dob)}</p>
+            <div className='font-arima font-medium text-sm text-center md:text-left'>
+              <span>{capitalize(authorData.nationality)}</span>
+              <span className={`${authorData.dob || authorData.customDob  ? 'inline' : 'hidden'}`}>,</span>
+              <span className={`${authorData.dob || authorData.customDob  ? 'block' : 'hidden'}`}>Born on {formatDate(authorData.dob) || authorData.customDob}</span>
+            </div>
             {authorData.dod && (
               <>
                 <p className='font-arima font-medium text-sm text-center md:text-left'>Died on {formatDate(authorData.dod)},</p>
@@ -410,7 +424,7 @@ function AuthorDetails() {
         <div className='mt-6 md:mt-0'>
           <p className='font-poppins font-semibold text-lg 2xl:text-center'>About {capitalize(authorData.nickname || authorData.authorName)}:</p>
           <p className='font-arima'>{authorData.biography}</p>
-          <div className='mt-2'>
+          <div className={`${authorData.awards ? 'block' : 'hidden'} mt-2`}>
             <p className='inline font-medium font-poppinstext-left text-sm'>Awards:</p>
             <div className='inline ml-1 text-sm font-arima  w-[90%] mx-auto'>
               {authorData.awards}

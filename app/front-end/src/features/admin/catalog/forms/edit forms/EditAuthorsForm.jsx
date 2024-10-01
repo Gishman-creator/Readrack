@@ -150,6 +150,15 @@ function EditAuthorForm({ onClose }) {
                 />
               </div>
             </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Custom date of birth:</label>
+              <input
+                type="text"
+                name="customDob"
+                defaultValue={authorData.customDob || ''}
+                className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              />
+            </div>
             <div className="mb-2">
               <label className="block text-sm font-medium">Nationality:</label>
               <input
@@ -185,6 +194,7 @@ function EditAuthorForm({ onClose }) {
                   name="x"
                   defaultValue={authorData.x || ''}
                   className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                  onClick={(e) => e.target.select()}
                 />
               </div>
               <div>
@@ -194,6 +204,7 @@ function EditAuthorForm({ onClose }) {
                   name="instagram"
                   defaultValue={authorData.instagram || ''}
                   className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                  onClick={(e) => e.target.select()}
                 />
               </div>
               <div>
@@ -203,6 +214,7 @@ function EditAuthorForm({ onClose }) {
                   name="facebook"
                   defaultValue={authorData.facebook || ''}
                   className="w-full border border-gray-300 rounded-lg px-2 py-1"
+                  onClick={(e) => e.target.select()}
                 />
               </div>
             </div>

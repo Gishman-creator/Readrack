@@ -14,6 +14,7 @@ const addAuthor = async (req, res) => {
       nickname,
       dob,
       dod,
+      customDob,
       nationality,
       biography,
       awards,
@@ -45,8 +46,8 @@ const addAuthor = async (req, res) => {
     // Insert author data into the database with the unique ID
     const insertQuery = `
       INSERT INTO authors (
-        id, image, authorName, nickname, dob, dod, nationality, biography, x, facebook, instagram, website, genres, awards
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, image, authorName, nickname, dob, dod, customDob, nationality, biography, x, facebook, instagram, website, genres, awards
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const insertValues = [
@@ -56,6 +57,7 @@ const addAuthor = async (req, res) => {
       nickname || null,
       dob || null,
       dod || null,
+      customDob || null,
       nationality || null,
       biography || null,
       x || null,

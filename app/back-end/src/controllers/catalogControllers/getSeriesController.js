@@ -1,61 +1,50 @@
-const pool = require('../../config/db');
+const poolpg = require('../../config/dbpg'); // Ensure this is the PostgreSQL poolpg configuration
 const { getAuthorsByIds } = require('../../utils/getUtils');
 const { getImageURL } = require('../../utils/imageUtils');
 
 exports.getSeries = async (req, res) => {
-
   const validatePagination = (value, defaultValue) => {
     return isNaN(value) ? defaultValue : value;
   };
 
   const limitStart = req.query.limitStart ? validatePagination(parseInt(req.query.limitStart, 10)) : null;
   const limitEnd = req.query.limitEnd ? validatePagination(parseInt(req.query.limitEnd, 10)) : null;
-  const genre = req.query.genre ? req.query.genre.trim() : null; // Get genre from query params
+  const genre = req.query.genre ? req.query.genre.trim() : null;
 
   try {
-    // Base query for fetching series with genre filter if applicable
     let dataQuery = `
-      SELECT series.*
+      SELECT series.* ,
+      COUNT(DISTINCT books.id) AS "currentBooks"
       FROM series
+      LEFT JOIN books ON books.serie_id = series.id
     `;
-    let countQuery = 'SELECT COUNT(*) AS totalCount FROM series';
-    let queryParams = [];
+    const queryParams = [];
 
-    // Add genre filter to the queries if genre is provided and is not null or empty
     if (genre && genre !== 'null') {
-      dataQuery += ' WHERE series.genres LIKE ?';
-      countQuery += ' WHERE genres LIKE ?';
+      dataQuery += ' WHERE series.genres ILIKE $1';
       queryParams.push(`%${genre}%`);
     }
 
-    // Now add the ORDER BY clause after the WHERE clause
-    dataQuery += ' ORDER BY series.searchCount DESC';
+    dataQuery += ' GROUP BY series.id ORDER BY series."searchCount" DESC';
 
-    // Add limit clause to the data query
     if (typeof limitStart === 'number' && typeof limitEnd === 'number') {
-      dataQuery += ' LIMIT ?, ?';
-      queryParams.push(limitStart, limitEnd - limitStart);
+      dataQuery += ` LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`;
+      queryParams.push(limitEnd - limitStart); // For LIMIT
+      queryParams.push(limitStart); // For OFFSET
     }
 
-    // Execute the queries in parallel
-    const [dataRows] = await pool.query(dataQuery, queryParams);
-    const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
+    const results = await poolpg.query(dataQuery, queryParams);
+    const dataRows = results.rows;
+    const totalCount = results.rowCount;
 
-    let url = null;
     for (const dataRow of dataRows) {
-      // Fetch authors for each dataRow
       const authors = await getAuthorsByIds(dataRow.author_id);
       dataRow.authors = authors;
 
-      url = null;
-      if (dataRow.image && dataRow.image !== 'null') {
-        url = await getImageURL(dataRow.image);
-      }
-      dataRow.imageURL = url;
+      dataRow.imageURL = dataRow.image && dataRow.image !== 'null' ? await getImageURL(dataRow.image) : null;
     }
 
-    // Send both data and total count in the response
-    res.json({ data: dataRows, totalCount: totalCount });
+    res.json({ data: dataRows, totalCount });
   } catch (error) {
     console.error('Error fetching series:', error);
     res.status(500).send('Error fetching series');
@@ -64,30 +53,23 @@ exports.getSeries = async (req, res) => {
 
 exports.getSerieById = async (req, res) => {
   const { id } = req.params;
-  const limit = parseInt(req.query.limit, 10) || 100; // Get limit from query params, default to 100
+  const limit = parseInt(req.query.limit, 10) || 100;
 
   try {
-    // Query to retrieve the series information with author name
-    const [seriesRows] = await pool.query(`
+    const { rows: seriesRows } = await poolpg.query(`
       SELECT series.*
       FROM series
-      WHERE series.id = ?
-      LIMIT ?
+      WHERE series.id = $1
+      LIMIT $2
     `, [id, limit]);
 
     if (seriesRows.length === 0) {
       return res.status(404).json({ message: 'Serie not found' });
     }
 
-    // Fetch authors for the seriesRows
     const authors = await getAuthorsByIds(seriesRows[0].author_id);
     seriesRows[0].authors = authors;
-
-    let url = null;
-    if (seriesRows[0].image && seriesRows[0].image !== 'null') {
-      url = await getImageURL(seriesRows[0].image);
-    }
-    seriesRows[0].imageURL = url;
+    seriesRows[0].imageURL = seriesRows[0].image && seriesRows[0].image !== 'null' ? await getImageURL(seriesRows[0].image) : null;
 
     res.json(seriesRows[0]);
   } catch (error) {
@@ -101,61 +83,60 @@ exports.getSeriesByAuthorId = async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || null;
 
   try {
-    // Create the pattern for the LIKE query by concatenating the wildcards
     const likePattern = `%${author_id}%`;
 
-    // Query for fetching series by author_id with author_name, first and last book dates
     let seriesQuery = `
       SELECT series.*,
-             YEAR(MIN(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS first_book_year,
-             YEAR(MAX(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS last_book_year
+      EXTRACT(YEAR FROM MIN(COALESCE(books."publishDate", 
+                                    -- Try converting customDate to a full date format
+                                    CASE 
+                                      WHEN books."customDate" ~* '^[0-9]{4}$' 
+                                      THEN to_date(books."customDate", 'YYYY')  -- If only a year
+                                      WHEN books."customDate" ~* '^[A-Za-z]+ [0-9]{4}$' 
+                                      THEN to_date(books."customDate", 'Month YYYY')  -- If month and year
+                                      ELSE NULL
+                                    END))) AS first_book_year,
+      EXTRACT(YEAR FROM MAX(COALESCE(books."publishDate", 
+                                    CASE 
+                                      WHEN books."customDate" ~* '^[0-9]{4}$' 
+                                      THEN to_date(books."customDate", 'YYYY')
+                                      WHEN books."customDate" ~* '^[A-Za-z]+ [0-9]{4}$' 
+                                      THEN to_date(books."customDate", 'Month YYYY')
+                                      ELSE NULL
+                                    END))) AS last_book_year,
+      COUNT(DISTINCT books.id) AS "currentBooks"
       FROM series
       LEFT JOIN books ON books.serie_id = series.id
-      WHERE series.author_id like ?
+      WHERE series.author_id ILIKE $1
       GROUP BY series.id
     `;
-    let countQuery = 'SELECT COUNT(*) AS totalCount FROM series WHERE author_id like ?';
-
-    // Append LIMIT clause if a limit is provided
     const queryParams = [likePattern];
 
     if (limit) {
-      seriesQuery += ` LIMIT ?`;
+      seriesQuery += ` LIMIT $2`;
       queryParams.push(limit);
     }
 
-    // Execute the series query
-    const [series] = await pool.query(seriesQuery, queryParams);
-    const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
+    const results = await poolpg.query(seriesQuery, queryParams);
+    const series = results.rows;
+    const totalCount = results.rowCount;
 
-    let url = null;
     for (const serie of series) {
-      // Fetch authors for each serie
       const authors = await getAuthorsByIds(serie.author_id);
       serie.authors = authors;
-
-      url = null;
-      if (serie.image && serie.image !== 'null') {
-        url = await getImageURL(serie.image);
-      }
-      serie.imageURL = url;
+      serie.imageURL = serie.image && serie.image !== 'null' ? await getImageURL(serie.image) : null;
     }
 
-    res.json({ series: series, totalCount: totalCount });
+    res.json({ series, totalCount });
   } catch (error) {
-    console.error("Error fetching series by author ID:", error);
+    console.error('Error fetching series by author ID:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
 
-
 exports.getSeriesCount = async (req, res) => {
   try {
-    const [rows] = await pool.query(`
-      SELECT COUNT(*) AS count
-      FROM series
-    `);
-
+    const { rows } = await poolpg.query('SELECT COUNT(*) AS count FROM series');
     res.json({ count: rows[0].count });
   } catch (error) {
     console.error('Error fetching series count:', error);

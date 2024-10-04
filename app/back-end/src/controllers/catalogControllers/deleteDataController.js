@@ -1,15 +1,14 @@
-const pool = require('../../config/db'); // Adjust path as necessary
+const poolpg = require('../../config/dbpg'); // Adjust path as necessary
 
 /**
  * Deletes data from the specified table based on the type and ids provided.
  * 
- * @param {string} type - The type of data to delete ('authors', 'series', or 'books').
+ * @param {string} type - The type of data to delete ('authors', 'series', 'collections', or 'books').
  * @param {Array<number>} ids - An array of ids to delete from the specified table.
  * @returns {Object} - Result of the deletion query.
  */
 exports.deleteData = async (req, res) => {
     const { type, ids } = req.body;
-    // console.log('The delete type is:', type);
 
     if (!type || !ids || !Array.isArray(ids)) {
         return res.status(400).json({ error: "Invalid request. 'type' and 'ids' must be provided." });
@@ -17,29 +16,30 @@ exports.deleteData = async (req, res) => {
 
     const validTypes = ['authors', 'series', 'collections', 'books'];
     if (!validTypes.includes(type)) {
-        return res.status(400).json({ error: "Invalid type. Valid types are 'authors', 'series', or 'books'." });
+        return res.status(400).json({ error: "Invalid type. Valid types are 'authors', 'series', 'collections', or 'books'." });
     }
 
     try {
-        const idsString = ids.join(', ');
+        // Ensure IDs are integers to prevent SQL injection
+        const idsArray = ids.map(id => parseInt(id, 10));
+        const idsString = idsArray.join(', ');
 
-        // Construct the delete query dynamically based on the type and ids
-        const query = `DELETE FROM ${type} WHERE id IN (${idsString})`;
+        // Construct the DELETE query dynamically based on the type and ids
+        const query = `DELETE FROM ${type} WHERE id = ANY($1::int[])`;
 
-        const [result] = await pool.query(query);
+        // Execute the deletion query using parameterized input
+        const result = await poolpg.query(query, [idsArray]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({ error: "No records found with the provided ids." });
         }
 
+        // Emit a Socket.IO event if available
         if (req.io) {
             req.io.emit('dataDeleted', { ids, type });
-            // console.log('Emitting deleted data ids:', ids, 'In', type);
-        } else {
-            // console.log('Socket.Io is not initialized.');
         }
 
-        return res.status(200).json({ message: `${result.affectedRows} record(s) successfully deleted.` });
+        return res.status(200).json({ message: `${result.rowCount} record(s) successfully deleted.` });
 
     } catch (error) {
         console.error('❌ Error deleting data:', error.message);

@@ -29,6 +29,7 @@ const searchCountController = require('../controllers/otherControllers/searchCou
 const logVisitsController = require('../controllers/otherControllers/logVisitsController');
 const getCountController = require('../controllers/otherControllers/getCountController');
 
+const {runMigrations} = require('../controllers/dataControllers/migrate');
 // const dataController = require('../controllers/dataControllers/dataController')
 // const generateDataController = require('../controllers/dataControllers/generateDataController');
 // const getRandomBufferByType = require('../controllers/dataControllers/getRandomBufferByType')
@@ -94,10 +95,6 @@ router.get('/getGenres', getGenresController.getGenresController);
 router.post('/recommendAuthors', recommendationController.recommendAuthors)
 router.post('/recommendSeries', recommendationController.recommendSeries)
 
-// Data generation Routes
-// router.get('/generateRandomData', generateDataController.generateDataArrays)
-// router.get('/generateData', dataController.generateRandomDataWithBlobs)
-// router.post('/getRandomBufferByType/:type', getRandomBufferByType.getRandomBufferByType)
-
+router.post('/migrate', runMigrations)
 
 module.exports = router;

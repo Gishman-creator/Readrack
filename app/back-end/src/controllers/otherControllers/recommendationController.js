@@ -1,4 +1,4 @@
-const pool = require('../../config/db');
+const poolpg = require('../../config/dbpg');
 const { getAuthorsByIds } = require('../../utils/getUtils');
 const { getImageURL } = require('../../utils/imageUtils');
 
@@ -12,39 +12,44 @@ exports.recommendAuthors = async (req, res) => {
     const genres = data.genres;
     const excludeId = data.id;
 
+    console.log('Genres', genres);
+
     if (!genres || genres.length === 0) {
         return res.status(400).json({ message: 'No genres provided' });
     }
 
     try {
         const userGenres = genres.split(',');
+        console.log('userGenres', userGenres);
 
         const query = `
             SELECT a.*, 
-              COUNT(DISTINCT s.id) AS numSeries, 
-              COUNT(DISTINCT b.id) AS numBooks
+              COUNT(DISTINCT s.id) AS "numSeries", 
+              COUNT(DISTINCT b.id) AS "numBooks"
             FROM authors a
-            LEFT JOIN series s ON s.author_id LIKE CONCAT('%', a.id, '%')
-            LEFT JOIN books b ON b.author_id LIKE CONCAT('%', a.id, '%')
-            WHERE (${userGenres.map(() => `a.genres LIKE ?`).join(' OR ')})
-            AND a.id != ?
+            LEFT JOIN series s ON s.author_id::TEXT LIKE CONCAT('%', a.id::TEXT, '%')
+            LEFT JOIN books b ON b.author_id::TEXT LIKE CONCAT('%', a.id::TEXT, '%')
+            WHERE (${userGenres.map((genre, index) => `s.genres::TEXT LIKE $${index + 1}`).join(' OR ')})
+            AND a.id != $${userGenres.length + 1}
             GROUP BY a.id
-            ORDER BY searchCount DESC 
+            ORDER BY a."searchCount" DESC
             LIMIT 10;
         `;
 
         const genreParams = userGenres.map(genre => `%${genre.trim()}%`);
         genreParams.push(excludeId);
 
-        const [results] = await pool.query(query, genreParams);
+        console.log('Query:', query);
+        console.log('Parameters:', genreParams);
 
-        let url = null;
+        const { rows: results } = await poolpg.query(query, genreParams);
+
         for (const result of results) {
-          url = null;
-          if (result.image) {
-            url = await getImageURL(result.image);
-          }
-          result.imageURL = url;
+            let url = null;
+            if (result.image) {
+                url = await getImageURL(result.image);
+            }
+            result.imageURL = url;
         }
 
         res.json(results);
@@ -67,30 +72,29 @@ exports.recommendSeries = async (req, res) => {
         const userGenres = genres.split(',');
 
         const query = `
-            SELECT series.*
-            FROM series
-            WHERE (${userGenres.map(() => `series.genres LIKE ?`).join(' OR ')})
-            AND series.id != ?
-            ORDER BY series.searchCount DESC
+            SELECT s.*
+            FROM series s
+            WHERE (${userGenres.map((genre, index) => `s.genres::TEXT LIKE $${index + 1}`).join(' OR ')})
+            AND s.id != $${userGenres.length + 1}
+            ORDER BY s."searchCount" DESC
             LIMIT 10;
         `;
 
         const genreParams = userGenres.map(genre => `%${genre.trim()}%`);
         genreParams.push(excludeId);
 
-        const [results] = await pool.query(query, genreParams);
+        const { rows: results } = await poolpg.query(query, genreParams);
 
-        let url = null;
         for (const result of results) {
-          // Fetch authors for each result
-          const authors = await getAuthorsByIds(result.author_id);
-          result.authors = authors;
+            // Fetch authors for each result
+            const authors = await getAuthorsByIds(result.author_id);
+            result.authors = authors;
 
-          url = null;
-          if (result.image) {
-            url = await getImageURL(result.image);
-          }
-          result.imageURL = url;
+            let url = null;
+            if (result.image) {
+                url = await getImageURL(result.image);
+            }
+            result.imageURL = url;
         }
 
         res.json(results);

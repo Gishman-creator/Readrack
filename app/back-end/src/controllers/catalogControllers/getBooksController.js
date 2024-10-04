@@ -1,4 +1,4 @@
-const pool = require('../../config/db');
+const poolpg = require('../../config/dbpg');
 const { getAuthorsByIds } = require('../../utils/getUtils');
 const { getImageURL } = require('../../utils/imageUtils');
 
@@ -12,23 +12,23 @@ exports.getBooks = async (req, res) => {
   const limitEnd = req.query.limitEnd ? validatePagination(parseInt(req.query.limitEnd, 10)) : null;
 
   try {
-    const [countResult] = await pool.query('SELECT COUNT(*) AS total FROM books');
-    const totalCount = countResult[0].total;
-
+    
     let dataQuery = `
-      SELECT books.*, series.serieName AS serie_name, collections.collectionName AS collection_name
-      FROM books
-      LEFT JOIN series ON books.serie_id = series.id
-      LEFT JOIN collections ON books.collection_id = collections.id
+    SELECT books.*, series."serieName" AS serie_name, collections."collectionName" AS collection_name
+    FROM books
+    LEFT JOIN series ON books.serie_id = series.id
+    LEFT JOIN collections ON books.collection_id = collections.id
     `;
     const queryParams = [];
-
+    
     if (typeof limitStart === 'number' && typeof limitEnd === 'number') {
-      dataQuery += ' LIMIT ?, ?';
-      queryParams.push(limitStart, limitEnd - limitStart);
+      dataQuery += ' LIMIT $1 OFFSET $2';
+      queryParams.push(limitEnd - limitStart, limitStart);
     }
-
-    const [books] = await pool.query(dataQuery, queryParams);
+    
+    const booksResult = await poolpg.query(dataQuery, queryParams);
+    const books = booksResult.rows;
+    const totalCount = booksResult.rowCount;
 
     for (const book of books) {
       // Fetch authors for each book
@@ -43,7 +43,7 @@ exports.getBooks = async (req, res) => {
       }
     }
 
-    res.json({ data: books, totalCount: totalCount });
+    res.json({ data: books, totalCount });
   } catch (error) {
     console.error('Error fetching books:', error);
     res.status(500).send('Error fetching books');
@@ -57,20 +57,21 @@ exports.getBookById = async (req, res) => {
 
   try {
     let query = `
-      SELECT books.*, series.serieName AS serie_name, collections.collectionName AS collection_name
+      SELECT books.*, series."serieName" AS serie_name, collections."collectionName" AS collection_name
       FROM books
       LEFT JOIN series ON books.serie_id = series.id
       LEFT JOIN collections ON books.collection_id = collections.id
-      WHERE books.id = ?
+      WHERE books.id = $1
     `;
     const queryParams = [id];
 
     if (limit) {
-      query += ' LIMIT ?';
+      query += ' LIMIT $2';
       queryParams.push(limit);
     }
 
-    const [books] = await pool.query(query, queryParams);
+    const booksResult = await poolpg.query(query, queryParams);
+    const books = booksResult.rows;
 
     if (books.length === 0) {
       return res.status(404).json({ message: 'Book not found' });
@@ -95,7 +96,7 @@ exports.getBookById = async (req, res) => {
   }
 };
 
-
+// Fetch books by series ID
 exports.getBooksBySerieId = async (req, res) => {
   const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
   let { serie_id } = req.params;
@@ -103,27 +104,23 @@ exports.getBooksBySerieId = async (req, res) => {
   try {
     // Fetch books by serie_id and join with authors and series to get their names
     let query = `
-      SELECT books.*, series.serieName AS serie_name, collections.collectionName AS collection_name
+      SELECT books.*, series."serieName" AS serie_name, collections."collectionName" AS collection_name
       FROM books
       LEFT JOIN series ON books.serie_id = series.id
       LEFT JOIN collections ON books.collection_id = collections.id
-      WHERE books.serie_id = ?
-      ORDER BY books.publishDate ASC
-    `;
-    let countQuery = `
-      SELECT COUNT(*) AS totalCount 
-      FROM books 
-      WHERE serie_id = ?
+      WHERE books.serie_id = $1
+      ORDER BY books."publishDate" ASC
     `;
     const queryParams = [serie_id];
 
     if (limit) {
-      query += ' LIMIT ?';
+      query += ' LIMIT $2';
       queryParams.push(limit);
     }
 
-    const [books] = await pool.query(query, queryParams);
-    const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
+    const booksResult = await poolpg.query(query, queryParams);
+    const books = booksResult.rows;
+    const totalCount = booksResult.rowCount;
 
     let url = null;
     for (const book of books) {
@@ -132,14 +129,13 @@ exports.getBooksBySerieId = async (req, res) => {
       book.authors = authors;
 
       // Fetch image URL if available
-      url = null;
       if (book.image && book.image !== 'null') {
         url = await getImageURL(book.image);
       }
       book.imageURL = url;
     }
 
-    res.json({ books: books, totalCount: totalCount });
+    res.json({ books, totalCount });
   } catch (error) {
     console.error('Error fetching books by series:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -149,50 +145,38 @@ exports.getBooksBySerieId = async (req, res) => {
 exports.getBooksByCollectionId = async (req, res) => {
   const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
   let { collection_id } = req.params;
-  // console.log('The collection id:', collection_id);
 
   try {
-    // Fetch books by collection_id and join with authors and collections to get their names
     let query = `
-      SELECT books.*, series.serieName AS serie_name, collections.collectionName AS collection_name
+      SELECT books.*, series."serieName" AS serie_name, collections."collectionName" AS collection_name
       FROM books
       LEFT JOIN series ON books.serie_id = series.id
       LEFT JOIN collections ON books.collection_id = collections.id
-      WHERE books.collection_id = ?
-      ORDER BY books.publishDate ASC
-    `;
-    let countQuery = `
-      SELECT COUNT(*) AS totalCount 
-      FROM books 
-      WHERE collection_id = ?
+      WHERE books.collection_id = $1
+      ORDER BY books."publishDate" ASC
     `;
     const queryParams = [collection_id];
 
     if (limit) {
-      query += ' LIMIT ?';
+      query += ' LIMIT $2';
       queryParams.push(limit);
     }
 
-    const [books] = await pool.query(query, queryParams);
-    const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
+    const booksResult = await poolpg.query(query, queryParams);
+    const books = booksResult.rows;
+    const totalCount = booksResult.rowCount;
 
-    let url = null;
     for (const book of books) {
-      // Fetch authors for each book
       const authors = await getAuthorsByIds(book.author_id);
       book.authors = authors;
 
       // Fetch image URL if available
-      url = null;
-      if (book.image && book.image !== 'null') {
-        url = await getImageURL(book.image);
-      }
-      book.imageURL = url;
+      book.imageURL = book.image && book.image !== 'null' ? await getImageURL(book.image) : null;
     }
 
     res.json({ books: books, totalCount: totalCount });
   } catch (error) {
-    console.error('Error fetching books by collections:', error);
+    console.error('Error fetching books by collection:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -202,49 +186,34 @@ exports.getBooksByAuthorId = async (req, res) => {
   let { author_id } = req.params;
 
   try {
-    // Create the pattern for the LIKE query by concatenating the wildcards
     const likePattern = `%${author_id}%`;
 
-    // Fetch books by author_id and join with authors and series to get their names
     let query = `
-      SELECT books.*, series.serieName AS serie_name, collections.collectionName AS collection_name
+      SELECT books.*, series."serieName" AS serie_name, collections."collectionName" AS collection_name
       FROM books
       LEFT JOIN series ON books.serie_id = series.id
       LEFT JOIN collections ON books.collection_id = collections.id
-      WHERE books.author_id like ?
+      WHERE books.author_id ILIKE $1
       AND (books.serie_id IS NULL OR books.serie_id = 0)
       AND (books.collection_id IS NULL OR books.collection_id = 0)
-      ORDER BY books.publishDate ASC
-    `;
-    let countQuery = `
-      SELECT COUNT(*) AS totalCount 
-      FROM books 
-      WHERE author_id like ?
-      AND (books.serie_id IS NULL OR books.serie_id = 0)
-      AND (books.collection_id IS NULL OR books.collection_id = 0)
+      ORDER BY books."publishDate" ASC
     `;
     const queryParams = [likePattern];
 
     if (limit) {
-      query += ' LIMIT ?';
+      query += ' LIMIT $2';
       queryParams.push(limit);
     }
 
-    const [books] = await pool.query(query, queryParams);
-    const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
+    const booksResult = await poolpg.query(query, queryParams);
+    const books = booksResult.rows;
+    const totalCount = booksResult.rowCount;
 
-    let url = null;
     for (const book of books) {
-      // Fetch authors for each book
       const authors = await getAuthorsByIds(book.author_id);
       book.authors = authors;
 
-      // Fetch image URL if available
-      url = null;
-      if (book.image && book.image !== 'null') {
-        url = await getImageURL(book.image);
-      }
-      book.imageURL = url;
+      book.imageURL = book.image && book.image !== 'null' ? await getImageURL(book.image) : null;
     }
 
     res.json({ books: books, totalCount: totalCount });
@@ -257,19 +226,20 @@ exports.getBooksByAuthorId = async (req, res) => {
 exports.getBookNames = async (req, res) => {
   const bookName = req.query.bookName;
 
-  let books = [];
   try {
-    [books] = await pool.query('SELECT count(*)as bookNameCount FROM books WHERE bookName LIKE ?', ['%' + bookName + '%']);
+    const booksResult = await poolpg.query(
+      'SELECT count(*) as bookNameCount FROM books WHERE "bookName" ILIKE $1',
+      [`%${bookName}%`]
+    );
+    const books = booksResult.rows;
+
+    if (books.length === 0) {
+      return res.status(404).json({ message: 'No books found with that name' });
+    }
+
+    res.json(books[0]);
   } catch (error) {
     console.error('Error fetching books by name:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error' });
   }
-
-  // If no books are found, return a message indicating that
-  if (books.length === 0) {
-    return res.status(404).json({ message: 'No books found with that name' });
-  }
-
-  res.json(books[0]);  // Return the first book found
 };
-

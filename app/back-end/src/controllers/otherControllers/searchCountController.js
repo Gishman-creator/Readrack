@@ -1,8 +1,7 @@
-const pool = require('../../config/db');
+const poolpg = require('../../config/dbpg');
 
 exports.incrementSearchCount = async (req, res) => {
     const { type, id } = req.body;
-    // console.log(`Incrementing search count for ${type} with id ${id}`);
 
     try {
         let tableName;
@@ -16,10 +15,10 @@ exports.incrementSearchCount = async (req, res) => {
             return res.status(400).json({ error: 'Invalid type' });
         }
 
-        const query = `UPDATE ${tableName} SET searchCount = searchCount + 1 WHERE id = ?`;
-        const [result] = await pool.query(query, [id]);
+        const query = `UPDATE ${tableName} SET "searchCount" = "searchCount" + 1 WHERE id = $1`;
+        const { rowCount } = await poolpg.query(query, [id]);
 
-        if (result.affectedRows === 0) {
+        if (rowCount === 0) {
             return res.status(404).json({ error: 'Item not found' });
         }
 

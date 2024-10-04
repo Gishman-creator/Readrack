@@ -1,5 +1,4 @@
-// controllers/logoutController.js
-const pool = require('../../config/db');
+const poolpg = require('../../config/dbpg');
 const { validateAccessToken } = require('../../middlewares/tokenValidationMiddleware');
 
 exports.logout = [
@@ -9,7 +8,7 @@ exports.logout = [
 
         try {
             // Remove the refresh token from the database
-            await pool.query('UPDATE admin SET refresh_token = NULL WHERE email = ?', [email]);
+            await poolpg.query('UPDATE admin SET refresh_token = NULL WHERE email = $1', [email]); // Parameterized query for PostgreSQL
 
             // Optionally, you could also blacklist the access token or do other cleanup if needed
 

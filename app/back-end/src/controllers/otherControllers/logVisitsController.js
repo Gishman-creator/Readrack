@@ -1,11 +1,11 @@
-const pool = require('../../config/db');
+const poolpg = require('../../config/dbpg');
 
 exports.logVisit = async (req, res) => {
     const { pageVisited, sessionId } = req.body;
 
     try {
-        await pool.query(
-            'INSERT INTO visits (session_id, page_visited, user_agent, ip_address) VALUES (?, ?, ?, ?)',
+        await poolpg.query(
+            'INSERT INTO visits (session_id, page_visited, user_agent, ip_address) VALUES ($1, $2, $3, $4)',
             [sessionId, pageVisited, req.get('User-Agent'), req.ip]
         );
         res.status(200).send('Visit logged successfully');
@@ -24,9 +24,9 @@ exports.getVisitsData = async (req, res) => {
         // Generate all 24 hours
         labels = Array.from({ length: 24 }, (_, i) => ({ label: i, visits: 0 }));
 
-        query = `SELECT HOUR(DATE_ADD(visit_time, INTERVAL 2 HOUR)) AS label, COUNT(*) AS visits 
-                 FROM visits 
-                 WHERE visit_time >= CURDATE() 
+        query = `SELECT EXTRACT(HOUR FROM visit_time) AS label, COUNT(*) AS visits
+                 FROM visits
+                 WHERE visit_time >= CURRENT_DATE
                  GROUP BY label`;
     } else if (filter === 'Week') {
         // Generate all days of the week
@@ -40,17 +40,18 @@ exports.getVisitsData = async (req, res) => {
             { label: 'Sunday', visits: 0 },
         ];
 
-        query = `SELECT DAYNAME(visit_time) AS label, COUNT(*) AS visits 
-                 FROM visits 
-                 WHERE YEARWEEK(visit_time, 1) = YEARWEEK(CURDATE(), 1)
+        query = `SELECT TO_CHAR(visit_time, 'Day') AS label, COUNT(*) AS visits
+                 FROM visits
+                 WHERE DATE_TRUNC('week', visit_time) = DATE_TRUNC('week', CURRENT_DATE)
                  GROUP BY label`;
     } else if (filter === 'Month') {
         // Generate all days of the month (1 to 31)
         labels = Array.from({ length: 31 }, (_, i) => ({ label: i + 1, visits: 0 }));
 
-        query = `SELECT DAY(visit_time) AS label, COUNT(*) AS visits 
-                 FROM visits 
-                 WHERE YEAR(visit_time) = YEAR(CURDATE()) AND MONTH(visit_time) = MONTH(CURDATE())
+        query = `SELECT EXTRACT(DAY FROM visit_time) AS label, COUNT(*) AS visits
+                 FROM visits
+                 WHERE EXTRACT(YEAR FROM visit_time) = EXTRACT(YEAR FROM CURRENT_DATE)
+                   AND EXTRACT(MONTH FROM visit_time) = EXTRACT(MONTH FROM CURRENT_DATE)
                  GROUP BY label`;
     } else if (filter === 'Year') {
         // Generate all months of the year
@@ -69,20 +70,22 @@ exports.getVisitsData = async (req, res) => {
             { label: 'December', visits: 0 },
         ];
 
-        query = `SELECT MONTHNAME(visit_time) AS label, COUNT(*) AS visits 
-                 FROM visits 
-                 WHERE YEAR(visit_time) = YEAR(CURDATE())
+        query = `SELECT TO_CHAR(visit_time, 'Month') AS label, COUNT(*) AS visits
+                 FROM visits
+                 WHERE EXTRACT(YEAR FROM visit_time) = EXTRACT(YEAR FROM CURRENT_DATE)
                  GROUP BY label`;
     }
 
     try {
-        const [results] = await pool.query(query);
+        const { rows: results } = await poolpg.query(query);
+        console.log('Visits Results:', results);
 
         // Merge results with labels
         const mergedData = labels.map(labelObj => {
-            const match = results.find(result => result.label === labelObj.label);
-            return match ? match : labelObj;
+            const match = results.find(result => Number(result.label.trim()) === labelObj.label); // Convert to number for comparison
+            return match ? { label: match.label, visits: Number(match.visits) } : labelObj; // Convert visits to number
         });
+        console.log('mergedData Results:', mergedData);
 
         res.status(200).json(mergedData);
     } catch (error) {

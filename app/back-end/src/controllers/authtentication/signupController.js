@@ -1,4 +1,4 @@
-// const pool = require('../../config/db');
+// const poolpg = require('../../config/dbpg');
 // const bcrypt = require('bcryptjs');
 // const { sendEmail } = require('../../services/emailService');
 // const { generateVerificationCode } = require('../../utils/verificationUtils');
@@ -10,7 +10,10 @@
 //         const verificationCode = generateVerificationCode();
 
 //         // Insert user into the database with the verification code
-//         await pool.query('INSERT INTO admin (email, password, firstName, lastName, verification_code) VALUES (?, ?, ?, ?, ?)', [email, hashedPassword, firstName, lastName, verificationCode]);
+//         await poolpg.query(
+//             'INSERT INTO admin (email, password, first_name, last_name, verification_code) VALUES ($1, $2, $3, $4, $5)', // Use $1, $2, etc. for PostgreSQL
+//             [email, hashedPassword, firstName, lastName, verificationCode]
+//         );
 
 //         // Send the verification email
 //         await sendEmail(

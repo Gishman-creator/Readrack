@@ -1,66 +1,51 @@
-const pool = require('../../config/db'); 
+const poolpg = require('../../config/dbpg'); // PostgreSQL poolpg
 const { getAuthorsByIds } = require('../../utils/getUtils');
 const { getImageURL } = require('../../utils/imageUtils');
 
 exports.getCollections = async (req, res) => {
-
   const validatePagination = (value, defaultValue) => {
     return isNaN(value) ? defaultValue : value;
   };
 
   const limitStart = req.query.limitStart ? validatePagination(parseInt(req.query.limitStart, 10)) : null;
   const limitEnd = req.query.limitEnd ? validatePagination(parseInt(req.query.limitEnd, 10)) : null;
-  const genre = req.query.genre ? req.query.genre.trim() : null; // Get genre from query params
+  const genre = req.query.genre ? req.query.genre.trim() : null;
 
   try {
-    // Base query for fetching collections with genre filter if applicable
     let dataQuery = `
       SELECT collections.*,
-       COUNT(DISTINCT books.id) AS numBooks
+       COUNT(DISTINCT books.id) AS "numBooks"
       FROM collections
       LEFT JOIN books ON books.collection_id = collections.id
     `;
-    let countQuery = 'SELECT COUNT(*) AS totalCount FROM collections';
     let queryParams = [];
 
-    // Add genre filter to the queries if genre is provided and is not null or empty
     if (genre && genre !== 'null') {
-      dataQuery += ' WHERE collections.genres LIKE ?';
-      countQuery += ' WHERE genres LIKE ?';
+      dataQuery += ' WHERE collections.genres ILIKE $1';
       queryParams.push(`%${genre}%`);
     }
 
-    // Add GROUP BY to ensure collections are grouped correctly
-    dataQuery += ' GROUP BY collections.id';
+    dataQuery += ' GROUP BY collections.id ORDER BY collections."searchCount" DESC';
 
-    // Add ORDER BY for sorting the collections by search count
-    dataQuery += ' ORDER BY collections.searchCount DESC';
-
-    // Add limit clause to the data query
     if (typeof limitStart === 'number' && typeof limitEnd === 'number') {
-      dataQuery += ' LIMIT ?, ?';
-      queryParams.push(limitStart, limitEnd - limitStart);
+      dataQuery += ` LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`;
+      queryParams.push(limitEnd - limitStart, limitStart);
     }
 
-    // Execute the queries in parallel
-    const [dataRows] = await pool.query(dataQuery, queryParams);
-    const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
+    const results = await poolpg.query(dataQuery, queryParams);
+    const dataRows = results.rows;
+    const totalCount = results.rowCount;
 
-    let url = null;
     for (const dataRow of dataRows) {
-      // Fetch authors for each dataRow
       const authors = await getAuthorsByIds(dataRow.author_id);
       dataRow.authors = authors;
 
-      url = null;
       if (dataRow.image && dataRow.image !== 'null') {
-        url = await getImageURL(dataRow.image);
+        dataRow.imageURL = await getImageURL(dataRow.image);
       }
-      dataRow.imageURL = url;
     }
 
-    // Send both data and total count in the response
-    res.json({ data: dataRows, totalCount: totalCount });
+    res.json({ data: dataRows, totalCount });
   } catch (error) {
     console.error('Error fetching collections:', error);
     res.status(500).send('Error fetching collections');
@@ -69,32 +54,29 @@ exports.getCollections = async (req, res) => {
 
 exports.getCollectionById = async (req, res) => {
   const { id } = req.params;
-  const limit = parseInt(req.query.limit, 10) || 100; // Get limit from query params, default to 100
+  const limit = parseInt(req.query.limit, 10) || 100;
 
   try {
-    // Query to retrieve the collections information with author name
-    const [collectionsRows] = await pool.query(`
+    const { rows: collectionsRows } = await poolpg.query(`
       SELECT collections.*,
-       COUNT(DISTINCT books.id) AS numBooks
+       COUNT(DISTINCT books.id) AS "numBooks"
       FROM collections
       LEFT JOIN books ON books.collection_id = collections.id
-      WHERE collections.id = ?
-      LIMIT ?
+      WHERE collections.id = $1
+      GROUP BY collections.id
+      LIMIT $2
     `, [id, limit]);
 
     if (collectionsRows.length === 0) {
       return res.status(404).json({ message: 'Collection not found' });
     }
 
-    // Fetch authors for the collectionsRows
     const authors = await getAuthorsByIds(collectionsRows[0].author_id);
     collectionsRows[0].authors = authors;
 
-    let url = null;
     if (collectionsRows[0].image && collectionsRows[0].image !== 'null') {
-      url = await getImageURL(collectionsRows[0].image);
+      collectionsRows[0].imageURL = await getImageURL(collectionsRows[0].image);
     }
-    collectionsRows[0].imageURL = url;
 
     res.json(collectionsRows[0]);
   } catch (error) {
@@ -108,50 +90,56 @@ exports.getCollectionsByAuthorId = async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || null;
 
   try {
-    // Create the pattern for the LIKE query by concatenating the wildcards
     const likePattern = `%${author_id}%`;
 
-    // Query for fetching collections by author_id with author_name, first and last book dates
     let collectionsQuery = `
       SELECT collections.*,
-       YEAR(MIN(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS first_book_year,
-       YEAR(MAX(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS last_book_year,
-       COUNT(DISTINCT books.id) AS numBooks
+      EXTRACT(YEAR FROM MIN(COALESCE(books."publishDate", 
+                                    -- Try converting customDate to a full date format
+                                    CASE 
+                                      WHEN books."customDate" ~* '^[0-9]{4}$' 
+                                      THEN to_date(books."customDate", 'YYYY')  -- If only a year
+                                      WHEN books."customDate" ~* '^[A-Za-z]+ [0-9]{4}$' 
+                                      THEN to_date(books."customDate", 'Month YYYY')  -- If month and year
+                                      ELSE NULL
+                                    END))) AS first_book_year,
+      EXTRACT(YEAR FROM MAX(COALESCE(books."publishDate", 
+                                    CASE 
+                                      WHEN books."customDate" ~* '^[0-9]{4}$' 
+                                      THEN to_date(books."customDate", 'YYYY')
+                                      WHEN books."customDate" ~* '^[A-Za-z]+ [0-9]{4}$' 
+                                      THEN to_date(books."customDate", 'Month YYYY')
+                                      ELSE NULL
+                                    END))) AS last_book_year,
+      COUNT(DISTINCT books.id) AS "numBooks"
       FROM collections
       LEFT JOIN books ON books.collection_id = collections.id
-      WHERE collections.author_id like ?
+      WHERE collections.author_id::TEXT ILIKE $1
       GROUP BY collections.id
     `;
-    let countQuery = 'SELECT COUNT(*) AS totalCount FROM collections WHERE author_id like ?';
 
-    // Append LIMIT clause if a limit is provided
     const queryParams = [likePattern];
-
     if (limit) {
-      collectionsQuery += ` LIMIT ?`;
+      collectionsQuery += ` LIMIT $2`;
       queryParams.push(limit);
     }
 
-    // Execute the collections query
-    const [collections] = await pool.query(collectionsQuery, queryParams);
-    const [[{ totalCount }]] = await pool.query(countQuery, queryParams);
+    const results = await poolpg.query(collectionsQuery, queryParams);
+    const collections = results.rows;
+    const totalCount = results.rowCount;
 
-    let url = null;
     for (const collection of collections) {
-      // Fetch authors for each collection
       const authors = await getAuthorsByIds(collection.author_id);
       collection.authors = authors;
 
-      url = null;
       if (collection.image && collection.image !== 'null') {
-        url = await getImageURL(collection.image);
+        collection.imageURL = await getImageURL(collection.image);
       }
-      collection.imageURL = url;
     }
 
-    res.json({ collections: collections, totalCount: totalCount });
+    res.json({ collections, totalCount });
   } catch (error) {
-    console.error("Error fetching collections by author ID:", error);
+    console.error('Error fetching collections by author ID:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -159,7 +147,7 @@ exports.getCollectionsByAuthorId = async (req, res) => {
 
 exports.getCollectionsCount = async (req, res) => {
   try {
-    const [rows] = await pool.query(`
+    const { rows } = await poolpg.query(`
       SELECT COUNT(*) AS count
       FROM collections
     `);

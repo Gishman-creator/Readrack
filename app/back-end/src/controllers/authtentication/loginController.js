@@ -1,4 +1,4 @@
-const pool = require('../../config/db');
+const poolpg = require('../../config/dbpg');
 const bcrypt = require('bcryptjs');
 const { sendEmail } = require('../../services/emailService'); // Import the email service
 const { generateVerificationCode } = require('../../utils/verificationUtils'); // Utility to generate code
@@ -6,7 +6,8 @@ const { generateVerificationCode } = require('../../utils/verificationUtils'); /
 exports.login = async (req, res) => {
     const { email, password } = req.body;
     try {
-        const [rows] = await pool.query('SELECT * FROM admin WHERE email = ?', [email]);
+        const query = 'SELECT * FROM admin WHERE email = $1'; // Parameterized query for PostgreSQL
+        const { rows } = await poolpg.query(query, [email]);
 
         if (rows.length > 0) {
             const user = rows[0];
@@ -16,7 +17,7 @@ exports.login = async (req, res) => {
                 const verificationCode = generateVerificationCode();
                 
                 // Store the verification code in the database
-                await pool.query('UPDATE admin SET verification_code = ? WHERE email = ?', [verificationCode, email]);
+                await poolpg.query('UPDATE admin SET verification_code = $1 WHERE email = $2', [verificationCode, email]);
 
                 // Send the verification email
                 await sendEmail(

@@ -1,64 +1,76 @@
-const pool = require('../../config/db');
+const poolpg = require('../../config/dbpg'); // Ensure this points to the PostgreSQL poolpg configuration
 const { getAuthorsByIds } = require('../../utils/getUtils');
 const { putImage, getImageURL } = require('../../utils/imageUtils');
 
 const updateCollection = async (req, res) => {
   const { id } = req.params;
   const { collectionName, numBooks, genres, link, author_id, imageName } = req.body;
-  // console.log('The update collection update body is:', req.body);
-  // console.log('The image info is:', req.file);
     
-  const image = req.file ? await putImage(id, req.file, 'collections') : imageName; // Await the function to resolve the promise
-  // console.log('The image key for Amazon is:', image);
+  const image = req.file ? await putImage(id, req.file, 'collections') : imageName;
 
   try {
-    const [result] = await pool.query(
-      'UPDATE collections SET collectionName = ?, numBooks = ?, genres = ?, link = ?, author_id = ?, image = ? WHERE id = ?',
+    // Update the collection in the database
+    const result = await poolpg.query(
+      `UPDATE collections 
+       SET collectionName = $1, numBooks = $2, genres = $3, link = $4, author_id = $5, image = $6 
+       WHERE id = $7`,
       [collectionName, numBooks, genres, link, author_id || null, image, id]
     );
 
-    // console.log('Collection updated successfully1 for:', id);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Collection not found or not updated' });
+    }
 
     // Fetch the updated collection data
-    const [collectionRows] = await pool.query(`
+    const collectionResult = await poolpg.query(`
       SELECT collections.*,
-       YEAR(MIN(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS first_book_year,
-       YEAR(MAX(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS last_book_year,
-       COUNT(DISTINCT books.id) AS numBooks
+        EXTRACT(YEAR FROM MIN(COALESCE(books."publishDate", 
+                                      -- Try converting customDate to a full date format
+                                      CASE 
+                                        WHEN books."customDate" ~* '^[0-9]{4}$' 
+                                        THEN to_date(books."customDate", 'YYYY')  -- If only a year
+                                        WHEN books."customDate" ~* '^[A-Za-z]+ [0-9]{4}$' 
+                                        THEN to_date(books."customDate", 'Month YYYY')  -- If month and year
+                                        ELSE NULL
+                                      END))) AS first_book_year,
+        EXTRACT(YEAR FROM MAX(COALESCE(books."publishDate", 
+                                      CASE 
+                                        WHEN books."customDate" ~* '^[0-9]{4}$' 
+                                        THEN to_date(books."customDate", 'YYYY')
+                                        WHEN books."customDate" ~* '^[A-Za-z]+ [0-9]{4}$' 
+                                        THEN to_date(books."customDate", 'Month YYYY')
+                                        ELSE NULL
+                                      END))) AS last_book_year,
+        COUNT(DISTINCT books.id) AS "numBooks"
       FROM collections
       LEFT JOIN books ON books.collection_id = collections.id
-      WHERE collections.id = ?
+      WHERE collections.id = $1
       GROUP BY collections.id
-      `, [id]
-    );
+    `, [id]);
 
-    if (collectionRows.length === 0) {
+    if (collectionResult.rows.length === 0) {
       return res.status(404).json({ message: 'Collection not found after update' });
     }
 
-    // Fetch authors for the collectionRows
-    const authors = await getAuthorsByIds(collectionRows[0].author_id);
-    collectionRows[0].authors = authors;
+    // Fetch authors for the collection
+    const authors = await getAuthorsByIds(collectionResult.rows[0].author_id);
+    collectionResult.rows[0].authors = authors;
 
+    // Fetch image URL
     let url = null;
-    if (collectionRows[0].image && collectionRows[0].image !== 'null') {
-      url = await getImageURL(collectionRows[0].image);
+    if (collectionResult.rows[0].image && collectionResult.rows[0].image !== 'null') {
+      url = await getImageURL(collectionResult.rows[0].image);
     }
-    collectionRows[0].imageURL = url;
+    collectionResult.rows[0].imageURL = url;
 
-    const updatedCollections = collectionRows[0];
+    const updatedCollections = collectionResult.rows[0];
 
-    // Use req.io to emit the event
+    // Emit the updated collection data
     if (req.io) {
       req.io.emit('collectionsUpdated', updatedCollections);
-      // console.log('Emitting updated collections:', updatedCollections);
-    } else {
-      console.error('Socket.IO is not initialized.');
     }
 
-    // console.log('Collection updated successfully2');
-
-    res.status(200).json({ message: 'Collection updated successfully', result });
+    res.status(200).json({ message: 'Collection updated successfully', updatedCollections });
   } catch (error) {
     console.error('Error updating collections:', error);
     res.status(500).json({ message: 'Failed to update collections', error: error.message });

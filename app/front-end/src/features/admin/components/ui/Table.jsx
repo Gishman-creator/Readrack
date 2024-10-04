@@ -91,7 +91,6 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                             'GET',
                             {}, {}, {}, signal  // Pass signal here
                         );
-                        console.log('Books response:', response);
                     } else if (activeTab === "Authors") {
                         console.log('Calling authors');
                         response = await axiosUtils(
@@ -99,8 +98,8 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                             'GET',
                             {}, {}, {}, signal  // Pass signal here
                         );
-                        console.log('Authors response:', response);
                     }
+                    console.log('Authors response:', response);
                     data = response.data.data;
                     totalCount = response.data.totalCount;
                 }
@@ -365,7 +364,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
         return tableData.map((item) => (
             <tr
                 key={item.id} // Use unique item ID as key
-                className={`cursor-pointer border-b border-slate-200 hover:bg-gray-100 ${selectedRowIds.includes(item.id) ? "bg-blue-100 hover:bg-blue-100" : ""}`}
+                className={`${activeTab === "Series" && parseInt(item.currentBooks) < item.numBooks ? "bg-orange-200 hover:bg-orange-100" : ""} cursor-pointer border-b border-slate-200 hover:bg-gray-100 ${selectedRowIds.includes(item.id) ? "bg-blue-100 hover:bg-blue-100" : ""}`}
                 onClick={() => handleRowClick(item.id, item)} // Pass the item data
             >
                 <td
@@ -386,7 +385,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                     <>
                         <td className="px-4 py-2">{capitalize(item.serieName)}</td>
                         <td className="px-4 py-2">{item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</td>
-                        <td className="px-4 py-2">{item.numBooks}</td>
+                        <td className="px-4 py-2">{`${parseInt(item.currentBooks)}/${item.numBooks}`}</td>
                         <td className="px-4 py-2 overflow-hidden whitespace-nowrap text-ellipsis">
                             {`${item.genres.substring(0, 15)}...`}
                         </td>

@@ -14,9 +14,9 @@ export default function Home() {
     const activeTab = useSelector((state) => state.user.activeTab);
     const activeGenre = useSelector((state) => state.user.activeGenre);
 
-    const [pageLimitStart, setPageLimitStart] = useState(0);
-    const [pageLimitEnd, setPageLimitEnd] = useState(30);
-    const [pageInterval, setPageInterval] = useState(30);
+    const [pageLimitStart, setPageLimitStart] = useState();
+    const [pageLimitEnd, setPageLimitEnd] = useState();
+    const [pageInterval, setPageInterval] = useState(0);
     const [totalItems, setTotalItems] = useState(0);
 
     const [isLoading, setIsLoading] = useState(true);
@@ -26,44 +26,45 @@ export default function Home() {
 
     const dispatch = useDispatch();
 
-    const updatePageLimitAndInterval = () => {
-        const width = window.innerWidth;
-        if (width >= 1536) {
-            setPageLimitEnd(90);
-            setPageInterval(90);
-        } else if (width >= 1024 && width < 1536) {
-            setPageLimitEnd(75);
-            setPageInterval(75);
-        } else if (width >= 640 && width < 1024) {
-            setPageLimitEnd(45);
-            setPageInterval(45);
-        } else {
-            setPageLimitEnd(30);
-            setPageInterval(30);
-        }
-        // Reset to the first page whenever tab or genre changes
-        setPageLimitStart(0);
-    };
-
     useEffect(() => {
-        updatePageLimitAndInterval();
+        const updatePageLimitAndInterval = () => {
+            console.log('Updating page limit and interval...');
+            const width = window.innerWidth;
+            if (width >= 1536) {
+                setPageLimitEnd(90);
+                setPageInterval(90);
+            } else if (width >= 1024 && width < 1536) {
+                setPageLimitEnd(75);
+                setPageInterval(75);
+            } else if (width >= 640 && width < 1024) {
+                setPageLimitEnd(45);
+                setPageInterval(45);
+            } else {
+                setPageLimitEnd(30);
+                setPageInterval(30);
+            }
+            // Reset to the first page whenever tab or genre changes
+            setPageLimitStart(0);
+        };
+
+        updatePageLimitAndInterval()
+
         window.addEventListener('resize', updatePageLimitAndInterval);
 
         return () => {
             window.removeEventListener('resize', updatePageLimitAndInterval);
         };
-    }, []);
 
-    useEffect(() => {
-        // Update page limits when activeTab or activeGenre changes
-        updatePageLimitAndInterval();
-    }, [activeTab, activeGenre]);
+    }, [activeTab, activeGenre, pageLimitStart, pageLimitEnd])
+
 
     useEffect(() => {
         const fetchData = async () => {
             setIsLoading(true);
-            // console.log('The active tab is:', activeTab);
-            if (!activeTab) return; // Wait until activeTab is set
+            console.log('The active tab is:', activeTab);
+            console.log('The pageLimitEnd is:', pageLimitEnd);
+            console.log('The pageLimitStart is:', pageLimitStart);
+            if (!activeTab || !pageLimitEnd || !pageLimitStart === undefined) return; // Wait until activeTab is set
 
             try {
                 let response;
@@ -72,11 +73,11 @@ export default function Home() {
                 } else {
                     response = await axiosUtils(`/api/getAuthors?genre=${activeGenre}&limitStart=${pageLimitStart}&limitEnd=${pageLimitEnd}`, 'GET');
                 }
+                console.log('Response:', response);
 
                 const { data, totalCount } = response.data;
 
                 setTotalItems(totalCount);
-                // console.log('Data fetched', dataWithBlobs);
                 setCardData(data);
                 setIsLoading(false);
             } catch (error) {

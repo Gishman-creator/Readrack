@@ -1,6 +1,6 @@
 // src/controllers/catalogControllers/addSeriesController.js
 
-const pool = require('../../config/db');
+const poolpg = require('../../config/dbpg');
 const { getAuthorsByIds } = require('../../utils/getUtils');
 const { putImage, getImageURL } = require('../../utils/imageUtils');
 
@@ -13,7 +13,6 @@ const addSeries = async (req, res) => {
     const { serieName, author_id, numBooks, genres, link } = req.body;
 
     const image = req.file ? await putImage('', req.file, 'series') : null; // Await the function to resolve the promise
-    // console.log('The image key for Amazon is:', image);
 
     try {
         let uniqueId;
@@ -23,8 +22,8 @@ const addSeries = async (req, res) => {
         while (!isUnique) {
             uniqueId = generateRandomId();
 
-            // Check if the ID already exists
-            const [rows] = await pool.query('SELECT id FROM series WHERE id = ?', [uniqueId]);
+            // Check if the ID already exists in PostgreSQL
+            const { rows } = await poolpg.query('SELECT id FROM series WHERE id = $1', [uniqueId]);
 
             if (rows.length === 0) {
                 isUnique = true;
@@ -32,23 +31,37 @@ const addSeries = async (req, res) => {
         }
 
         // Insert series data into the database with the unique ID
-        const [result] = await pool.query(
-            'INSERT INTO series (id, serieName, author_id, numBooks, genres, link, image) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        await poolpg.query(
+            'INSERT INTO series (id, serieName, author_id, numBooks, genres, link, image) VALUES ($1, $2, $3, $4, $5, $6, $7)',
             [uniqueId, serieName, author_id, numBooks, genres, link, image]
         );
 
-        const [serieData] = await pool.query(`
+        const { rows: serieData } = await poolpg.query(`
             SELECT 
                 series.*,
-                YEAR(MIN(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS first_book_year,
-                YEAR(MAX(IFNULL(books.publishDate, STR_TO_DATE(books.customDate, '%Y')))) AS last_book_year
+                EXTRACT(YEAR FROM MIN(COALESCE(books."publishDate", 
+                                              -- Try converting customDate to a full date format
+                                              CASE 
+                                                WHEN books."customDate" ~* '^[0-9]{4}$' 
+                                                THEN to_date(books."customDate", 'YYYY')  -- If only a year
+                                                WHEN books."customDate" ~* '^[A-Za-z]+ [0-9]{4}$' 
+                                                THEN to_date(books."customDate", 'Month YYYY')  -- If month and year
+                                                ELSE NULL
+                                              END))) AS first_book_year,
+                EXTRACT(YEAR FROM MAX(COALESCE(books."publishDate", 
+                                              CASE 
+                                                WHEN books."customDate" ~* '^[0-9]{4}$' 
+                                                THEN to_date(books."customDate", 'YYYY')
+                                                WHEN books."customDate" ~* '^[A-Za-z]+ [0-9]{4}$' 
+                                                THEN to_date(books."customDate", 'Month YYYY')
+                                                ELSE NULL
+                                              END))) AS last_book_year
             FROM series
             LEFT JOIN books ON books.serie_id = series.id
-            WHERE series.id = ?
+            WHERE series.id = $1
             GROUP BY series.id
             ORDER BY books.publishDate ASC;
-            `, [uniqueId]
-        );
+        `, [uniqueId]);
 
         // Fetch authors for the serieData
         const authors = await getAuthorsByIds(serieData[0].author_id);
@@ -56,16 +69,13 @@ const addSeries = async (req, res) => {
 
         let url = null;
         if (serieData[0].image && serieData[0].image !== 'null') {
-          url = await getImageURL(serieData[0].image);
+            url = await getImageURL(serieData[0].image);
         }
         serieData[0].imageURL = url;
 
         // Emit the newly added series data if Socket.IO is initialized
         if (req.io) {
             req.io.emit('serieAdded', serieData[0]);  // Emit the full series data
-            // console.log('Emitting added series:', serieData[0]);
-        } else {
-            // console.log('Socket.IO is not initialized.');
         }
 
         res.status(201).json({ message: 'Series added successfully', seriesId: uniqueId });

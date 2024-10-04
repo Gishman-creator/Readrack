@@ -1,6 +1,6 @@
 // src/controllers/addBookController.js
 
-const pool = require('../../config/db');
+const poolpg = require('../../config/dbpg');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() }); // Use memory storage for image blob
 const { putImage, getImageURL } = require('../../utils/imageUtils');
@@ -25,12 +25,7 @@ const addBook = async (req, res) => {
       link,
     } = req.body;
 
-    // console.log('the received author ids are:', author_id);
-
-    // console.log('The added book info:', req.body);
-    
-    const image = req.file ? await putImage('', req.file, 'books') : null; // Await the function to resolve the promise
-    // console.log('The image key for Amazon is:', image);
+    const image = req.file ? await putImage('', req.file, 'books') : null;
 
     let uniqueId;
     let isUnique = false;
@@ -39,8 +34,8 @@ const addBook = async (req, res) => {
     while (!isUnique) {
       uniqueId = generateRandomId();
 
-      // Check if the ID already exists
-      const [rows] = await pool.execute('SELECT id FROM books WHERE id = ?', [uniqueId]);
+      // Check if the ID already exists in PostgreSQL
+      const { rows } = await poolpg.query('SELECT id FROM books WHERE id = $1', [uniqueId]);
 
       if (rows.length === 0) {
         isUnique = true;
@@ -48,45 +43,45 @@ const addBook = async (req, res) => {
     }
 
     // Convert empty strings to null for foreign key fields
-    const serieId = serie_id === '' ? null : serie_id;
-    const collectionId = collection_id === '' ? null : collection_id;
-    
+    const serieId = Number.isNaN(parseInt(serie_id)) ? 0 : parseInt(serie_id);
+    const collectionId = Number.isNaN(parseInt(collection_id)) ? 0 : parseInt(collection_id);
+    const serie_index = Number.isNaN(parseInt(serieIndex)) ? 0 : parseInt(serieIndex);
 
     // Insert book data into the database with the unique ID
     const query = `
       INSERT INTO books (
-        id, image, bookName, author_id, serie_id, collection_id, genres, publishDate, customDate, serieIndex, link
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, image, "bookName", author_id, serie_id, collection_id, genres, "publishDate", "customDate", "serieIndex", link
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
     `;
 
     const values = [
       uniqueId,
       image,
       bookName,
-      author_id || null,
+      author_id,
       serieId,
       collectionId,
       genres || null,
       publishDate || null,
       customDate || null,
-      serieIndex || 0,
+      serie_index,
       link || null,
     ];
 
-    // console.log('The values are:', values)
+    console.log('values', values);
 
-    await pool.execute(query, values);
+    await poolpg.query(query, values);
 
-    const [bookData] = await pool.query(`
-      SELECT books.*, series.serieName AS serie_name, collections.collectionName AS collection_name
+    const { rows: bookData } = await poolpg.query(`
+      SELECT books.*, series."serieName" AS serie_name, collections."collectionName" AS collection_name
       FROM books
       LEFT JOIN series ON books.serie_id = series.id
       LEFT JOIN collections ON books.collection_id = collections.id
-      WHERE books.id = ?
-      `, [uniqueId]
-    );
+      WHERE books.id = $1
+    `, [uniqueId]);
 
     const book = bookData[0];
+
     // Fetch authors for the book
     const authors = await getAuthorsByIds(book.author_id);
     book.authors = authors;
@@ -100,13 +95,9 @@ const addBook = async (req, res) => {
     // Emit the newly added book data if Socket.IO is initialized
     if (req.io) {
       req.io.emit('bookAdded', bookData[0]);  // Emit the full book data
-      // console.log('Emitting added book:', bookData[0]);
-    } else {
-      // console.log('Socket.IO is not initialized.');
     }
 
     res.status(201).json({ message: 'Book added successfully', bookId: uniqueId });
-    // console.log('Book added successfully');
   } catch (error) {
     console.error('Error adding book:', error);
     res.status(500).json({ error: 'Failed to add book' });

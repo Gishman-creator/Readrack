@@ -1,5 +1,5 @@
 // controllers/genreController.js
-const pool = require('../../config/db');
+const poolpg = require('../../config/dbpg');
 
 const genres = [
     "Fiction", "Biography", "Autobiography", "Memoir", "History", "Science", "Technology",
@@ -28,23 +28,23 @@ exports.getGenresController = async (req, res) => {
     }
 
     try {
-        // Construct a single query with multiple genres using OR condition
+        // Construct the query with ILIKE for PostgreSQL and array of placeholders
         const query = `
             SELECT genres
             FROM ${tableName}
-            WHERE ${genres.map(() => 'genres LIKE ?').join(' OR ')}
+            WHERE ${genres.map((_, index) => `genres ILIKE $${index + 1}`).join(' OR ')}
         `;
 
-        // Generate the parameters for the LIKE clauses
+        // Generate the parameters for the ILIKE clauses
         const params = genres.map(genre => `%${genre}%`);
 
-        const [rows] = await pool.query(query, params);
+        const result = await poolpg.query(query, params);
 
-        // Initialize an object to track matched genres
+        // Initialize a set to track matched genres
         const genresWithResults = new Set();
 
         // Iterate over each row and match genres with flexible comparison
-        rows.forEach(row => {
+        result.rows.forEach(row => {
             const rowGenres = row.genres.split(',').map(g => g.trim().toLowerCase()); // Normalize and split
             genres.forEach(genre => {
                 if (rowGenres.some(rg => rg.includes(genre.toLowerCase()))) {

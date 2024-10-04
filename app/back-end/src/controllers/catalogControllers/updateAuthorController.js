@@ -1,58 +1,53 @@
-const pool = require('../../config/db');
+const poolpg = require('../../config/dbpg'); // Make sure this points to the pg poolpg configuration
 const { putImage, getImageURL } = require('../../utils/imageUtils');
 
 const updateAuthor = async (req, res) => {
 
     const { id } = req.params;
-    // console.log('Body', req.body);
-    // console.log('File', req.file); // Log file information
 
     const { authorName, nickname, dob, dod, customDob, nationality, biography, awards, x, instagram, facebook, website, genres, imageName } = req.body;
-    // console.log(authorName, nickname, dob, dod, nationality, biography, awards, x, instagram, facebook, website, genres);
 
-    const image = req.file ? await putImage(id, req.file, 'authors') : imageName; // Await the function to resolve the promise
-    // console.log('The image key for Amazon is:', image);
-
-    // if (image) {
-    //     console.log('Image is:', image);
-    // }
+    const image = req.file ? await putImage(id, req.file, 'authors') : imageName;
 
     try {
-        const [result] = await pool.query(
-            'UPDATE authors SET authorName = ?, nickname = ?, dob = ?, dod = ?, customDob = ?, nationality = ?, biography = ?, awards = ?, x = ?, instagram = ?, facebook = ?, website = ?, genres = ?, image = ? WHERE id = ?',
+        // Update author information
+        const result = await poolpg.query(
+            `UPDATE authors 
+             SET authorName = $1, nickname = $2, dob = $3, dod = $4, customDob = $5, 
+                 nationality = $6, biography = $7, awards = $8, x = $9, instagram = $10, 
+                 facebook = $11, website = $12, genres = $13, image = $14 
+             WHERE id = $15`,
             [authorName, nickname || null, dob, dod || null, customDob || null, nationality, biography, awards, x, instagram, facebook, website, genres, image, id]
         );
 
-        // Fetch the updated author data
-        const [authorRows] = await pool.query(`
+        // Fetch updated author data
+        const authorResult = await poolpg.query(`
             SELECT a.*, 
-              COUNT(DISTINCT s.id) AS numSeries, 
-              COUNT(DISTINCT b.id) AS numBooks
+              COUNT(DISTINCT s.id) AS "numSeries", 
+              COUNT(DISTINCT b.id) AS "numBooks"
             FROM authors a
-            LEFT JOIN series s ON s.author_id LIKE CONCAT('%', a.id, '%')
-            LEFT JOIN books b ON b.author_id LIKE CONCAT('%', a.id, '%')
-            WHERE a.id = ?
+            LEFT JOIN series s ON s.author_id::text LIKE '%' || a.id::text || '%'
+            LEFT JOIN books b ON b.author_id::text LIKE '%' || a.id::text || '%'
+            WHERE a.id = $1
             GROUP BY a.id
-        `, [id]
-        );
+        `, [id]);
 
-        if (authorRows.length === 0) {
+        if (authorResult.rows.length === 0) {
             return res.status(404).json({ message: 'Author not found after update' });
         }
 
+        // Handle image URL if an image exists
         let url = null;
-        if (authorRows[0].image && authorRows[0].image !== 'null') {
-          url = await getImageURL(authorRows[0].image);
+        if (authorResult.rows[0].image && authorResult.rows[0].image !== 'null') {
+            url = await getImageURL(authorResult.rows[0].image);
         }
-        authorRows[0].imageURL = url;
+        authorResult.rows[0].imageURL = url;
 
-        const updatedAuthors = authorRows[0];
+        const updatedAuthor = authorResult.rows[0];
 
+        // Emit event via socket if available
         if (req.io) {
-            req.io.emit('authorsUpdated', updatedAuthors);
-            // console.log('Emitting updated authors:', updatedAuthors);
-        } else {
-            // console.log('Socket.Io is not initialized.');
+            req.io.emit('authorsUpdated', updatedAuthor);
         }
 
         res.status(200).json({ message: 'Author updated successfully', result });

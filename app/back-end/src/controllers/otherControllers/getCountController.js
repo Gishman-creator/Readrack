@@ -1,70 +1,77 @@
 // controllers/getCountController.js
-const pool = require('../../config/db');
+const poolpg = require('../../config/dbpg');
 
 exports.getCount = async (req, res) => {
     const { type } = req.query;
 
     try {
         if (type === 'books') {
-            const [results] = await pool.query('SELECT COUNT(*) AS totalCount FROM books');
-            res.status(200).json({ totalCount: results[0].totalCount });
+            // Query for books count
+            const result = await poolpg.query('SELECT COUNT(*) AS "totalCount" FROM books');
+            res.status(200).json({ totalCount: result.rows[0].totalCount });
         } else if (type === 'series') {
-            const [totalSeriesResults] = await pool.query('SELECT COUNT(*) AS totalCount FROM series');
-
-            const [completeSeriesResults] = await pool.query(`
-                SELECT COUNT(*) AS completeCount
+            // Total series count
+            const totalSeriesResult = await poolpg.query('SELECT COUNT(*) AS "totalCount" FROM series');
+            
+            // Complete series count
+            const completeSeriesResult = await poolpg.query(`
+                SELECT COUNT(*) AS "completeCount"
                 FROM series s
                 WHERE (SELECT COUNT(*) 
                        FROM books b 
                        WHERE b.serie_id = s.id
-                ) >= s.numBooks;
+                ) >= s."numBooks";
             `);
-
-            const [incompleteSeriesResults] = await pool.query(`
-                SELECT COUNT(*) AS incompleteCount
+            
+            // Incomplete series count
+            const incompleteSeriesResult = await poolpg.query(`
+                SELECT COUNT(*) AS "incompleteCount"
                 FROM series s
                 WHERE (SELECT COUNT(*) 
                        FROM books b 
                        WHERE b.serie_id = s.id
-                ) < s.numBooks;
+                ) < s."numBooks";
             `);
 
             res.status(200).json({
-                totalCount: totalSeriesResults[0].totalCount,
-                completeCount: completeSeriesResults[0].completeCount,
-                incompleteCount: incompleteSeriesResults[0].incompleteCount
+                totalCount: totalSeriesResult.rows[0].totalCount,
+                completeCount: completeSeriesResult.rows[0].completeCount,
+                incompleteCount: incompleteSeriesResult.rows[0].incompleteCount
             });
         } else if (type === 'authors') {
-            const [totalAuthorsResults] = await pool.query('SELECT COUNT(*) AS totalCount FROM authors');
+            // Total authors count
+            const totalAuthorsResult = await poolpg.query('SELECT COUNT(*) AS "totalCount" FROM authors');
 
-            const [completeAuthorsResults] = await pool.query(`
-                SELECT COUNT(*) AS completeCount
+            // Complete authors count
+            const completeAuthorsResult = await poolpg.query(`
+                SELECT COUNT(*) AS "completeCount"
                 FROM authors a
                 WHERE NOT EXISTS (
                     SELECT 1
                     FROM series s
                     LEFT JOIN books b ON s.id = b.serie_id
                     WHERE s.author_id = a.id
-                    AND (SELECT COUNT(*) FROM books b WHERE b.serie_id = s.id) < s.numBooks
+                    AND (SELECT COUNT(*) FROM books b WHERE b.serie_id = s.id) < s."numBooks"
                 );
             `);
 
-            const [incompleteAuthorsResults] = await pool.query(`
-                SELECT COUNT(*) AS incompleteCount
+            // Incomplete authors count
+            const incompleteAuthorsResult = await poolpg.query(`
+                SELECT COUNT(*) AS "incompleteCount"
                 FROM authors a
                 WHERE EXISTS (
                     SELECT 1
                     FROM series s
                     LEFT JOIN books b ON s.id = b.serie_id
                     WHERE s.author_id = a.id
-                    AND (SELECT COUNT(*) FROM books b WHERE b.serie_id = s.id) < s.numBooks
+                    AND (SELECT COUNT(*) FROM books b WHERE b.serie_id = s.id) < s."numBooks"
                 );
             `);
 
             res.status(200).json({
-                totalCount: totalAuthorsResults[0].totalCount,
-                completeCount: completeAuthorsResults[0].completeCount,
-                incompleteCount: incompleteAuthorsResults[0].incompleteCount
+                totalCount: totalAuthorsResult.rows[0].totalCount,
+                completeCount: completeAuthorsResult.rows[0].completeCount,
+                incompleteCount: incompleteAuthorsResult.rows[0].incompleteCount
             });
         } else {
             res.status(400).send('Invalid type specified');

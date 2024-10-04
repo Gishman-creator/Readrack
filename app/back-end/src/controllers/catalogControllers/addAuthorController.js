@@ -1,6 +1,6 @@
 // src/controllers/addAuthorController.js
 
-const pool = require('../../config/db');
+const poolpg = require('../../config/dbpg');
 const { putImage, getImageURL } = require('../../utils/imageUtils');
 
 const generateRandomId = () => {
@@ -24,30 +24,29 @@ const addAuthor = async (req, res) => {
       website,
       genres,
     } = req.body;
-    // console.log('The image req.file is:', req.file);
-    const image = req.file ? await putImage('', req.file, 'authors') : null; // Await the function to resolve the promise
-    // console.log('The image key for Amazon is:', image);
+
+    const image = req.file ? await putImage('', req.file, 'authors') : null;
 
     let uniqueId;
     let isUnique = false;
 
-    // Generate a unique ID
+    // Generate a unique ID if necessary
     while (!isUnique) {
       uniqueId = generateRandomId();
 
-      // Check if the ID already exists
-      const [rows] = await pool.execute('SELECT id FROM authors WHERE id = ?', [uniqueId]);
+      // Check if the ID already exists in PostgreSQL
+      const { rows } = await poolpg.query('SELECT id FROM authors WHERE id = $1', [uniqueId]);
 
       if (rows.length === 0) {
         isUnique = true;
       }
     }
 
-    // Insert author data into the database with the unique ID
+    // Insert author data into the PostgreSQL database
     const insertQuery = `
       INSERT INTO authors (
         id, image, authorName, nickname, dob, dod, customDob, nationality, biography, x, facebook, instagram, website, genres, awards
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
     `;
 
     const insertValues = [
@@ -68,21 +67,21 @@ const addAuthor = async (req, res) => {
       awards || null,
     ];
 
-    // Execute the insert query
-    await pool.execute(insertQuery, insertValues);
+    // Execute the insert query in PostgreSQL
+    await poolpg.query(insertQuery, insertValues);
 
-    // Fetch the newly added author data
+    // Fetch the newly added author data with the number of series and books
     const fetchQuery = `
       SELECT a.*, 
-        COUNT(DISTINCT s.id) AS numSeries, 
-        COUNT(DISTINCT b.id) AS numBooks
+        COUNT(DISTINCT s.id) AS "numSeries", 
+        COUNT(DISTINCT b.id) AS "numBooks"
       FROM authors a
-      LEFT JOIN series s ON s.author_id LIKE CONCAT('%', a.id, '%')
-      LEFT JOIN books b ON b.author_id LIKE CONCAT('%', a.id, '%')
-      WHERE a.id = ?
+      LEFT JOIN series s ON s.author_id LIKE '%' || a.id || '%'
+      LEFT JOIN books b ON b.author_id LIKE '%' || a.id || '%'
+      WHERE a.id = $1
       GROUP BY a.id
     `;
-    const [authorData] = await pool.execute(fetchQuery, [uniqueId]);
+    const { rows: authorData } = await poolpg.query(fetchQuery, [uniqueId]);
 
     let url = null;
     if (authorData[0].image && authorData[0].image !== 'null') {
@@ -92,15 +91,11 @@ const addAuthor = async (req, res) => {
 
     // Emit the newly added author data if Socket.IO is initialized
     if (req.io) {
-      req.io.emit('authorAdded', authorData[0]);  // Emit the full author data
-      // console.log('Emitting added author:', authorData[0]);
-    } else {
-      // console.log('Socket.IO is not initialized.');
+      req.io.emit('authorAdded', authorData[0]);
     }
 
     // Respond with success message and the inserted author ID
     res.status(201).json({ message: 'Author added successfully', authorId: uniqueId });
-    // console.log('Author added successfully');
   } catch (error) {
     console.error('Error adding author:', error);
     res.status(500).json({ error: 'Failed to add author' });

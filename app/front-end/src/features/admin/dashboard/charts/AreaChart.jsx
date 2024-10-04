@@ -18,6 +18,7 @@ const AreaChart = () => {
     const fetchData = async () => {
         try {
             const response = await axiosUtils(`/api/get-visits-data?filter=${selectedOption}`, 'GET');
+            console.log('Visists Response:', response);
             const formattedData = response.data.map(visit => ({
                 name: visit.label, // Adjusted from visit_time to label
                 visits: visit.visits,

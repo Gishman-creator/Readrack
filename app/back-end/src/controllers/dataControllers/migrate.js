@@ -1,4 +1,3 @@
-const pool = require('../../config/db');
 const poolpg = require('../../config/dbpg');
 
 // Function to migrate authors

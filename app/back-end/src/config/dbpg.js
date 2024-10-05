@@ -2,13 +2,11 @@ const { Pool } = require('pg'); // Import the Pool class from pg package
 const dotenv = require('dotenv');
 dotenv.config();
 
+const prod = process.env.NODE_ENV === "production";
+
 // Create a connection pool to PostgreSQL
 const poolpg = new Pool({
-    host: process.env.HOST,               // Use the PostgreSQL host
-    user: process.env.PG_USER,            // PostgreSQL user (adjust environment variable if needed)
-    password: process.env.PG_PASSWORD,    // PostgreSQL password (adjust environment variable if needed)
-    database: process.env.PG_DATABASE,    // PostgreSQL database (adjust environment variable if needed)
-    port: process.env.PG_PORT || 5432,        // Default PostgreSQL port
+    connectionString: !prod ? process.env.DATABASE_URL_LOCAL : process.env.DATABASE_URL
 });
 
 // Test the connection to the PostgreSQL database

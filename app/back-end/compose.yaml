@@ -20,7 +20,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=root
       - POSTGRES_DB=readrack
-      - POSTGRES_USER=root
+      - POSTGRES_USER=postgres
 
     labels:
       api.description: "Postgres Database"

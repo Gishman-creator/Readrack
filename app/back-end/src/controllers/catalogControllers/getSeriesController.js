@@ -1,4 +1,5 @@
 const poolpg = require('../../config/dbpg'); // Ensure this is the PostgreSQL poolpg configuration
+const { fetchPublishYearsUtil } = require('../../utils/fetchPublishYearsUtil');
 const { getAuthorsByIds } = require('../../utils/getUtils');
 const { getImageURL } = require('../../utils/imageUtils');
 
@@ -35,7 +36,15 @@ exports.getSeries = async (req, res) => {
 
     const results = await poolpg.query(dataQuery, queryParams);
     const dataRows = results.rows;
-    const totalCount = results.rowCount;
+
+    // Query to count total books
+    const countQuery = `
+    SELECT COUNT(*) AS total_count 
+    FROM series
+    `;
+
+    const countResult = await poolpg.query(countQuery);
+    const totalCount = parseInt(countResult.rows[0].total_count, 10);
 
     for (const dataRow of dataRows) {
       const authors = await getAuthorsByIds(dataRow.author_id);
@@ -85,31 +94,16 @@ exports.getSeriesByAuthorId = async (req, res) => {
   try {
     const likePattern = `%${author_id}%`;
 
+    // Step 1: Get the series for the specified author
     let seriesQuery = `
       SELECT series.*,
-      EXTRACT(YEAR FROM MIN(COALESCE(books."publishDate", 
-                                    -- Try converting customDate to a full date format
-                                    CASE 
-                                      WHEN books."customDate" ~* '^[0-9]{4}$' 
-                                      THEN to_date(books."customDate", 'YYYY')  -- If only a year
-                                      WHEN books."customDate" ~* '^[A-Za-z]+ [0-9]{4}$' 
-                                      THEN to_date(books."customDate", 'Month YYYY')  -- If month and year
-                                      ELSE NULL
-                                    END))) AS first_book_year,
-      EXTRACT(YEAR FROM MAX(COALESCE(books."publishDate", 
-                                    CASE 
-                                      WHEN books."customDate" ~* '^[0-9]{4}$' 
-                                      THEN to_date(books."customDate", 'YYYY')
-                                      WHEN books."customDate" ~* '^[A-Za-z]+ [0-9]{4}$' 
-                                      THEN to_date(books."customDate", 'Month YYYY')
-                                      ELSE NULL
-                                    END))) AS last_book_year,
       COUNT(DISTINCT books.id) AS "currentBooks"
       FROM series
       LEFT JOIN books ON books.serie_id = series.id
       WHERE series.author_id ILIKE $1
       GROUP BY series.id
     `;
+
     const queryParams = [likePattern];
 
     if (limit) {
@@ -119,15 +113,23 @@ exports.getSeriesByAuthorId = async (req, res) => {
 
     const results = await poolpg.query(seriesQuery, queryParams);
     const series = results.rows;
-    const totalCount = results.rowCount;
 
+    // Step 2: Loop through each series to get publication years
     for (const serie of series) {
+      // Use the utility function to fetch publish years
+      const publishYears = await fetchPublishYearsUtil(serie.id, 'serie');
+
+      // Step 3: Find the first and last book years
+      serie.first_book_year = publishYears.length > 0 ? Math.min(...publishYears) : null;
+      serie.last_book_year = publishYears.length > 0 ? Math.max(...publishYears) : null;
+
+      // Step 4: Add authors and image URL to each series
       const authors = await getAuthorsByIds(serie.author_id);
       serie.authors = authors;
       serie.imageURL = serie.image && serie.image !== 'null' ? await getImageURL(serie.image) : null;
     }
 
-    res.json({ series, totalCount });
+    res.json({ series });
   } catch (error) {
     console.error('Error fetching series by author ID:', error);
     res.status(500).json({ message: 'Internal server error' });

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axiosUtils from '../../../utils/axiosUtils';
-import { capitalize, formatDate, spacesToHyphens } from '../../../utils/stringUtils';
+import { capitalize, capitalizeGenres, spacesToHyphens } from '../../../utils/stringUtils';
 import { bufferToBlobURL } from '../../../utils/imageUtils';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -200,7 +200,7 @@ function CollectionDetails() {
               <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
                 <p className='md:inline font-medium font-poppins text-center md:text-left text-sm'>Genres:</p>
                 <div className='md:inline flex flex-wrap gap-x-2 md:ml-1 text-sm text-center md:text-left font-arima items-center justify-center md:justify-start w-[90%] mx-auto'>
-                  {collectionData.genres}
+                  {capitalizeGenres(collectionData.genres)}
                 </div>
               </div>
             </div>
@@ -240,7 +240,7 @@ function CollectionDetails() {
                     <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                   )}
                   <p className='font-arima text-slate-400 text-sm mt-1'>
-                    #{index + 1}, published {formatDate(item.publishDate) || item.customDate}
+                    #{index + 1}, published {item.publishDate}
                   </p>
                   <a
                     href={item.link}

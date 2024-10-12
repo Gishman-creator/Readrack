@@ -5,7 +5,7 @@ const updateAuthor = async (req, res) => {
 
     const { id } = req.params;
 
-    const { authorName, nickname, dob, dod, customDob, nationality, biography, awards, x, instagram, facebook, website, genres, imageName } = req.body;
+    const { authorName, nickname, dob, dod, nationality, biography, awards, x, instagram, facebook, website, genres, imageName } = req.body;
 
     const image = req.file ? await putImage(id, req.file, 'authors') : imageName;
 
@@ -13,11 +13,11 @@ const updateAuthor = async (req, res) => {
         // Update author information
         const result = await poolpg.query(
             `UPDATE authors 
-             SET authorName = $1, nickname = $2, dob = $3, dod = $4, customDob = $5, 
-                 nationality = $6, biography = $7, awards = $8, x = $9, instagram = $10, 
-                 facebook = $11, website = $12, genres = $13, image = $14 
+             SET "authorName" = $1, nickname = $2, dob = $3, dod = $4, 
+                 nationality = $5, biography = $6, awards = $7, x = $8, instagram = $9, 
+                 facebook = $10, website = $11, genres = $12, image = $13 
              WHERE id = $15`,
-            [authorName, nickname || null, dob, dod || null, customDob || null, nationality, biography, awards, x, instagram, facebook, website, genres, image, id]
+            [authorName, nickname || null, dob, dod || null, nationality, biography, awards, x, instagram, facebook, website, genres, image, id]
         );
 
         // Fetch updated author data

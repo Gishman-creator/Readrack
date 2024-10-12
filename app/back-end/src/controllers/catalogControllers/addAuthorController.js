@@ -14,7 +14,6 @@ const addAuthor = async (req, res) => {
       nickname,
       dob,
       dod,
-      customDob,
       nationality,
       biography,
       awards,
@@ -45,8 +44,8 @@ const addAuthor = async (req, res) => {
     // Insert author data into the PostgreSQL database
     const insertQuery = `
       INSERT INTO authors (
-        id, image, authorName, nickname, dob, dod, customDob, nationality, biography, x, facebook, instagram, website, genres, awards
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        id, image, "authorName", nickname, dob, dod, nationality, biography, x, facebook, instagram, website, genres, awards
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
     `;
 
     const insertValues = [
@@ -56,7 +55,6 @@ const addAuthor = async (req, res) => {
       nickname || null,
       dob || null,
       dod || null,
-      customDob || null,
       nationality || null,
       biography || null,
       x || null,

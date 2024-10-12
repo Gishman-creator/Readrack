@@ -28,7 +28,15 @@ exports.getBooks = async (req, res) => {
     
     const booksResult = await poolpg.query(dataQuery, queryParams);
     const books = booksResult.rows;
-    const totalCount = booksResult.rowCount;
+
+    // Query to count total books
+    const countQuery = `
+    SELECT COUNT(*) AS total_count 
+    FROM books
+    `;
+    
+    const countResult = await poolpg.query(countQuery);
+    const totalCount = parseInt(countResult.rows[0].total_count, 10);
 
     for (const book of books) {
       // Fetch authors for each book

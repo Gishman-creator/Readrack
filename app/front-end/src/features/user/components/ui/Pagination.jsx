@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 function Pagination({ pageLimitStart, pageLimitEnd, pageInterval, totalItems, onPageChange, toTop }) {
+    console.log('toTop', toTop)
     const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {
-        const newPage = Math.ceil(pageLimitStart / pageInterval) || 1;
+        const newPage = pageLimitStart !== 0 ? Math.ceil(pageLimitStart / pageInterval) + 1 : 1;
         setCurrentPage(newPage);
     }, [pageLimitStart, pageInterval]);
 
@@ -15,10 +16,8 @@ function Pagination({ pageLimitStart, pageLimitEnd, pageInterval, totalItems, on
         setCurrentPage(pageNumber);
         const validPageInterval = pageInterval || 10; // Default to 10 if pageInterval is undefined
 
-        let limitStart = (pageNumber - 1) * validPageInterval + 1;
-        let limitEnd = Math.min(pageNumber * validPageInterval + 1, totalItems + 1);
-
-        limitStart = Math.max(limitStart, 1);
+        let limitStart = (pageNumber - 1) * validPageInterval;
+        let limitEnd = Math.min(pageNumber * validPageInterval, totalItems);
 
         onPageChange(limitStart, limitEnd);
         if (toTop) {

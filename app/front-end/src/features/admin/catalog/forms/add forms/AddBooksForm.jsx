@@ -251,7 +251,7 @@ function AddBooksForm({ onClose }) {
       <h2 className="text-lg font-semibold">Add Book</h2>
       <form onSubmit={handleSubmit} className="flex flex-col md:flex-row max-h-custom2 md:max-h-fit overflow-y-auto md:overflow-hidden">
         <ImagePreview onImageChange={handleImageChange} onImageUpload={handleImageUpload} />
-        <div className="md:ml-4 md:px-4 md:max-w-[23rem] md:max-h-[19rem] md:overflow-y-auto">
+        <div className="md:ml-4 md:px-4 md:min-w-[23rem] md:max-h-[19rem] md:overflow-y-auto">
           <div className="mb-4">
             <label className="block text-sm font-medium">Book name:</label>
             <input
@@ -393,21 +393,20 @@ function AddBooksForm({ onClose }) {
               </ul>
             )}
           </div>
-          <div className="mb-2 flex space-x-2">
-            <div>
-              <label className="block text-sm font-medium">Publish date:</label>
-              <input type="date" name="publishDate" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Genres:</label>
-              <input type="text" name="genres" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
-            </div>
-          </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium">Custom date:</label>
+            <label className="block text-sm font-medium">Publish date:</label>
             <input
               type="text"
-              name="customDate"
+              name="publishDate"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              placeholder="e.g., October 8, 2024"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium">Genres:</label>
+            <input
+              type="text"
+              name="genres"
               className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
             />
           </div>

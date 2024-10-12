@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import axiosUtils from "../../../../utils/axiosUtils";
-import { capitalize, formatDate, spacesToHyphens } from "../../../../utils/stringUtils";
+import { capitalize, spacesToHyphens } from "../../../../utils/stringUtils";
 import TableHeader from "./TableHeader";
 import { toggleRowSelection, selectAllRows, clearSelection, setTableTotalItems, setSearchTerm } from "../../slices/catalogSlice";
 import { useSocket } from "../../../../context/SocketContext";
@@ -418,7 +418,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                         <td className="px-4 py-2">{capitalize(item.bookName)}</td>
                         <td className="px-4 py-2">{item.serie_name ? item.serie_name : item.collection_name}</td>
                         <td className="px-4 py-2">{item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</td>
-                        <td className="px-4 py-2">{formatDate(item.publishDate) || item.customDate}</td>
+                        <td className="px-4 py-2">{item.publishDate}</td>
                         <td className="px-4 py-2">
                             <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
                                 Link
@@ -430,7 +430,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                     <>
                         <td className="px-4 py-2">{item.nickname ? capitalize(item.nickname) : capitalize(item.authorName)}</td>
                         <td className="px-4 py-2">{item.numBooks}</td>
-                        <td className="px-4 py-2">{formatDate(item.dob) || item.customDob}</td>
+                        <td className="px-4 py-2">{item.dob}</td>
                         <td className="px-4 py-2">
                             {item.nationality}
                         </td>

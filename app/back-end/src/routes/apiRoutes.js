@@ -30,6 +30,9 @@ const logVisitsController = require('../controllers/otherControllers/logVisitsCo
 const getCountController = require('../controllers/otherControllers/getCountController');
 
 const {runMigrations} = require('../controllers/dataControllers/migrate');
+const convertPublishDateController = require('../controllers/dataControllers/convertPublishDateController');
+const { migrateDod } = require('../controllers/dataControllers/migrateDodController');
+const { updateAuthorData } = require('../controllers/dataControllers/updateAuthorData');
 // const dataController = require('../controllers/dataControllers/dataController')
 // const generateDataController = require('../controllers/dataControllers/generateDataController');
 // const getRandomBufferByType = require('../controllers/dataControllers/getRandomBufferByType')
@@ -95,6 +98,10 @@ router.get('/getGenres', getGenresController.getGenresController);
 router.post('/recommendAuthors', recommendationController.recommendAuthors)
 router.post('/recommendSeries', recommendationController.recommendSeries)
 
-router.post('/migrate', runMigrations)
+router.post('/migrate', runMigrations);
+router.post('/migrateDod', migrateDod);
+router.post('/updateAuthorData', updateAuthorData);
+router.get('/convertPublishDate/:id', convertPublishDateController);
+
 
 module.exports = router;

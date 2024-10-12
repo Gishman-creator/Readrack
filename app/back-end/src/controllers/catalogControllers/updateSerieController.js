@@ -1,18 +1,19 @@
 const poolpg = require('../../config/dbpg'); // Ensure this points to the PostgreSQL poolpg configuration
+const { fetchPublishYearsUtil } = require('../../utils/fetchPublishYearsUtil');
 const { getAuthorsByIds } = require('../../utils/getUtils');
 const { putImage, getImageURL } = require('../../utils/imageUtils');
 
 const updateSerie = async (req, res) => {
   const { id } = req.params;
   const { serieName, numBooks, genres, link, author_id, related_collections, imageName } = req.body;
-  
+
   const image = req.file ? await putImage(id, req.file, 'series') : imageName;
 
   try {
     // Update the series data in the database
     const result = await poolpg.query(
       `UPDATE series 
-       SET serieName = $1, numBooks = $2, genres = $3, link = $4, author_id = $5, related_collections = $6, image = $7 
+       SET "serieName" = $1, "numBooks" = $2, genres = $3, link = $4, author_id = $5, related_collections = $6, image = $7 
        WHERE id = $8`,
       [serieName, numBooks, genres, link, author_id || null, related_collections, image, id]
     );
@@ -24,23 +25,7 @@ const updateSerie = async (req, res) => {
     // Fetch the updated serie data
     const serieResult = await poolpg.query(`
       SELECT series.*,
-      EXTRACT(YEAR FROM MIN(COALESCE(books."publishDate", 
-                                    -- Try converting customDate to a full date format
-                                    CASE 
-                                      WHEN books."customDate" ~* '^[0-9]{4}$' 
-                                      THEN to_date(books."customDate", 'YYYY')  -- If only a year
-                                      WHEN books."customDate" ~* '^[A-Za-z]+ [0-9]{4}$' 
-                                      THEN to_date(books."customDate", 'Month YYYY')  -- If month and year
-                                      ELSE NULL
-                                    END))) AS first_book_year,
-      EXTRACT(YEAR FROM MAX(COALESCE(books."publishDate", 
-                                    CASE 
-                                      WHEN books."customDate" ~* '^[0-9]{4}$' 
-                                      THEN to_date(books."customDate", 'YYYY')
-                                      WHEN books."customDate" ~* '^[A-Za-z]+ [0-9]{4}$' 
-                                      THEN to_date(books."customDate", 'Month YYYY')
-                                      ELSE NULL
-                                    END))) AS last_book_year
+      COUNT(DISTINCT books.id) AS "currentBooks"
       FROM series
       LEFT JOIN books ON books.serie_id = series.id
       WHERE series.id = $1
@@ -54,6 +39,13 @@ const updateSerie = async (req, res) => {
     // Fetch authors for the serie
     const authors = await getAuthorsByIds(serieResult.rows[0].author_id);
     serieResult.rows[0].authors = authors;
+
+    // Use the utility function to fetch publish years
+    const publishYears = await fetchPublishYearsUtil(serieResult.rows.id, 'serie');
+
+    // Step 3: Find the first and last book years
+    serieResult.rows[0].first_book_year = publishYears.length > 0 ? Math.min(...publishYears) : null;
+    serieResult.rows[0].last_book_year = publishYears.length > 0 ? Math.max(...publishYears) : null;
 
     // Fetch image URL if image is set
     let url = null;

@@ -13,6 +13,7 @@ import NetworkErrorPage from '../../../pages/NetworkErrorPage';
 export default function Home() {
     const activeTab = useSelector((state) => state.user.activeTab);
     const activeGenre = useSelector((state) => state.user.activeGenre);
+    console.log(`Navigating to ${activeTab}...`);
 
     const [pageLimitStart, setPageLimitStart] = useState();
     const [pageLimitEnd, setPageLimitEnd] = useState();
@@ -23,6 +24,9 @@ export default function Home() {
     const [notFound, setNotFound] = useState(false);
     const [networkError, setNetworkError] = useState(false);
     const [cardData, setCardData] = useState([]);
+    if(!cardData || cardData.length === 0) {
+        console.log('Card data is empty');
+    }
 
     const dispatch = useDispatch();
 

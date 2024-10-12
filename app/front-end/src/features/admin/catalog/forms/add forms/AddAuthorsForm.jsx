@@ -94,22 +94,22 @@ function AddAuthorsForm({ onClose }) {
             />
           </div>
           {/* Other form fields */}
-          <div className="w-full mb-2 flex space-x-2">
-            <div className='w-full'>
-              <label className="block text-sm font-medium">Date of birth:</label>
-              <input type="date" name="dob" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
-            </div>
-            <div className='w-full'>
-              <label className="block text-sm font-medium">Date of death:</label>
-              <input type="date" name="dod" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
-            </div>
-          </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium">Custom date of birth:</label>
+            <label className="block text-sm font-medium">Date of birth:</label>
             <input
               type="text"
-              name="customDob"
+              name="dob"
               className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              placeholder="e.g., October 8, 2024"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium">Date of death:</label>
+            <input
+              type="text"
+              name="dod"
+              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              placeholder="e.g., October 8, 2024"
             />
           </div>
           <div className="mb-2">

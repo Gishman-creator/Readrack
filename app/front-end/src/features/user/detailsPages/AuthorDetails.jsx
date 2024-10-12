@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axiosUtils from '../../../utils/axiosUtils';
-import { calculateAgeAtDeath, capitalize, formatDate, spacesToHyphens } from '../../../utils/stringUtils';
+import { calculateAgeAtDeath, capitalize, capitalizeGenres, spacesToHyphens } from '../../../utils/stringUtils';
 import { bufferToBlobURL } from '../../../utils/imageUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -302,7 +302,7 @@ function AuthorDetails() {
   return (
     <div className='px-[4%] sm:px-[12%]'>
       <div className='md:flex md:flex-row md:space-x-6 xl:space-x-8 mb-10'>
-        <div className='w-full pt-2 md:w-[22rem] md:h-full md:sticky md:top-20 lg:top-[4.5rem] overflow-auto'>
+        <div className='w-full pt-2 md:w-[22rem] md:h-full md:sticky md:top-20 lg:top-[4rem] overflow-auto'>
           <div className=' max-w-[13rem] mx-auto'>
             <img src={authorData.imageURL || blank_image} alt="" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' loading="lazy" />
             <div className='w-full mx-auto'>
@@ -315,18 +315,18 @@ function AuthorDetails() {
               <div className='font-arima font-medium text-sm text-center md:text-left'>
                 <span>{capitalize(authorData.nationality)}</span>
                 <span className={`${authorData.dob || authorData.customDob  ? 'inline' : 'hidden'}`}>,</span>
-                <span className={`${authorData.dob || authorData.customDob  ? 'block' : 'hidden'}`}>Born on {formatDate(authorData.dob) || authorData.customDob}</span>
+                <span className={`${authorData.dob || authorData.customDob  ? 'block' : 'hidden'}`}>Born on {authorData.dob}</span>
               </div>
               {authorData.dod && (
                 <>
-                  <p className='font-arima font-medium text-sm text-center md:text-left'>Died on {formatDate(authorData.dod)},</p>
+                  <p className='font-arima font-medium text-sm text-center md:text-left mt-2'>Died on {authorData.dod},</p>
                   <p className='font-arima font-medium text-sm text-center md:text-left'> at {authorData.age} years old.</p>
                 </>
               )}
               <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
                 <p className='md:inline font-poppins font-semibold text-center md:text-left text-sm'>Genres:</p>
                 <div className='md:inline flex flex-wrap gap-x-2 md:ml-1 text-sm text-center md:text-left font-arima items-center justify-center md:justify-start w-[90%] mx-auto'>
-                  {authorData.genres}
+                  {capitalizeGenres(authorData.genres)}
                 </div>
               </div>
               <div className='flex justify-evenly items-center mt-4'>
@@ -392,10 +392,12 @@ function AuthorDetails() {
               </div>
               <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
                 {series.slice(0, seriesLimit).map((item, index) => (
-                  <div
+                  <a
+                    href={`/series/${item.id}/${spacesToHyphens(item.serieName)}`}
                     key={item.id}
                     className='flex space-x-2 mt-4 pb-3 border-b-2 border-gray-300 cursor-pointer'
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault(); 
                       navigate(`/series/${item.id}/${spacesToHyphens(item.serieName)}`);
                     }}
                   >
@@ -429,7 +431,7 @@ function AuthorDetails() {
                         </a>
                       }
                     </div>
-                  </div>
+                  </a>
                 ))}
               </div>
               {(seriesCount > seriesLimit || seriesLimit > groupRange) && (
@@ -443,7 +445,7 @@ function AuthorDetails() {
             </>
           )}
 
-          {/* Author series */}
+          {/* Author collection */}
           {collections.length > 0 && (
             <>
               <div className='flex justify-between items-center mt-8 md:mt-12'>
@@ -453,10 +455,12 @@ function AuthorDetails() {
               </div>
               <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
                 {collections.slice(0, collectionsLimit).map((item, index) => (
-                  <div
+                  <a
+                    href={`/collections/${item.id}/${spacesToHyphens(item.collectionName)}`}
                     key={item.id}
                     className='flex space-x-2 mt-4 pb-3 border-b-2 border-gray-300 cursor-pointer'
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault(); 
                       navigate(`/collections/${item.id}/${spacesToHyphens(item.collectionName)}`);
                     }}
                   >
@@ -490,7 +494,7 @@ function AuthorDetails() {
                         </a>
                       }
                     </div>
-                  </div>
+                  </a>
                 ))}
               </div>
               {(collectionsCount > collectionsLimit || collectionsLimit > groupRange) && (
@@ -527,7 +531,7 @@ function AuthorDetails() {
                   </div>
                   <p className='font-arima text-sm'>by  {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                   <p className='font-arima text-slate-400 text-sm mt-1'>
-                    published {formatDate(item.publishDate) || item.customDate}
+                    published {item.publishDate}
                   </p>
                   <a
                     href={item.link}

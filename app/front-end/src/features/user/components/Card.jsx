@@ -8,7 +8,6 @@ import { incrementSearchCount } from '../../../utils/searchCountUtils';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 function Card({ card, activeTab, fixedWidth }) {
-    // console.log('The cardData from card.jsx', card.image);
     const navigate = useNavigate();
     const dispatch = useDispatch();
     // console.log('The card image url is:', card);
@@ -29,15 +28,28 @@ function Card({ card, activeTab, fixedWidth }) {
     };
 
     const navigateToAuthor = (e, author) => {
+        e.preventDefault();
         e.stopPropagation(); // Prevent the card's onClick from triggering
         incrementSearchCount('author', author.author_id);
         navigate(`/authors/${author.author_id}/${spacesToHyphens(author.author_name)}`);
     };
 
+    // Dynamic href based on the activeTab
+    const getHref = () => {
+        if (activeTab === 'Series') {
+            return `/series/${card.id}/${spacesToHyphens(card.serieName)}`;
+        } else if (activeTab === 'Collections') {
+            return `/collections/${card.id}/${spacesToHyphens(card.collectionName)}`;
+        } else {
+            return `/authors/${card.id}/${spacesToHyphens(card.authorName)}`;
+        }
+    };
+
     return (
-        <div
+        <a
+            href={getHref()}
             className={`${fixedWidth ? 'min-w-[10rem]' : 'w-full'} md:max-w-[10rem] group hover:border-[#e1e1e1] rounded-md cursor-pointer mb-7`}
-            onClick={() => navigateToDetails(card.id)}
+            onClick={(e) => {e.preventDefault(); navigateToDetails(card.id)}}
         >
             <div className="relative overflow-hidden rounded-lg duration-300 group-hover:shadow-custom3">
                 <img
@@ -75,15 +87,16 @@ function Card({ card, activeTab, fixedWidth }) {
                             className='text-sm font-arima overflow-hidden whitespace-nowrap text-ellipsis '
                         >
                             <span>by </span>
-                            {card.authors.map(author => (
-                                <span
+                            {card.authors && card.authors.length > 0 && card.authors.map(author => (
+                                <a
+                                    href={`/authors/${author.author_id}/${spacesToHyphens(author.author_name)}`}
                                     key={author.author_id}
                                     title={capitalize(author.author_name)}
                                     className='hover:underline cursor-pointer'
-                                    onClick={(e) => navigateToAuthor(e, author)}
+                                    onClick={(e) => {navigateToAuthor(e, author)}}
                                 >
                                     {capitalize(author.nickname || author.author_name)}
-                                </span>
+                                </a>
                             )).reduce((prev, curr) => [prev, ', ', curr])}
                         </p>
                         <p className="font-arima font-bold text-xs text-green-700 mt-4">
@@ -124,7 +137,7 @@ function Card({ card, activeTab, fixedWidth }) {
                     </>
                 )}
             </div>
-        </div>
+        </a>
     );
 }
 

@@ -50,11 +50,7 @@ const NavBar = () => {
 
     return (
         <div className={`fixed top-0 flex min-w-full max-w-full h-14 justify-between items-center px-[2%] sm:px-[12%] bg-white z-20`}>
-            <div className={`z-24 sm:flex items-center ${isSearchOpen ? 'hidden' : 'flex'}`} onClick={navigateToHome}>
-                {/* Hamburger Menu for Small Screens */}
-                <div className={`${isSearchOpen ? 'block' : 'sm:hidden'} lg:hidden mr-`}>
-                    <Bars3Icon className='w-10 h-10 p-2 cursor-pointer rounded-lg on-click' onClick={toggleMenu} />
-                </div>
+            <a href="/" className={`z-24 sm:flex items-center ${isSearchOpen ? 'hidden' : 'flex'}`} onClick={(e) => { e.preventDefault(); navigateToHome() }}>
                 {/* Logo */}
                 <div>
                     <img src={logo} alt="Logo" className="w-8 h-8 cursor-pointer" />
@@ -63,23 +59,37 @@ const NavBar = () => {
                     <h1 className='inline'>read</h1>
                     <h1 className='inline font-bold text-primary'>rack</h1>
                 </div>
-            </div>
+            </a>
 
             {/* Navigation Links */}
             <div className={`${isSearchOpen ? 'hidden' : 'sm:flex'} lg:flex hidden sm:space-x-4`}>
-                <span
-                    onClick={() => handleTabClick('Series')}
+                <a
+                    href='/series'
+                    onClick={(e) => { e.preventDefault(); handleTabClick('Series') }}
                     className={`cursor-pointer font-arima font-semibold ${activeTab == 'Series' ? 'text-primary font-extrabold' : ''}`}
-                >Series</span>
-                <span
-                    onClick={() => handleTabClick('Authors')}
+                >Series</a>
+                <a
+                    href='/authors'
+                    onClick={(e) => { e.preventDefault(); handleTabClick('Authors') }}
                     className={`cursor-pointer font-arima font-semibold ${activeTab == 'Authors' ? 'text-primary font-extrabold' : ''}`}
-                >Authors</span>
-                <span className='sm:hidden'>Donate</span>
+                >Authors</a>
+                <a className='sm:hidden'>Donate</a>
             </div>
 
-            {/* Render Search Bar */}
-            <SearchBar isSearchOpen={isSearchOpen} toggleSearch={toggleSearch} />
+            <div className={`${isSearchOpen && 'w-full'} flex items-center space-x-2`}>
+                <a
+                    href='/series'
+                    onClick={(e) => { e.preventDefault(); handleTabClick('Series') }}
+                    className={`sm:hidden cursor-pointer font-arima font-semibold ${activeTab == 'Series' ? 'hidden' : (!isSearchOpen ? 'inline' : 'hidden')}`}
+                >Series</a>
+                <a
+                    href='/authors'
+                    onClick={(e) => { e.preventDefault(); handleTabClick('Authors') }}
+                    className={`sm:hidden cursor-pointer font-arima font-semibold ${activeTab == 'Authors' ? 'hidden' : (!isSearchOpen ? 'inline' : 'hidden')}`}
+                >Authors</a>
+                {/* Render Search Bar */}
+                <SearchBar isSearchOpen={isSearchOpen} toggleSearch={toggleSearch} />
+            </div>
 
             {/* Render Sidebar */}
             <SideBar isMenuOpen={isMenuOpen} toggleMenu={toggleMenu} />

@@ -31,14 +31,14 @@ exports.search = async (req, res) => {
 
   const query = req.query.query ? req.query.query.trim().replace(/%/g, '\\%').replace(/_/g, '\\_') : null;
   const type = req.query.type;
-  const seriePageLimitStart = validatePagination(parseInt(req.query.seriePageLimitStart, 10), 0);
-  const seriePageLimitEnd = validatePagination(parseInt(req.query.seriePageLimitEnd, 10), 10);
-  const collectionPageLimitStart = validatePagination(parseInt(req.query.collectionPageLimitStart, 10), 0);
-  const collectionPageLimitEnd = validatePagination(parseInt(req.query.collectionPageLimitEnd, 10), 10);
-  const authorPageLimitStart = validatePagination(parseInt(req.query.authorPageLimitStart, 10), 0);
-  const authorPageLimitEnd = validatePagination(parseInt(req.query.authorPageLimitEnd, 10), 10);
-  const bookPageLimitStart = validatePagination(parseInt(req.query.bookPageLimitStart, 10), 0);
-  const bookPageLimitEnd = validatePagination(parseInt(req.query.bookPageLimitEnd, 10), 10);
+  const seriePageLimitStart = validatePagination(parseInt(req.query.seriePageLimitStart, 10));
+  const seriePageLimitEnd = validatePagination(parseInt(req.query.seriePageLimitEnd, 10));
+  const collectionPageLimitStart = validatePagination(parseInt(req.query.collectionPageLimitStart, 10));
+  const collectionPageLimitEnd = validatePagination(parseInt(req.query.collectionPageLimitEnd, 10));
+  const authorPageLimitStart = validatePagination(parseInt(req.query.authorPageLimitStart, 10));
+  const authorPageLimitEnd = validatePagination(parseInt(req.query.authorPageLimitEnd, 10));
+  const bookPageLimitStart = validatePagination(parseInt(req.query.bookPageLimitStart, 10));
+  const bookPageLimitEnd = validatePagination(parseInt(req.query.bookPageLimitEnd, 10));
 
   try {
     // Initialize queries
@@ -46,12 +46,17 @@ exports.search = async (req, res) => {
     let collectionsQuery = 'SELECT * FROM collections';
     let authorsQuery = `SELECT a.*, COUNT(DISTINCT s.id) AS "numSeries", COUNT(DISTINCT b.id) AS "numBooks" FROM authors a LEFT JOIN series s ON s.author_id::text LIKE '%' || a.id::text || '%' LEFT JOIN books b ON b.author_id::text LIKE '%' || a.id::text || '%' `;
     let booksQuery = 'SELECT books.*, series."serieName" AS serie_name, collections."collectionName" AS collection_name FROM books LEFT JOIN series ON books.serie_id = series.id LEFT JOIN collections ON books.collection_id = collections.id';
+    let seriesCountQuery = 'SELECT COUNT(*) AS "totalCount" FROM series';
+    let collectionsCountQuery = 'SELECT COUNT(*) AS "totalCount" FROM collections';
+    let authorsCountQuery = 'SELECT COUNT(*) AS "totalCount" FROM authors';
+    let booksCountQuery = 'SELECT COUNT(*) AS "totalCount" FROM books';
 
     let seriesQueryParams = [];
     let collectionsQueryParams = [];
     let authorsQueryParams = [];
     let booksQueryParams = [];
     let countQueryParams = [];
+    let authorsCountQueryParams = [];
 
     // Apply query filter if available (for any order search)
     if (query) {
@@ -68,6 +73,11 @@ exports.search = async (req, res) => {
       authorsQuery += ` WHERE ${authorsCondition} OR ${authorsNicknameCondition} GROUP BY a.id ORDER BY "searchCount" DESC`;
       booksQuery += ` WHERE ${booksCondition} ORDER BY "searchCount" DESC`;
 
+      seriesCountQuery += ` WHERE ${seriesCondition}`;
+      collectionsCountQuery += ` WHERE ${collectionsCondition}`;
+      authorsCountQuery += ` WHERE ${authorsCondition} OR ${authorsNicknameCondition}`;
+      booksCountQuery += ` WHERE ${booksCondition}`;
+
       // Append params
       seriesQueryParams.push(...seriesParams);
       collectionsQueryParams.push(...collectionsParams);
@@ -75,6 +85,7 @@ exports.search = async (req, res) => {
       booksQueryParams.push(...booksParams);
 
       countQueryParams.push(...seriesParams);
+      authorsCountQueryParams.push(...seriesParams, ...authorsNicknameParams);
     }
 
     // Apply limits and offsets
@@ -98,6 +109,7 @@ exports.search = async (req, res) => {
     // Execute queries
     const seriesResult = await poolpg.query(seriesQuery, seriesQueryParams);
     const collectionsResult = await poolpg.query(collectionsQuery, collectionsQueryParams);
+    console.log('authorsQueryParams', authorsQueryParams)
     const authorsResult = await poolpg.query(authorsQuery, authorsQueryParams);
     const booksResult = await poolpg.query(booksQuery, booksQueryParams);
 
@@ -125,10 +137,20 @@ exports.search = async (req, res) => {
     }
 
     // Execute count queries
-    const totalSeries = seriesResult.rowCount;
-    const totalCollections = collectionsResult.rowCount;
-    const totalAuthors = authorsResult.rowCount;
-    const totalBooks = booksResult.rowCount;
+    const totalSeriesResult = await poolpg.query(seriesCountQuery, countQueryParams);
+    const totalSeries = totalSeriesResult.rows[0]?.totalCount || 0;
+
+    const totalCollectionsResult = await poolpg.query(collectionsCountQuery, countQueryParams);
+    const totalCollections = totalCollectionsResult.rows[0]?.totalCount || 0;
+
+    console.log('authorsCountQuery', authorsCountQuery)
+    console.log('authorsCountQueryParams', authorsCountQueryParams)
+    const totalAuthorsResult = await poolpg.query(authorsCountQuery, authorsCountQueryParams);
+    const totalAuthors = totalAuthorsResult.rows[0]?.totalCount || 0;
+
+    const totalBooksResult = await poolpg.query(booksCountQuery, countQueryParams);
+    const totalBooks = totalBooksResult.rows[0]?.totalCount || 0;
+
 
     // Combine results
     let results = [];

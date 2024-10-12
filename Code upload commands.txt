@@ -24,3 +24,7 @@ directories:
 
 /etc/systemd/system/myapp.service
 /etc/app.env
+
+**Restoring a db:
+
+pg_dump -U postgres -F c -b -v -f readrack3.dump readrack3

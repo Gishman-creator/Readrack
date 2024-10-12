@@ -1,4 +1,5 @@
 const poolpg = require('../../config/dbpg'); // PostgreSQL poolpg
+const { fetchPublishYearsUtil } = require('../../utils/fetchPublishYearsUtil');
 const { getAuthorsByIds } = require('../../utils/getUtils');
 const { getImageURL } = require('../../utils/imageUtils');
 
@@ -34,7 +35,15 @@ exports.getCollections = async (req, res) => {
 
     const results = await poolpg.query(dataQuery, queryParams);
     const dataRows = results.rows;
-    const totalCount = results.rowCount;
+
+    // Query to count total books
+    const countQuery = `
+    SELECT COUNT(*) AS total_count 
+    FROM collections
+    `;
+    
+    const countResult = await poolpg.query(countQuery);
+    const totalCount = parseInt(countResult.rows[0].total_count, 10);
 
     for (const dataRow of dataRows) {
       const authors = await getAuthorsByIds(dataRow.author_id);
@@ -94,23 +103,6 @@ exports.getCollectionsByAuthorId = async (req, res) => {
 
     let collectionsQuery = `
       SELECT collections.*,
-      EXTRACT(YEAR FROM MIN(COALESCE(books."publishDate", 
-                                    -- Try converting customDate to a full date format
-                                    CASE 
-                                      WHEN books."customDate" ~* '^[0-9]{4}$' 
-                                      THEN to_date(books."customDate", 'YYYY')  -- If only a year
-                                      WHEN books."customDate" ~* '^[A-Za-z]+ [0-9]{4}$' 
-                                      THEN to_date(books."customDate", 'Month YYYY')  -- If month and year
-                                      ELSE NULL
-                                    END))) AS first_book_year,
-      EXTRACT(YEAR FROM MAX(COALESCE(books."publishDate", 
-                                    CASE 
-                                      WHEN books."customDate" ~* '^[0-9]{4}$' 
-                                      THEN to_date(books."customDate", 'YYYY')
-                                      WHEN books."customDate" ~* '^[A-Za-z]+ [0-9]{4}$' 
-                                      THEN to_date(books."customDate", 'Month YYYY')
-                                      ELSE NULL
-                                    END))) AS last_book_year,
       COUNT(DISTINCT books.id) AS "numBooks"
       FROM collections
       LEFT JOIN books ON books.collection_id = collections.id
@@ -129,6 +121,13 @@ exports.getCollectionsByAuthorId = async (req, res) => {
     const totalCount = results.rowCount;
 
     for (const collection of collections) {
+      // Use the utility function to fetch publish years
+      const publishYears = await fetchPublishYearsUtil(collection.id, 'collection');
+
+      // Step 3: Find the first and last book years
+      collection.first_book_year = publishYears.length > 0 ? Math.min(...publishYears) : null;
+      collection.last_book_year = publishYears.length > 0 ? Math.max(...publishYears) : null;
+
       const authors = await getAuthorsByIds(collection.author_id);
       collection.authors = authors;
 

@@ -5,35 +5,10 @@ export function sortByFirstBookYearAsc(a, b) {
     return yearA - yearB;  // Ascending order
 };
 
-// Function to parse custom date string into a Date object or year
-function parseCustomDate(customDate) {
-    if (!customDate) return null;
-
-    const yearOnlyRegex = /^\d{4}$/;  // Matches only years like "1988"
-    const monthYearRegex = /^(January|February|March|April|May|June|July|August|September|October|November|December)\s\d{4}$/;  // Matches "April 1993"
-
-    // If the custom date is only a year, return just the year
-    if (yearOnlyRegex.test(customDate)) {
-        return new Date(parseInt(customDate, 10), 0);  // January of the given year
-    }
-
-    // If the custom date includes a month and year, return full Date
-    if (monthYearRegex.test(customDate)) {
-        return new Date(customDate);
-    }
-
-    return null;
-}
-
-// Sorting function to handle both customDate and publishDate
 export function sortByPublishDateAsc(a, b) {
-    // Parse custom dates
-    const customDateA = parseCustomDate(a.customDate);
-    const customDateB = parseCustomDate(b.customDate);
-
-    // Use publishDate if customDate is not available
-    const dateA = customDateA || (a.publishDate ? new Date(a.publishDate) : null);
-    const dateB = customDateB || (b.publishDate ? new Date(b.publishDate) : null);
+    // Parse publish dates
+    const dateA = parsePublishDate(a.publishDate);
+    const dateB = parsePublishDate(b.publishDate);
 
     // If both dates are null, consider them equal
     if (!dateA && !dateB) return 0;
@@ -44,6 +19,35 @@ export function sortByPublishDateAsc(a, b) {
 
     // Compare dates in ascending order
     return dateA - dateB;
+}
+
+// Helper function to parse publishDate
+function parsePublishDate(publishDate) {
+    if (!publishDate) return null;
+
+    // Attempt to parse full date, month-year, or year only
+    const fullDate = new Date(publishDate); // Try parsing as a full date
+
+    if (!isNaN(fullDate.getTime())) {
+        return fullDate; // Return full date if valid
+    }
+
+    // If it's not a full date, try month-year format
+    const monthYearMatch = publishDate.match(/(\w+)\s+(\d{4})/);
+    if (monthYearMatch) {
+        const month = monthYearMatch[1];
+        const year = monthYearMatch[2];
+        return new Date(`${month} 1, ${year}`); // Set day to 1
+    }
+
+    // If it's just a year, return a date object for January 1st of that year
+    const yearMatch = publishDate.match(/^(\d{4})$/);
+    if (yearMatch) {
+        return new Date(`${yearMatch[1]}-01-01`);
+    }
+
+    // Return null if no valid format found
+    return null;
 }
 
 export const sortByNumBooks = (data, ascending) => {

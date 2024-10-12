@@ -99,12 +99,11 @@ const SearchResults = () => {
     }, [type, totalSeries, totalAuthors]);
 
     useEffect(() => {
-        if (seriePageLimitStart === undefined || seriePageLimitEnd === undefined || authorPageLimitStart === undefined || authorPageLimitEnd === undefined) return;
 
         const fetchResults = async () => {
             setIsLoading(true);
             try {
-                const response = await axiosUtils(`/api/search?query=${initialQuery}&type=${type}&seriePageLimitStart=${seriePageLimitStart}&seriePageLimitEnd=${seriePageLimitEnd}&authorPageLimitStart=${authorPageLimitStart}&authorPageLimitEnd=${authorPageLimitEnd}`, 'GET');
+                const response = await axiosUtils(`/api/search?query=${initialQuery}&type=${type}`, 'GET');
                 console.log('The search results are:', response);
 
                 const dataWithBlobs = response.data.results.map((item) => ({
@@ -139,7 +138,7 @@ const SearchResults = () => {
         };
 
         fetchResults();
-    }, [initialQuery, type, seriePageLimitStart, authorPageLimitStart, seriePageLimitEnd, authorPageLimitEnd]);
+    }, [initialQuery, type]);
 
     const handlePageChange = (newPageStart, newPageEnd, isSeries) => {
         if (isSeries) {
@@ -207,7 +206,7 @@ const SearchResults = () => {
                         <div>
                             <h2 className="font-poppins font-semibold mb-3 mt-6">Series</h2>
                             <div className='mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-6 gap-6 md:gap-0'>
-                                {series.map((result) => (
+                                {series.slice(seriePageLimitStart, seriePageLimitEnd).map((result) => (
                                     <Card key={result.id} card={result} activeTab="Series" />
                                 ))}
                             </div>
@@ -227,7 +226,7 @@ const SearchResults = () => {
                         <div>
                             <h2 className="font-poppins font-semibold mb-3 mt-10">Authors</h2>
                             <div className='mt-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-6 gap-6 md:gap-0'>
-                                {authors.map((result) => (
+                                {authors.slice(authorPageLimitStart, authorPageLimitEnd).map((result) => (
                                     <Card key={result.id} card={result} activeTab="Authors" />
                                 ))}
                             </div>

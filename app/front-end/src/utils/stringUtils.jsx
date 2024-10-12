@@ -8,22 +8,14 @@ export function capitalize(str) {
         .join(' ');    
 }
 
-export function formatDate(date) {
-    if (!date) return date;
+// New function to capitalize genres
+export function capitalizeGenres(genreStr) {
+    if (!genreStr) return genreStr;
 
-    // Convert the date string to a Date object
-    const d = new Date(date);
-
-    // Extract day, month, and year in UTC
-    const day = d.getUTCDate();
-    const month = d.getUTCMonth(); // Zero-based month
-    const year = d.getUTCFullYear();
-
-    // Array of month names
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-    // Format date as 'MMM d, yyyy'
-    return `${monthNames[month]} ${day}, ${year}`;
+    return genreStr
+        .split(',')   // Split the string by commas into an array of genres
+        .map(genre => capitalize(genre.trim())) // Trim whitespace and capitalize each genre
+        .join(', ');  // Join the genres back together with commas and spaces
 }
 
 export function calculateAgeAtDeath (dob, dod) {

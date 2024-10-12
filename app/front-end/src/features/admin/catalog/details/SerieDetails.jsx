@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axiosUtils from '../../../../utils/axiosUtils';
-import { capitalize, formatDate, spacesToHyphens } from '../../../../utils/stringUtils';
+import { capitalize, capitalizeGenres, spacesToHyphens } from '../../../../utils/stringUtils';
 import { bufferToBlobURL } from '../../../../utils/imageUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -251,7 +251,7 @@ function SerieDetails() {
             <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
               <p className='md:inline font-medium font-poppins text-center md:text-left text-sm'>Genres:</p>
               <div className='md:inline flex flex-wrap gap-x-2 md:ml-1 text-sm text-center md:text-left font-arima items-center justify-center md:justify-start w-[90%] mx-auto'>
-                {serieData.genres}
+                {capitalizeGenres(serieData.genres)}
               </div>
             </div>
           </div>
@@ -300,7 +300,7 @@ function SerieDetails() {
                 </div>
                 <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
                 <p className='font-arima text-slate-400 text-sm mt-1'>
-                  #{item.serieIndex}, published {formatDate(item.publishDate) || item.customDate}
+                  #{item.serieIndex}, published {item.publishDate}
                 </p>
                 <a
                   href={item.link}

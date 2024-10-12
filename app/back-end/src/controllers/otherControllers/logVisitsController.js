@@ -78,14 +78,14 @@ exports.getVisitsData = async (req, res) => {
 
     try {
         const { rows: results } = await poolpg.query(query);
-        console.log('Visits Results:', results);
+        // console.log('Visits Results:', results);
 
         // Merge results with labels
         const mergedData = labels.map(labelObj => {
             const match = results.find(result => Number(result.label.trim()) === labelObj.label); // Convert to number for comparison
             return match ? { label: match.label, visits: Number(match.visits) } : labelObj; // Convert visits to number
         });
-        console.log('mergedData Results:', mergedData);
+        // console.log('mergedData Results:', mergedData);
 
         res.status(200).json(mergedData);
     } catch (error) {

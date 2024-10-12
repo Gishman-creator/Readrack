@@ -82,7 +82,7 @@ const updateAuthorData = async (req, res) => {
                 req.io.emit('progress', progress);
             }
 
-            // console.log(`Updated author ID ${id} and progress: ${progress}`);
+            console.log(`Updated author ID ${id} and progress: ${progress}`);
         }
 
         client.release(); // Release the client back to the pool
@@ -90,7 +90,7 @@ const updateAuthorData = async (req, res) => {
         console.error('Error during author update:', error.message);
 
         // Retry after a delay if there's an error
-        // setTimeout(() => updateAuthorData(req, res), 5000); // Retry every 5 seconds if there is an error
+        setTimeout(() => updateAuthorData(req, res), 5000); // Retry every 5 seconds if there is an error
     }
 };
 

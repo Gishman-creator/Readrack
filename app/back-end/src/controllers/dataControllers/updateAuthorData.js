@@ -22,7 +22,17 @@ const generationConfig = {
 };
 
 // Function to connect to the Gemini API and update the database
+
+let isUpdating = false; // Lock variable
+
 const updateAuthorData = async (req, res) => {
+    
+    if (isUpdating) {
+        return res.status(400).json({ message: "Update process already running." });
+    }
+
+    isUpdating = true; // Set lock
+
     try {
         // Connect to the database
         const client = await poolpg.connect();

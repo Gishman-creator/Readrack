@@ -74,6 +74,9 @@ const updateAuthorData = async (req, res) => {
             const progressPercentage = ((processedAuthors / totalAuthors) * 100).toFixed(2);
             const progress = `${processedAuthors}/${totalAuthors} (${progressPercentage}%)`;
 
+            // Debugging log
+            console.log(`Processed: ${processedAuthors}, Total: ${totalAuthors}, Progress: ${progressPercentage}%`);
+
             // Emit progress updates via Socket.IO
             if (req.io) {
                 req.io.emit('progress', progress);

@@ -11,8 +11,8 @@ function Banner() {
         // Make the initial API call to start the update process
         const startUpdate = async () => {
             try {
-                const response = await axiosUtils('/api/updateAuthorData', 'POST');
-                setMessage(response.data.message);  // Set initial message from the response
+                const response = await axiosUtils('/api/validateAuthors', 'POST');
+                console.log(response)
             } catch (error) {
                 console.error('Error starting author update:', error);
                 setMessage('Failed to start author update.');
@@ -26,15 +26,20 @@ function Banner() {
             setProgress(data);  // Update progress percentage
         });
 
+        socket.on('validateMessage', (message) => {
+            setMessage(message);  // Update progress percentage
+        });
+
         // Clean up socket connection when the component unmounts
         return () => {
             socket.off('progress');
+            socket.off('validateMessage');
         };
     }, [socket]);
 
     return (
         <div className="w-full p-2 bg-primary text-white text-center text-sm font-emibold">
-            <p>{message} {progress}</p>
+            <p>{message ? message : `Author data validation in progress: ${progress}`}</p>
         </div>
     );
 }

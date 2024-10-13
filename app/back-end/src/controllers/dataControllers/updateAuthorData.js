@@ -26,7 +26,7 @@ const generationConfig = {
 let isUpdating = false; // Lock variable
 
 const updateAuthorData = async (req, res) => {
-    
+
     if (isUpdating) {
         return res.status(400).json({ message: "Update process already running." });
     }
@@ -53,7 +53,7 @@ const updateAuthorData = async (req, res) => {
         }
 
         // Send an initial response to keep the request open
-        res.status(200).json({ message: "Author data update started:" });
+        res.status(200).json({ message: "Author data update started." });
 
         // Total authors to process
         const totalAuthors = authors.length;

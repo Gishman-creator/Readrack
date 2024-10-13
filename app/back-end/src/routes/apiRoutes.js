@@ -33,6 +33,7 @@ const {runMigrations} = require('../controllers/dataControllers/migrate');
 const convertPublishDateController = require('../controllers/dataControllers/convertPublishDateController');
 const { migrateDod } = require('../controllers/dataControllers/migrateDodController');
 const { updateAuthorData } = require('../controllers/dataControllers/updateAuthorData');
+const { validateAuthor } = require('../controllers/dataControllers/validateAuthor');
 // const dataController = require('../controllers/dataControllers/dataController')
 // const generateDataController = require('../controllers/dataControllers/generateDataController');
 // const getRandomBufferByType = require('../controllers/dataControllers/getRandomBufferByType')
@@ -101,6 +102,7 @@ router.post('/recommendSeries', recommendationController.recommendSeries)
 router.post('/migrate', runMigrations);
 router.post('/migrateDod', migrateDod);
 router.post('/updateAuthorData', updateAuthorData);
+router.post('/validateAuthors', validateAuthor);
 router.get('/convertPublishDate/:id', convertPublishDateController);
 
 

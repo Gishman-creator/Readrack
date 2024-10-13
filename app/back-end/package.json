@@ -29,6 +29,7 @@
     "nodemailer": "^6.9.14",
     "nodemon": "^3.1.4",
     "pg": "^8.13.0",
+    "puppeteer": "^23.5.3",
     "serverless-http": "^3.2.0",
     "sharp": "^0.33.5",
     "socket.io": "^4.7.5"

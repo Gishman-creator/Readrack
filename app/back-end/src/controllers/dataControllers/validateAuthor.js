@@ -52,12 +52,12 @@ const validateAuthor = async (req, res) => {
 
         const browser = await puppeteer.launch({
             headless: true, 
-            executablePath: '/usr/bin/google-chrome',  // Path to Chrome executable
-            args: [
-                '--no-sandbox', 
-                '--disable-gpu', 
-                '--remote-debugging-port=9222'
-            ]
+            // executablePath: '/usr/bin/google-chrome',  // Path to Chrome executable
+            // args: [
+            //     '--no-sandbox', 
+            //     '--disable-gpu', 
+            //     '--remote-debugging-port=9222'
+            // ]
         });
         const page = await browser.newPage();
 
@@ -138,6 +138,11 @@ const validateAuthor = async (req, res) => {
         console.error('Error during author validation:', error.message);
         res.status(500).json({ message: 'Error during validation process.' });
         isValidating = false; // Release lock in case of error
+        
+        // Retry after a delay
+        setTimeout(() => {
+            validateAuthor();
+        }, 5000); // Retry after 5 seconds
     }
 };
 

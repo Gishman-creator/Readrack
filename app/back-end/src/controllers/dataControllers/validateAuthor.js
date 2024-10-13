@@ -51,8 +51,7 @@ const validateAuthor = async (req, res) => {
         } 
 
         const browser = await puppeteer.launch({
-            headless: true, 
-            executablePath: '/usr/bin/google-chrome'  // Adjust to the correct path of your Chrome/Chromium
+            headless: true  // Adjust to the correct path of your Chrome/Chromium
         });
         const page = await browser.newPage();
 

@@ -151,6 +151,4 @@ const formatDate = (dobText) => {
     return dobMatch ? dobMatch[0] : 'Date of birth not found';
 };
 
-validateAuthor();
-
 module.exports = { validateAuthor };

@@ -43,21 +43,21 @@ const validateAuthor = async (req, res) => {
         if (authors.length === 0) {
             console.log("No authors to validate.");
             res.status(400).json({ message: "No authors to validate." });
-            if (req.io) {
-                req.io.emit('validateMessage', 'No authors to validate.');
-            }
-            client.release();
+            // if (req.io) {
+            //     req.io.emit('validateMessage', 'No authors to validate.');
+            // }
+            // client.release();
             return;
-        } 
+        }
 
         const browser = await puppeteer.launch({
-            headless: true, 
-            executablePath: '/usr/bin/google-chrome',  // Path to Chrome executable
-            args: [
-                '--no-sandbox', 
-                '--disable-gpu', 
-                '--remote-debugging-port=9222'
-            ]
+            headless: true,
+            // executablePath: '/usr/bin/google-chrome',  // Path to Chrome executable
+            // args: [
+            //     '--no-sandbox',
+            //     '--disable-gpu',
+            //     '--remote-debugging-port=9222'
+            // ]
         });
         const page = await browser.newPage();
 
@@ -126,9 +126,9 @@ const validateAuthor = async (req, res) => {
             console.log(`Progress: ${progress}`);
 
             // Emit progress updates via Socket.IO
-            if (req.io) {
-                req.io.emit('progress', progress);
-            }
+            // if (req.io) {
+            //     req.io.emit('progress', progress);
+            // }
         }
 
         await browser.close();
@@ -136,13 +136,8 @@ const validateAuthor = async (req, res) => {
         isValidating = false; // Release lock after finishing the validation
     } catch (error) {
         console.error('Error during author validation:', error.message);
-        res.status(500).json({ message: 'Error during validation process.' });
+        // res.status(500).json({ message: 'Error during validation process.' });
         isValidating = false; // Release lock in case of error
-        
-        // Retry after a delay
-        setTimeout(() => {
-            validateAuthor();
-        }, 5000); // Retry after 5 seconds
     }
 };
 
@@ -151,5 +146,10 @@ const formatDate = (dobText) => {
     const dobMatch = dobText.match(/(\w+\s\d{1,2},\s\d{4})/);
     return dobMatch ? dobMatch[0] : 'Date of birth not found';
 };
+
+// Retry after a delay
+setTimeout(() => {
+    validateAuthor();
+}, 5000); // Retry after 5 seconds
 
 module.exports = { validateAuthor };

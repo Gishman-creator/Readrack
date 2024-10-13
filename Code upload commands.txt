@@ -34,3 +34,12 @@ pg_dump -U postgres -F c -b -v -f readrack3.dump readrack3
 sudo docker cp readrack3.dump 87a2da575b1b:/readrack3.dump
 sudo docker exec -it 87a2da575b1b bash
 pg_restore -U postgres -d readrack3 -v /readrack3.dump
+
+**Installing chrome:
+
+sudo docker exec -it container_id bash
+
+apt-get update
+apt-get install -y wget sudo
+wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+apt install ./google-chrome-stable_current_amd64.deb

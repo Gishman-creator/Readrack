@@ -90,6 +90,7 @@ const validateAuthor = async (req, res) => {
                     `UPDATE authors SET status = $1 WHERE id = $2`,
                     ['discard', id]
                 );
+                processedAuthors++;
                 continue;
             }
 

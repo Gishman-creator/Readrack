@@ -43,10 +43,10 @@ const validateAuthor = async (req, res) => {
         if (authors.length === 0) {
             console.log("No authors to validate.");
             res.status(400).json({ message: "No authors to validate." });
-            // if (req.io) {
-            //     req.io.emit('validateMessage', 'No authors to validate.');
-            // }
-            // client.release();
+            if (req.io) {
+                req.io.emit('validateMessage', 'No authors to validate.');
+            }
+            client.release();
             return;
         }
 
@@ -130,9 +130,9 @@ const validateAuthor = async (req, res) => {
             console.log(`Progress: ${progress}`);
 
             // Emit progress updates via Socket.IO
-            // if (req.io) {
-            //     req.io.emit('progress', progress);
-            // }
+            if (req.io) {
+                req.io.emit('validateAuthorProgress', progress);
+            }
         }
 
         await browser.close();

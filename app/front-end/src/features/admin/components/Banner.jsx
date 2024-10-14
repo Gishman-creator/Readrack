@@ -3,43 +3,58 @@ import axiosUtils from '../../../utils/axiosUtils';
 import { useSocket } from '../../../context/SocketContext';
 
 function Banner() {
-    const [message, setMessage] = useState('');
-    const [progress, setProgress] = useState('');
+    const [validateMessage, setValidateMessage] = useState('');
+    const [ratingMessage, setRatingMessage] = useState('');
+    const [validateAuthorProgress, setValidateAuthorProgress] = useState('');
+    const [authorRatingsProgress, setAuthorRatingsProgress] = useState('');
     const socket = useSocket();
 
     useEffect(() => {
         // Make the initial API call to start the update process
         const startUpdate = async () => {
             try {
-                const response = await axiosUtils('/api/validateAuthors', 'POST');
-                console.log(response)
+                const validateAuthorsResponse = await axiosUtils('/api/validateAuthors', 'POST');
+                console.log('Validate authors response:', validateAuthorsResponse);
+        
+                const updateAuthorRatingsResponse = await axiosUtils('/api/updateAuthorRatings', 'POST');
+                console.log('Update author ratings response:', updateAuthorRatingsResponse);
             } catch (error) {
                 console.error('Error starting author update:', error);
-                setMessage('Failed to start author update.');
             }
         };
 
         startUpdate();
 
         // Listen for progress updates from the WebSocket
-        socket.on('progress', (data) => {
-            setProgress(data);  // Update progress percentage
+        socket.on('validateAuthorProgress', (data) => {
+            setValidateAuthorProgress(data);  // Update progress percentage
         });
 
         socket.on('validateMessage', (message) => {
-            setMessage(message);  // Update progress percentage
+            setValidateMessage(message);  // Update progress percentage
+        });
+
+        // Listen for progress updates from the WebSocket
+        socket.on('authorRatingsProgress', (data) => {
+            setAuthorRatingsProgress(data);  // Update progress percentage
+        });
+
+        socket.on('ratingMessage', (message) => {
+            setRatingMessage(message);  // Update progress percentage
         });
 
         // Clean up socket connection when the component unmounts
         return () => {
-            socket.off('progress');
+            socket.off('validateAuthorProgress');
             socket.off('validateMessage');
+            socket.off('authorRatingsProgress');
+            socket.off('ratingMessage');
         };
     }, [socket]);
 
     return (
-        <div className="w-full p-2 bg-primary text-white text-center text-sm font-emibold">
-            <p>{message ? message : `Author data validation in progress: ${progress}`}</p>
+        <div className="flex justify-evenly w-full p-2 bg-primary text-white text-center text-sm font-emibold">
+            <span>{validateMessage ? validateMessage : `Author validation: ${validateAuthorProgress}`}</span> <span>{ratingMessage ? ratingMessage : `Author rating: ${authorRatingsProgress}`}</span>
         </div>
     );
 }

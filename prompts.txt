@@ -16,3 +16,28 @@ the books prompt:
 list all book series and collections written Richard Chizma
 and their books and all his Standalone books
 and add full genres for each book
+
+**series validation prompt:
+
+strictly from  these series by jk rowling, list the uniq series without the editions:
+
+Harry Potter, Harry Potter Korean Split-Volume Paperback, Fantastic Beasts: The Original Screenplay, Pottermore Presents, From the Wizarding Archive, Harry Potter Japanese Split-Volume Children's Edition
+
+**author rack formula:
+
+Example:
+
+Assuming the following weights:
+
+Sales: 0.4
+Ratings: 0.3
+Reviews: 0.3
+If Rowling has:
+
+Total sales of 1 billion copies
+Average rating of 4.5 stars on Goodreads
+10 million reviews
+100 million followers on social media
+Her popularity score would be:
+
+(1 billion * 0.4) + (4.5 * 0.3) + (10 million * 0.2) + (100 million * 0.1) = 400,000,000 + 1.35 + 2,000,000 + 10,000,000 = 412,001,350

@@ -116,6 +116,7 @@ const updateAuthorRatings = async (req, res) => {
         return res.status(200).json({ message: "Author ratings update completed successfully." });
     } catch (error) {
         console.error('Error during author rating update:', error.message);
+        isValidating = false; // Release lock in case of error
         return res.status(500).json({ message: "Internal Server Error", error: error.message });
     } finally {
         if (client) {

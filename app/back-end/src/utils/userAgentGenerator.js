@@ -50,7 +50,7 @@ const generateRandomUserAgent = async () => {
         const result = await chatSession.sendMessage("generate for me a random user agent header from windows chrome, return the user agent header only and don't give me the same user agent headers");
 
         // Extract the user agent
-        const userAgent = result.response.text().trim();
+        const userAgent = result.response.text().replace(/\n/g, '').trim();
 
         // Log the user agent for debugging purposes
         console.log("Generated user agent:", userAgent);

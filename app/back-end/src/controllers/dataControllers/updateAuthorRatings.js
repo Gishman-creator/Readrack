@@ -22,12 +22,12 @@ const generationConfig = {
 };
 
 // Function to get the rating of an author from the Gemini API
-const getAuthorRating = async (author_name) => {
+const getAuthorRating = async (author_name, history) => {
     try {
-        // Use Gemini API to fetch rating information
+        // Use Gemini API to fetch rating information with conversation history
         const chatSession = model.startChat({
             generationConfig,
-            history: [], // No history is retained
+            history, // Pass the conversation history
         });
 
         const response = await chatSession.sendMessage(`
@@ -35,14 +35,16 @@ const getAuthorRating = async (author_name) => {
         `);
 
         // Extract the response text and return the rating
-        return response.response.text().trim(); // Ensure we only get the rating as text
+        const rating = response.response.text().trim();
+        // Add to the history to maintain context
+        history.push({ role: 'system', content: `Rating for ${author_name}: ${rating}` });
+        
+        return rating;
     } catch (error) {
         console.error(`Error fetching rating for ${author_name}:`, error.message);
         return null;
     }
 };
-
-// Function to update author ratings in the database
 
 let isValidating = false; // Lock variable
 
@@ -54,6 +56,8 @@ const updateAuthorRatings = async (req, res) => {
     isValidating = true; // Set lock
 
     let client;
+    let history = []; // Initialize an empty array for conversation history
+
     try {
         // Connect to the database
         client = await poolpg.connect();
@@ -64,7 +68,6 @@ const updateAuthorRatings = async (req, res) => {
             WHERE rating IS NULL;
         `);
 
-        // Check if there are no authors with missing ratings
         if (authors.length === 0) {
             console.log("No authors with missing ratings found.");
             if (req.io) {
@@ -73,18 +76,15 @@ const updateAuthorRatings = async (req, res) => {
             return res.status(400).json({ message: "No authors with missing ratings found. Process stopped." });
         }
 
-        // Total authors to process
         const totalAuthors = authors.length;
         let processedAuthors = 0;
 
-        // Loop through authors and fetch ratings from the Gemini API
         for (const author of authors) {
             const { id, author_name } = author;
-
             console.log(`Processing author: ${author_name}`);
 
-            // Query Gemini API for the rating
-            const rating = await getAuthorRating(author_name);
+            // Query Gemini API for the rating and maintain conversation history
+            const rating = await getAuthorRating(author_name, history);
 
             if (rating !== null) {
                 // Update the rating in the database
@@ -94,19 +94,15 @@ const updateAuthorRatings = async (req, res) => {
                     WHERE id = $2;
                 `, [rating, id]);
 
-                // Increment progress
                 processedAuthors++;
 
-                // Calculate progress percentage
                 const progressPercentage = ((processedAuthors / totalAuthors) * 100).toFixed(2);
                 const progress = `${processedAuthors}/${totalAuthors} (${progressPercentage}%)`;
 
-                // Emit progress updates via Socket.IO
                 if (req.io) {
                     req.io.emit('authorRatingsProgress', progress);
                 }
 
-                // Log the progress
                 console.log(`Updated author ID ${id} with rating: ${rating}. Progress: ${progress}`);
             } else {
                 console.log(`Skipping author ${author_name} due to API error.`);
@@ -117,6 +113,12 @@ const updateAuthorRatings = async (req, res) => {
     } catch (error) {
         console.error('Error during author rating update:', error.message);
         isValidating = false; // Release lock in case of error
+
+        // Retry after delay
+        setTimeout(() => {
+            updateAuthorRatings(req, res); // Restart the function
+        }, 5000); // Retry after 5 seconds
+
         return res.status(500).json({ message: "Internal Server Error", error: error.message });
     } finally {
         if (client) {
@@ -125,5 +127,4 @@ const updateAuthorRatings = async (req, res) => {
     }
 };
 
-// Export the update function to be used in the route
 module.exports = { updateAuthorRatings };

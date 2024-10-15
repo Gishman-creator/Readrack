@@ -1,83 +1,35 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const path = require('path');
-const dotenv = require('dotenv');
-const fs = require('fs');
+const userAgents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.5987.133 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5676.102 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/100.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.5968.24 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.91 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.5999.99 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4770.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.5672.82 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5590.25 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.5563.110 Safari/537.36"
+];
 
-dotenv.config();
-const prod = process.env.NODE_ENV === "production";
+// Function to generate a random user agent header
+const generateRandomUserAgent = () => {
+    const randomIndex = Math.floor(Math.random() * userAgents.length);
+    const userAgent = userAgents[randomIndex];
 
-const apiKey = process.env.GEMINI_API_KEY;
-const genAI = new GoogleGenerativeAI(apiKey);
+    // Log the user agent for debugging purposes
+    console.log("Generated user agent:", userAgent);
 
-const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash-8b",
-});
-
-const generationConfig = {
-    temperature: 1,
-    topP: 0.95,
-    topK: 40,
-    maxOutputTokens: 8192,
-    responseMimeType: "text/plain",
-};
-
-const historyFilePath = prod ? path.join(__dirname, '../assets/conversation_history.json') : './src/assets/conversation_history.json';
-let history = [];
-
-// Initialize or load the history
-try {
-    if (fs.existsSync(historyFilePath)) {
-        const historyData = fs.readFileSync(historyFilePath, 'utf8');
-        if (historyData) {
-            history = JSON.parse(historyData); // Parse only if the file contains valid JSON
-        }
-    } else {
-        fs.writeFileSync(historyFilePath, '[]'); // If the file doesn't exist, create an empty array
-    }
-} catch (error) {
-    console.error('Error loading history:', error.message);
-    history = []; // If there's an error, initialize history as an empty array
-}
-
-const generateRandomUserAgent = async () => {
-    try {
-        const chatSession = model.startChat({
-            generationConfig,
-            history: history
-        });
-
-        // Send the message and get the user agent from the response
-        const result = await chatSession.sendMessage("generate for me a random user agent header from windows chrome, return the user agent header only and don't give me the same user agent headers");
-
-        // Extract the user agent
-        const userAgent = result.response.text().replace(/\n/g, '').trim();
-
-        // Log the user agent for debugging purposes
-        console.log("Generated user agent:", userAgent);
-
-        // Append the conversation to history as separate objects
-        history.push({
-            role: "user",
-            parts: [
-                { text: "generate for me a random user agent header from windows chrome, return the user agent header only" },
-            ],
-        });
-
-        history.push({
-            role: "model",
-            parts: [
-                { text: userAgent }
-            ],
-        });
-
-        // Save the updated history to the file
-        fs.writeFileSync(historyFilePath, JSON.stringify(history, null, 2));
-
-        return userAgent;
-    } catch (error) {
-        console.error('Error generating user agent:', error.message);
-        throw error;
-    }
+    return userAgent;
 };
 
 module.exports = { generateRandomUserAgent };

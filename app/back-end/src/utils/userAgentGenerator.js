@@ -21,7 +21,7 @@ const generationConfig = {
     responseMimeType: "text/plain",
 };
 
-const historyFilePath = prod ? path.join(__dirname, './src/assets/conversation_history.json') : './src/assets/conversation_history.json';
+const historyFilePath = prod ? path.join(__dirname, '../assets/conversation_history.json') : './src/assets/conversation_history.json';
 let history = [];
 
 // Initialize or load the history

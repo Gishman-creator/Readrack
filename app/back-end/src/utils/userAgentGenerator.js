@@ -1,8 +1,10 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const path = require('path');
 const dotenv = require('dotenv');
 const fs = require('fs');
 
 dotenv.config();
+const prod = process.env.NODE_ENV === "production";
 
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -19,7 +21,7 @@ const generationConfig = {
     responseMimeType: "text/plain",
 };
 
-const historyFilePath = '../assets/conversation_history.json';
+const historyFilePath = prod ? path.join(__dirname, './src/assets/conversation_history.json') : './src/assets/conversation_history.json';
 let history = [];
 
 // Initialize or load the history
@@ -51,7 +53,7 @@ const generateRandomUserAgent = async () => {
         const userAgent = result.response.text().trim();
 
         // Log the user agent for debugging purposes
-        // console.log("Generated user agent:", userAgent);
+        console.log("Generated user agent:", userAgent);
 
         // Append the conversation to history as separate objects
         history.push({

@@ -1,9 +1,8 @@
-// userAgentGenerator.js
-const {
-    GoogleGenerativeAI,
-} = require("@google/generative-ai");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const dotenv = require('dotenv');
-dotenv.config()
+const fs = require('fs');
+
+dotenv.config();
 
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -20,32 +19,62 @@ const generationConfig = {
     responseMimeType: "text/plain",
 };
 
+const historyFilePath = '../assets/conversation_history.json';
+let history = [];
+
+// Initialize or load the history
+try {
+    if (fs.existsSync(historyFilePath)) {
+        const historyData = fs.readFileSync(historyFilePath, 'utf8');
+        if (historyData) {
+            history = JSON.parse(historyData); // Parse only if the file contains valid JSON
+        }
+    } else {
+        fs.writeFileSync(historyFilePath, '[]'); // If the file doesn't exist, create an empty array
+    }
+} catch (error) {
+    console.error('Error loading history:', error.message);
+    history = []; // If there's an error, initialize history as an empty array
+}
+
 const generateRandomUserAgent = async () => {
     try {
         const chatSession = model.startChat({
             generationConfig,
-            history: [
-                {
-                    role: "user",
-                    parts: [
-                        { text: "generate for me a random user agent header from windows chrome, return the user agent header only" },
-                    ],
-                },
-                {
-                    role: "model",
-                    parts: [
-                        { text: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36\n" },
-                    ],
-                },
+            history: history
+        });
+
+        // Send the message and get the user agent from the response
+        const result = await chatSession.sendMessage("generate for me a random user agent header from windows chrome, return the user agent header only and don't give me the same user agent headers");
+
+        // Extract the user agent
+        const userAgent = result.response.text().trim();
+
+        // Log the user agent for debugging purposes
+        // console.log("Generated user agent:", userAgent);
+
+        // Append the conversation to history as separate objects
+        history.push({
+            role: "user",
+            parts: [
+                { text: "generate for me a random user agent header from windows chrome, return the user agent header only" },
             ],
         });
 
-        const result = await chatSession.sendMessage("generate for me a random user agent header from windows chrome, return the user agent header only and don't give me the same user agent headers");
-        const userAgent = result.response.text().trim(); // Get the user agent header text
+        history.push({
+            role: "model",
+            parts: [
+                { text: userAgent }
+            ],
+        });
+
+        // Save the updated history to the file
+        fs.writeFileSync(historyFilePath, JSON.stringify(history, null, 2));
+
         return userAgent;
     } catch (error) {
         console.error('Error generating user agent:', error.message);
-        throw error; // Rethrow the error for handling in calling function
+        throw error;
     }
 };
 

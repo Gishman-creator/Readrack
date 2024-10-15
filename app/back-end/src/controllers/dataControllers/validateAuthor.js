@@ -52,12 +52,12 @@ const validateAuthor = async (req, res) => {
 
         const browser = await puppeteer.launch({
             headless: true,
-            executablePath: '/usr/bin/google-chrome',  // Path to Chrome executable
-            args: [
-                '--no-sandbox',
-                '--disable-gpu',
-                '--remote-debugging-port=9222'
-            ]
+            // executablePath: '/usr/bin/google-chrome',  // Path to Chrome executable
+            // args: [
+            //     '--no-sandbox',
+            //     '--disable-gpu',
+            //     '--remote-debugging-port=9222'
+            // ]
         });
         const page = await browser.newPage();
 

@@ -35,6 +35,10 @@ sudo docker cp readrack3.dump 87a2da575b1b:/readrack3.dump
 sudo docker exec -it 87a2da575b1b bash
 pg_restore -U postgres -d readrack3 -v /readrack3.dump
 
+**Other db commands
+
+psql -U postgres -h localhost -c "CREATE DATABASE your_database_name;"
+
 **Installing chrome:
 
 sudo docker exec -it container_id bash

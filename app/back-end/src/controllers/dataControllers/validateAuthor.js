@@ -1,30 +1,13 @@
-const puppeteer = require('puppeteer');
+const axios = require('axios');
+const cheerio = require('cheerio');
 const poolpg = require('../../config/dbpg3');
+const { generateRandomUserAgent } = require("../../utils/userAgentGenerator");
 
 let isValidating = false; // Lock variable
 
 const validateAuthor = async (req, res) => {
     if (isValidating) {
-        const client = await poolpg.connect();
-
-        // Fetch authors with missing status
-        const { rows: authors } = await client.query(`
-            SELECT id, author_name FROM authors 
-            WHERE status IS NULL;
-        `);
-
-        // Check if there are any authors to validate
-        if (authors.length === 0) {
-            console.log("No authors to validate.");
-            res.status(400).json({ message: "No authors to validate." });
-            if (req.io) {
-                req.io.emit('validateMessage', 'No authors to validate.');
-            }
-            client.release();
-            return;
-        } else {
-            return res.status(200).json({ message: "Validate process already running." });
-        }
+        return res.status(200).json({ message: "Validate process already running." });
     }
 
     isValidating = true; // Set lock
@@ -50,20 +33,12 @@ const validateAuthor = async (req, res) => {
             return;
         }
 
-        const browser = await puppeteer.launch({
-            headless: true,
-            // executablePath: '/usr/bin/google-chrome',  // Path to Chrome executable
-            // args: [
-            //     '--no-sandbox',
-            //     '--disable-gpu',
-            //     '--remote-debugging-port=9222'
-            // ]
-        });
-        const page = await browser.newPage();
-
         // Total authors to process
         const totalAuthors = authors.length;
         let processedAuthors = 0;
+
+        const user = await generateRandomUserAgent();
+        console.log('User Agent:', user);
 
         // Loop through authors and validate their information
         for (const author of authors) {
@@ -71,17 +46,19 @@ const validateAuthor = async (req, res) => {
             const searchQuery = `author ${author_name}`; // Use the author's name in the search query
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
 
-            await page.goto(
-                googleSearchUrl,
-                {waitUntil: 'networkidle2', timeout: 0}
-            );
-
-            // Check if the author exists by searching for the specific div with class 'Z1hOCe'
-            const authorExists = await page.evaluate(() => {
-                const sections = document.querySelectorAll('.Z1hOCe');
-                return sections.length > 0;
+            // Fetch the Google search results page
+            const response = await axios.get(googleSearchUrl, {
+                headers: {
+                    'User-Agent': user,
+                }
             });
 
+            const $ = cheerio.load(response.data);
+
+            // Check if the author exists by searching for the specific div with class 'Z1hOCe'
+            const authorExists = $('.Z1hOCe').length > 0;
+
+            console.log('Validating Author:', author_name);
             console.log('Author Exists:', authorExists);
 
             if (!authorExists) {
@@ -98,23 +75,21 @@ const validateAuthor = async (req, res) => {
             let dob = null;
             let dod = null;
 
-            const infoSections = await page.$$('.Z1hOCe');
-
-            for (const section of infoSections) {
-                const labels = await section.$$eval('.w8qArf.FoJoyf', elements => elements.map(el => el.textContent));
+            $('.Z1hOCe').each((index, section) => {
+                const labels = $(section).find('.w8qArf.FoJoyf').map((i, el) => $(el).text()).get();
 
                 if (labels.some(label => label.includes('Born'))) {
-                    dob = await section.$eval('.LrzXr.kno-fv.wHYlTd.z8gr9e', el => el.textContent.trim());
-                    dob = formatDate(dob);  // Format the date
+                    dob = $(section).find('.LrzXr.kno-fv.wHYlTd.z8gr9e').text().trim();
+                    dob = formatDate(dob); // Format the date
                     // console.log(`Extracted DOB: ${dob}`);
                 }
 
                 if (labels.some(label => label.includes('Died'))) {
-                    dod = await section.$eval('.LrzXr.kno-fv.wHYlTd.z8gr9e', el => el.textContent.trim());
-                    dod = formatDate(dod);  // Format the date
+                    dod = $(section).find('.LrzXr.kno-fv.wHYlTd.z8gr9e').text().trim();
+                    dod = formatDate(dod); // Format the date
                     // console.log(`Extracted DOD: ${dod}`);
                 }
-            }
+            });
 
             // Update the database with the extracted DOB and DOD
             await client.query(`UPDATE authors SET status = $1, dob = $2, dod = $3 WHERE id = $4;`, ['keep', dob, dod, id]);
@@ -135,12 +110,10 @@ const validateAuthor = async (req, res) => {
             }
         }
 
-        await browser.close();
         client.release();
         isValidating = false; // Release lock after finishing the validation
     } catch (error) {
         console.error('Error during author validation:', error.message);
-        // res.status(500).json({ message: 'Error during validation process.' });
         isValidating = false; // Release lock in case of error
         // Retry after a delay
         setTimeout(() => {

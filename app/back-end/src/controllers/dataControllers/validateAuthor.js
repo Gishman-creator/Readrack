@@ -42,16 +42,10 @@ const validateAuthor = async (req, res) => {
 
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-        for (const author of authors) {
-            // Existing code...
-            await sleep(2000); // Wait for 2 seconds before making the next request
-            // Existing code...
-        }
-
         // Loop through authors and validate their information
         for (const author of authors) {
 
-            await sleep(1000);
+            await sleep(2000);
 
             const { id, author_name } = author; // Extract id and author_name
             const searchQuery = `author ${author_name}`; // Use the author's name in the search query

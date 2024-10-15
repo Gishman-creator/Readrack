@@ -13,9 +13,9 @@ function Banner() {
         // Make the initial API call to start the update process
         const startUpdate = async () => {
             try {
-                const validateAuthorsResponse = await axiosUtils('/api/validateAuthors', 'POST');
-                console.log('Validate authors response:', validateAuthorsResponse);
-        
+                // const validateAuthorsResponse = await axiosUtils('/api/validateAuthors', 'POST');
+                // console.log('Validate authors response:', validateAuthorsResponse);
+
                 const updateAuthorRatingsResponse = await axiosUtils('/api/updateAuthorRatings', 'POST');
                 console.log('Update author ratings response:', updateAuthorRatingsResponse);
             } catch (error) {
@@ -26,13 +26,13 @@ function Banner() {
         startUpdate();
 
         // Listen for progress updates from the WebSocket
-        socket.on('validateAuthorProgress', (data) => {
-            setValidateAuthorProgress(data);  // Update progress percentage
-        });
+        // socket.on('validateAuthorProgress', (data) => {
+        //     setValidateAuthorProgress(data);  // Update progress percentage
+        // });
 
-        socket.on('validateMessage', (message) => {
-            setValidateMessage(message);  // Update progress percentage
-        });
+        // socket.on('validateMessage', (message) => {
+        //     setValidateMessage(message);  // Update progress percentage
+        // });
 
         // Listen for progress updates from the WebSocket
         socket.on('authorRatingsProgress', (data) => {
@@ -54,7 +54,8 @@ function Banner() {
 
     return (
         <div className="flex justify-evenly w-full p-2 bg-primary text-white text-center text-sm font-emibold">
-            <span>{validateMessage ? validateMessage : `Author validation: ${validateAuthorProgress}`}</span> <span>{ratingMessage ? ratingMessage : `Author rating: ${authorRatingsProgress}`}</span>
+            {/* <span>{validateMessage ? validateMessage : `Author validation: ${validateAuthorProgress}`}</span> */}
+            <span>{ratingMessage ? ratingMessage : `Author rating: ${authorRatingsProgress}`}</span>
         </div>
     );
 }

@@ -10,7 +10,7 @@ let isValidating = false;
 
 const scrapeBookSeriesInOrder = async (req, res) => {
     if (isValidating) {
-        return res.status(200).json({ message: "Scraping process already running." });
+        return;
     }
 
     isValidating = true;
@@ -29,7 +29,7 @@ const scrapeBookSeriesInOrder = async (req, res) => {
             if (req.io) {
                 req.io.emit('scrapeBookSeriesMessage', "No authors to scrape.");
             }
-            res.status(400).json({ message: "No authors to scrape." });
+            // res.status(400).json({ message: "No authors to scrape." });
             client.release();
             isValidating = false;
             return;

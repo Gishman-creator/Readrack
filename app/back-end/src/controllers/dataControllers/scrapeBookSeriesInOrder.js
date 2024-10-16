@@ -82,7 +82,7 @@ const scrapeBookSeriesInOrder = async (req, res) => {
 
             // Log the extracted links
             console.log('Processing author:', author_name);
-            console.log('Extracted links:', allResultLinks)
+            console.log('Extracted links:', allResultLinks);
 
             let bookSeriesUrl = "none";
 

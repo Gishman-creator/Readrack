@@ -35,6 +35,7 @@ const { migrateDod } = require('../controllers/dataControllers/migrateDodControl
 const { updateAuthorData } = require('../controllers/dataControllers/updateAuthorData');
 const { validateAuthor } = require('../controllers/dataControllers/validateAuthor');
 const { updateAuthorRatings } = require('../controllers/dataControllers/updateAuthorRatings');
+const { scrapeBookSeriesInOrder } = require('../controllers/dataControllers/scrapeBookSeriesInOrder');
 // const dataController = require('../controllers/dataControllers/dataController')
 // const generateDataController = require('../controllers/dataControllers/generateDataController');
 // const getRandomBufferByType = require('../controllers/dataControllers/getRandomBufferByType')
@@ -104,6 +105,7 @@ router.post('/migrate', runMigrations);
 router.post('/migrateDod', migrateDod);
 router.post('/updateAuthorData', updateAuthorData);
 router.post('/validateAuthors', validateAuthor);
+router.post('/scrapeBookSeriesInOrder', scrapeBookSeriesInOrder);
 router.post('/updateAuthorRatings', updateAuthorRatings);
 router.get('/convertPublishDate/:id', convertPublishDateController);
 

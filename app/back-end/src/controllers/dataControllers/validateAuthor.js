@@ -59,6 +59,7 @@ const validateAuthor = async (req, res) => {
             });
 
             const $ = cheerio.load(response.data);
+            // console.log('Google Search Results Page:', $.html());
 
             // Check if the author exists by searching for the specific div with class 'Z1hOCe'
             const authorExists = $('.Z1hOCe').length > 0;
@@ -67,7 +68,7 @@ const validateAuthor = async (req, res) => {
             console.log('Author Exists:', authorExists);
 
             if (!authorExists) {
-                // console.log(`No authors found, discarding: ${author_name}`);
+                console.log(`No authors found, discarding: ${author_name}`);
                 await client.query(
                     `UPDATE authors SET status = $1 WHERE id = $2`,
                     ['discard', id]

@@ -26,6 +26,9 @@ const scrapeBookSeriesInOrder = async (req, res) => {
 
         if (authors.length === 0) {
             console.log("No authors to scrape.");
+            if (req.io) {
+                req.io.emit('scrapeBookSeriesMessage', "No authors to scrape.");
+            }
             res.status(400).json({ message: "No authors to scrape." });
             client.release();
             isValidating = false;
@@ -78,7 +81,7 @@ const scrapeBookSeriesInOrder = async (req, res) => {
             const allResultLinks = Array.from(resultLinks).map((el) => $(el).find('h3').text());
 
             // Log the extracted links
-            console.log('Processing author:', 'Dante Alighieri');
+            console.log('Processing author:', author_name);
             console.log('Extracted links:', allResultLinks)
 
             let bookSeriesUrl = "none";

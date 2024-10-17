@@ -7,7 +7,7 @@ let isValidating = false; // Lock variable
 
 const validateAuthor = async (req, res) => {
     if (isValidating) {
-        return res.status(200).json({ message: "Validate process already running." });
+        return;
     }
 
     isValidating = true; // Set lock
@@ -25,7 +25,6 @@ const validateAuthor = async (req, res) => {
         // Check if there are any authors to validate
         if (authors.length === 0) {
             console.log("No authors to validate.");
-            res.status(400).json({ message: "No authors to validate." });
             if (req.io) {
                 req.io.emit('validateMessage', 'No authors to validate.');
             }

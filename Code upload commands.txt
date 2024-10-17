@@ -25,7 +25,7 @@ directories:
 /etc/systemd/system/myapp.service
 /etc/app.env
 
-**Restoring a db:
+**Exporting a db:
 
 pg_dump -U postgres -F c -b -v -f readrack3.dump readrack3
 
@@ -38,6 +38,7 @@ pg_restore -U postgres -d readrack3 -v /readrack3.dump
 **Other db commands
 
 psql -U postgres -h localhost -c "CREATE DATABASE your_database_name;"
+scp -i "./home/ssh/rwanda-mig.pem" <local_file_path> <remote_user>@<remote_host>:<remote_destination_path>
 
 **Installing chrome:
 

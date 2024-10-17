@@ -1,34 +1,30 @@
 const poolpg = require('../../config/dbpg3');
 
-exports.insertNewBook = async (bookName, amazonLink, authorId) => {
+exports.insertNewBook = async (bookName, amazonLink, authorId, penName) => {
     let bookIdLength = 6; // Start with 6 digits
     let maxIdsForCurrentLength;
     let currentLengthIdsCount;
     let idExists, bookId;
 
     do {
-        // Calculate the maximum number of IDs for the current length
         maxIdsForCurrentLength = getMaxIdsForLength(bookIdLength);
-
-        // Count how many IDs of the current length exist in the database
         currentLengthIdsCount = await getIdsCountByLength(bookIdLength);
 
         if (currentLengthIdsCount < maxIdsForCurrentLength) {
-            // If there are still available IDs of this length, generate a new one
             do {
                 bookId = generateRandomId(bookIdLength);
+                // console.log('Generated bookId:', bookId);
                 idExists = await checkIfIdExists(bookId);
             } while (idExists);
         } else {
-            // If all IDs of this length are taken, increment the length and try again
             bookIdLength++;
         }
     } while (idExists || currentLengthIdsCount >= maxIdsForCurrentLength);
 
-    // Insert the new book with the generated unique ID
-    const insertBookQuery = `INSERT INTO books (id, book_name, amazon_link, author_id) VALUES ($1, $2, $3, $4)`;
-    await poolpg.query(insertBookQuery, [bookId, bookName, amazonLink, authorId]);
-}
+    const insertBookQuery = `INSERT INTO books (id, book_name, amazon_link, author_id, pen_name) VALUES ($1, $2, $3, $4, $5)`;
+    await poolpg.query(insertBookQuery, [bookId, bookName, amazonLink, authorId, penName || null]); // Insert pen name or null
+};
+
 
 // Helper function to calculate the maximum number of IDs for a given length
 function getMaxIdsForLength(length) {
@@ -37,7 +33,7 @@ function getMaxIdsForLength(length) {
 
 // Helper function to generate a random ID of the given length
 function generateRandomId(length) {
-    return Math.floor(Math.pow(10, length - 1) + Math.random() * 9 * Math.pow(10, length - 1)).toString();
+    return Math.floor(Math.pow(10, length - 1) + Math.random() * 9 * Math.pow(10, length - 1)).toString();console.log('Generated bookId:', bookId);
 }
 
 // Helper function to check if a given ID exists in the 'books' table

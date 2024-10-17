@@ -10,7 +10,7 @@ let isValidating = false;
 
 const scrapeBookSeriesInOrder = async (req, res) => {
     if (isValidating) {
-        return res.status(200).json({ message: "Scraping process already running." });
+        return;
     }
 
     isValidating = true;
@@ -29,7 +29,7 @@ const scrapeBookSeriesInOrder = async (req, res) => {
             if (req.io) {
                 req.io.emit('scrapeBookSeriesMessage', "No authors to scrape.");
             }
-            res.status(400).json({ message: "No authors to scrape." });
+            // res.status(400).json({ message: "No authors to scrape." });
             client.release();
             isValidating = false;
             return;
@@ -54,14 +54,21 @@ const scrapeBookSeriesInOrder = async (req, res) => {
                 headers: { 'User-Agent': userAgent }
             });
 
-            const $ = cheerio.load(response.data); 
-            
+            const $ = cheerio.load(response.data);
+
+            // console.log("Scraping page:", $('title').text());
+
             let resultLinks;
-            const httpLinks = $('a[jsname="UWckNb"]')
+            const httpLinks = $('a')
                 .filter((i, el) => {
                     const href = $(el).attr('href');
                     return href && href.startsWith("https://www");
                 });
+
+            // httpLinks.each((i, el) => {
+            //     const href = $(el).attr('href');
+            //     console.log(href);
+            // });
 
             if (httpLinks.length === 0) {
                 console.log("No links found with 'https://www'. Retrying...");
@@ -163,7 +170,7 @@ const scrapeBookSeriesInOrder = async (req, res) => {
                 }
             } else {
                 console.log(`No books found for ${author_name}`);
-                await client.query(`UPDATE authors SET bookseriesinorder_link = none WHERE id = $2`, [ id]);
+                await client.query(`UPDATE authors SET bookseriesinorder_link = 'none' WHERE id = $2`, [id]);
             }
 
             // Increment processed authors count

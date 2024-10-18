@@ -194,7 +194,7 @@ const scrapeBookSeriesInOrder = async (req, res) => {
                 }
             } else {
                 console.log(`No books found for ${author_name}`);
-                await client.query(`UPDATE authors SET bookseriesinorder_link = 'none' WHERE id = $2`, [id]);
+                await client.query(`UPDATE authors SET bookseriesinorder_link = 'none' WHERE id = $1`, [id]);
             }
 
             // Update the author's pen names in the authors table

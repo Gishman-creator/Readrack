@@ -42,7 +42,7 @@ const scrapeSeries = async (req, res) => {
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
         for (const author of authors) {
-            await sleep(2000);
+            await sleep(4000);
 
             const { id, author_name } = author;
             // const author_name = 'Jk rowling';

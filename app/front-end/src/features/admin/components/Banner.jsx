@@ -15,11 +15,11 @@ function Banner() {
         // Make the initial API call to start the update process
         const startUpdate = async () => {
             try {
-                const validateAuthorResponse = await axiosUtils('/api/validateAuthors', 'POST');
-                console.log('Validate authors response:', validateAuthorResponse);
+                // const validateAuthorResponse = await axiosUtils('/api/validateAuthors', 'POST');
+                // console.log('Validate authors response:', validateAuthorResponse);
 
-                // const scrapeBookSeriesInOrderResponse = await axiosUtils('/api/scrapeBookSeriesInOrder', 'POST');
-                // console.log('Validate authors response:', scrapeBookSeriesInOrderResponse);
+                const scrapeBookSeriesInOrderResponse = await axiosUtils('/api/scrapeBookSeriesInOrder', 'POST');
+                console.log('Validate authors response:', scrapeBookSeriesInOrderResponse);
 
                 // const updateAuthorRatingsResponse = await axiosUtils('/api/updateAuthorRatings', 'POST');
                 // console.log('Update author ratings response:', updateAuthorRatingsResponse);
@@ -31,22 +31,22 @@ function Banner() {
         startUpdate();
 
         // Listen for progress updates from the WebSocket
-        socket.on('validateAuthorProgress', (data) => {
-            setValidateAuthorProgress(data);  // Update progress percentage
-        });
+        // socket.on('validateAuthorProgress', (data) => {
+        //     setValidateAuthorProgress(data);  // Update progress percentage
+        // });
 
-        socket.on('validateAuthorMessage', (message) => {
-            setValidateAuthorMessage(message);  // Update progress percentage
-        });
+        // socket.on('validateAuthorMessage', (message) => {
+        //     setValidateAuthorMessage(message);  // Update progress percentage
+        // });
 
         // Listen for progress updates from the WebSocket
-        // socket.on('scrapeBookSeriesProgress', (data) => {
-        //     setScrapeBookSeriesProgress(data);  // Update progress percentage
-        // });
+        socket.on('scrapeBookSeriesProgress', (data) => {
+            setScrapeBookSeriesProgress(data);  // Update progress percentage
+        });
 
-        // socket.on('scrapeBookSeriesMessage', (message) => {
-        //     setScrapeBookSeriesMessage(message);  // Update progress percentage
-        // });
+        socket.on('scrapeBookSeriesMessage', (message) => {
+            setScrapeBookSeriesMessage(message);  // Update progress percentage
+        });
 
         // Listen for progress updates from the WebSocket
         // socket.on('authorRatingsProgress', (data) => {
@@ -70,8 +70,8 @@ function Banner() {
 
     return (
         <div className="flex justify-evenly w-full p-2 bg-primary text-white text-center text-sm font-emibold">
-            <span>{validateAuthorMessage ? validateAuthorMessage : `Author validation running: ${validateAuthorProgress}`}</span>
-            {/* <span>{scrapeBookSeriesMessage ? scrapeBookSeriesMessage : `Author validation: ${scrapeBookSeriesProgress}`}</span> */}
+            {/* <span>{validateAuthorMessage ? validateAuthorMessage : `Author validation running: ${validateAuthorProgress}`}</span> */}
+            <span>{scrapeBookSeriesMessage ? scrapeBookSeriesMessage : `Author bookseriesinorder scraping running: ${scrapeBookSeriesProgress}`}</span>
             {/* <span>{ratingMessage ? ratingMessage : `Author rating: ${authorRatingsProgress}`}</span> */}
         </div>
     );

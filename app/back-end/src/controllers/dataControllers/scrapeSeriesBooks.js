@@ -28,7 +28,7 @@ const scrapeSeriesBooks = async (req, res) => {
         if (seriesList.length === 0) {
             console.log("No series to scrape.");
             if (req.io) {
-                req.io.emit('scrapeBookSeriesMessage', "No series to scrape.");
+                req.io.emit('scrapeSeriesBooksMessage', "No series to scrape.");
             }
             client.release();
             isValidating = false;
@@ -79,16 +79,17 @@ const scrapeSeriesBooks = async (req, res) => {
             if (!matchedTag) {
                 console.log(`No matching series for h2 tags for series: ${serie_name}`);
                 // Update the processed series counter
+                await client.query(`UPDATE series SET book_status = 'done' WHERE id = $1`, [seriesId]);
                 processedSeries++;
-    
+
                 // Calculate progress percentage
                 const progressPercentage = ((processedSeries / totalSeries) * 100).toFixed(2);
                 const progress = `${processedSeries}/${totalSeries} (${progressPercentage}%)`;
-                console.log(`Progress: ${progress}`);
-    
+                console.log(`Progress: ${progress}\n`);
+
                 // Emit progress to the client if connected
                 if (req.io) {
-                    req.io.emit('scrapeSeriesProgress', progress);
+                    req.io.emit('scrapeSeriesBooksProgress', progress);
                 }
 
                 continue; // Skip to the next series if no match is found
@@ -130,11 +131,11 @@ const scrapeSeriesBooks = async (req, res) => {
             // Calculate progress percentage
             const progressPercentage = ((processedSeries / totalSeries) * 100).toFixed(2);
             const progress = `${processedSeries}/${totalSeries} (${progressPercentage}%)`;
-            console.log(`Progress: ${progress}`);
+            console.log(`Progress: ${progress}\n`);
 
             // Emit progress to the client if connected
             if (req.io) {
-                req.io.emit('scrapeSeriesProgress', progress);
+                req.io.emit('scrapeSeriesBooksProgress', progress);
             }
         }
 

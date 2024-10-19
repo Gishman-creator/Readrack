@@ -35,14 +35,14 @@ const scrapeSeries = async (req, res) => {
         }
 
         const totalAuthors = authors.length;
-        let processedAuthors = 0; 
+        let processedAuthors = 0;
         const userAgent = await generateRandomUserAgent();
         console.log('User Agent:', userAgent);
 
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
         for (const author of authors) {
-            // await sleep(20000);
+            await sleep(2000);
 
             const { id, author_name } = author;
             // const author_name = 'Jk rowling';
@@ -80,7 +80,7 @@ const scrapeSeries = async (req, res) => {
                 const isSameAuthor = await areAuthorsSame(h3Text, author_name);
                 return isSameAuthor ? href : null; // Return the link if the authors match
             });
-            
+
             // Wait for all promises to resolve
             const authorCheckResults = await Promise.all(authorCheckPromises);
 
@@ -95,6 +95,10 @@ const scrapeSeries = async (req, res) => {
             }
 
             console.log('validLinks:', validLinks[0]);
+            if (validLinks[0]) {
+                await client.query(`UPDATE authors SET good_reads_profile = $1 WHERE id = $2`, [validLinks[0], id]);
+            }
+
 
             // Fetch the Goodreads author page
             const authorResponse = await axios.get(validLinks[0], {

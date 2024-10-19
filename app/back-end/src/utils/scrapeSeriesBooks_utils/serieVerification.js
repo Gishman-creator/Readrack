@@ -50,13 +50,13 @@ async function serieVerification(serie1Text, serie_name) {
           {
               role: "user",
               parts: [
-                  { text: "from this text return the name of the serie only: Publication Order of Three Cities Books" },
+                  { text: "from this text return the name of the serie only: Publication Order of African Trilogy Books" },
               ],
           },
           {
               role: "model",
               parts: [
-                  { text: "Three Cities\n" },
+                  { text: "African Trilogy\n" },
               ],
           },
       ],

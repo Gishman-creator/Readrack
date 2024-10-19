@@ -4,10 +4,12 @@ import { useSocket } from '../../../context/SocketContext';
 
 function Banner() {
     const [scrapeBookSeriesMessage, setScrapeBookSeriesMessage] = useState('');
+    const [scrapeSeriesBooksMessage, setScrapeSeriesBooksMessage] = useState('');
     const [scrapeSeriesMessage, setScrapeSeriesMessage] = useState('');
     const [ratingMessage, setRatingMessage] = useState('');
     const [validateAuthorMessage, setValidateAuthorMessage] = useState('');
     const [scrapeBookSeriesProgress, setScrapeBookSeriesProgress] = useState('');
+    const [scrapeSeriesBooksProgress, setScrapeSeriesBooksProgress] = useState('');
     const [scrapeSeriesProgress, setScrapeSeriesProgress] = useState('');
     const [authorRatingsProgress, setAuthorRatingsProgress] = useState('');
     const [validateAuthorProgress, setValidateAuthorProgress] = useState('');
@@ -23,8 +25,11 @@ function Banner() {
                 // const scrapeBookSeriesInOrderResponse = await axiosUtils('/api/scrapeBookSeriesInOrder', 'POST');
                 // console.log('Validate authors response:', scrapeBookSeriesInOrderResponse);
 
-                const scrapeSeriesResponse = await axiosUtils('/api/scrapeSeries', 'POST');
-                console.log('Validate authors response:', scrapeSeriesResponse);
+                // const scrapeSeriesResponse = await axiosUtils('/api/scrapeSeries', 'POST');
+                // console.log('Validate authors response:', scrapeSeriesResponse);
+
+                const scrapeSeriesBooksResponse = await axiosUtils('/api/scrapeSeriesBooks', 'POST');
+                console.log('Validate authors response:', scrapeSeriesBooksResponse);
 
                 // const updateAuthorRatingsResponse = await axiosUtils('/api/updateAuthorRatings', 'POST');
                 // console.log('Update author ratings response:', updateAuthorRatingsResponse);
@@ -45,12 +50,21 @@ function Banner() {
         // });
 
         // Listen for progress updates from the WebSocket
-        socket.on('scrapeSeriesProgress', (data) => {
-            setScrapeSeriesProgress(data);  // Update progress percentage
+        // socket.on('scrapeSeriesProgress', (data) => {
+        //     setScrapeSeriesProgress(data);  // Update progress percentage
+        // });
+
+        // socket.on('scrapeSeriesMessage', (message) => {
+        //     setScrapeSeriesMessage(message);  // Update progress percentage
+        // });
+
+        // Listen for progress updates from the WebSocket
+        socket.on('scrapeSeriesBooksProgress', (data) => {
+            setScrapeSeriesBooksProgress(data);  // Update progress percentage
         });
 
-        socket.on('scrapeSeriesMessage', (message) => {
-            setScrapeSeriesMessage(message);  // Update progress percentage
+        socket.on('scrapeSeriesBooksMessage', (message) => {
+            setScrapeSeriesBooksMessage(message);  // Update progress percentage
         });
 
         // Listen for progress updates from the WebSocket
@@ -75,6 +89,8 @@ function Banner() {
         return () => {
             socket.off('validateAuthorProgress');
             socket.off('validateAuthorMessage');
+            socket.off('scrapeSeriesBooksProgress');
+            socket.off('scrapeSeriesBooksMessage');
             socket.off('scrapeSeriesProgress');
             socket.off('scrapeSeriesMessage');
             socket.off('scrapeBookSeriesProgress');
@@ -87,7 +103,8 @@ function Banner() {
     return (
         <div className="flex justify-evenly w-full p-2 bg-primary text-white text-center text-sm font-emibold">
             {/* <span>{validateAuthorMessage ? validateAuthorMessage : `Author validation running: ${validateAuthorProgress}`}</span> */}
-            <span>{scrapeSeriesMessage ? scrapeSeriesMessage : `Series scraping running: ${scrapeSeriesProgress}`}</span>
+            <span>{scrapeSeriesBooksMessage ? scrapeSeriesBooksMessage : `Series books scraping running: ${scrapeSeriesBooksProgress}`}</span>
+            {/* <span>{scrapeSeriesMessage ? scrapeSeriesMessage : `Series scraping running: ${scrapeSeriesProgress}`}</span> */}
             {/* <span>{scrapeBookSeriesMessage ? scrapeBookSeriesMessage : `Author bookseriesinorder scraping running: ${scrapeBookSeriesProgress}`}</span> */}
             {/* <span>{ratingMessage ? ratingMessage : `Author rating: ${authorRatingsProgress}`}</span> */}
         </div>

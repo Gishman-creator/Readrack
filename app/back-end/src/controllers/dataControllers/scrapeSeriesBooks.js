@@ -48,7 +48,7 @@ const scrapeSeriesBooks = async (req, res) => {
             const { id: seriesId, serie_name, author_id, bookseriesinorder_link, author_name } = serie;
             // await sleep(2000); // To avoid spamming the server
 
-            console.log(`Processing serie ${serie_name} by ${author_name} on ${bookseriesinorder_link}`);
+            console.log(`Processing serie ${serie_name}: ${seriesId} by ${author_name} on ${bookseriesinorder_link}`);
 
             if (!bookseriesinorder_link) {
                 console.log(`No link found for series: ${serie_name}`);
@@ -110,7 +110,7 @@ const scrapeSeriesBooks = async (req, res) => {
                         const bookTitle = seriesPage(row).find('td.booktitle').text().trim();
                         const amazonLink = seriesPage(row).find('td a').attr('href');
                         if (bookTitle && amazonLink) {
-                            books.push({ title: bookTitle, amazon: amazonLink, seriesId: seriesId });
+                            books.push({ title: bookTitle, amazon: amazonLink, author_id, seriesId: seriesId });
                         }
                     });
                 });
@@ -118,7 +118,8 @@ const scrapeSeriesBooks = async (req, res) => {
 
             // Process books by series
             for (const book of books) {
-                await processBook(book.title, book.amazon, author_id);
+                console.log(`Processing book: ${book.title}`);
+                await processBook(book.title, book.amazon, author_id, seriesId);
             }
 
             // Update the status of processed series

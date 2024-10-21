@@ -38,6 +38,9 @@ const { updateAuthorRatings } = require('../controllers/dataControllers/updateAu
 const { scrapeBookSeriesInOrder } = require('../controllers/dataControllers/scrapeBookSeriesInOrder');
 const { scrapeSeries } = require('../controllers/dataControllers/scrapeSeries');
 const { scrapeSeriesBooks } = require('../controllers/dataControllers/scrapeSeriesBooks');
+const { scrapeBookInfo } = require('../controllers/dataControllers/scrapeBookInfo');
+const { scrapeBooks } = require('../controllers/dataControllers/scrapeBooks');
+const { scrapeDistinctBooks } = require('../controllers/dataControllers/scrapeDistinctBooks');
 // const dataController = require('../controllers/dataControllers/dataController')
 // const generateDataController = require('../controllers/dataControllers/generateDataController');
 // const getRandomBufferByType = require('../controllers/dataControllers/getRandomBufferByType')
@@ -110,6 +113,9 @@ router.post('/validateAuthors', validateAuthor);
 router.post('/scrapeBookSeriesInOrder', scrapeBookSeriesInOrder);
 router.post('/scrapeSeries', scrapeSeries);
 router.post('/scrapeSeriesBooks', scrapeSeriesBooks);
+router.post('/scrapeBookInfo', scrapeBookInfo);
+router.post('/scrapeBooks', scrapeBooks);
+router.post('/scrapeDistinctBooks', scrapeDistinctBooks);
 
 router.post('/updateAuthorRatings', updateAuthorRatings);
 router.get('/convertPublishDate/:id', convertPublishDateController);

@@ -38,7 +38,7 @@ pg_restore -U postgres -d readrack3 -v /readrack3.dump
 **Other db commands
 
 psql -U postgres -h localhost -c "CREATE DATABASE your_database_name;"
-scp -i "./home/ssh/rwanda-mig.pem" <local_file_path> <remote_user>@<remote_host>:<remote_destination_path>
+scp -i "./home/ssh/rwanda-mig.pem" ubuntu@ec2-3-88-21-240.compute-1.amazonaws.com:~/readrackP1.dump ./home/dumps/readrackP1.dump
 
 **Installing chrome:
 

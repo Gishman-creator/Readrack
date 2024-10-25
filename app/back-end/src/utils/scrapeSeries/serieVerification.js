@@ -47,6 +47,18 @@ async function serieVerification(series) {
                 {text: "Les Rougon-Macquart, Three Cities Trilogy, Les Quatre Évangiles, Stories for Ninon\n"},
               ],
             },
+            {
+                role: "user",
+                parts: [
+                    { text: "from this text return the name of the serie only and don't include 'the' definite article: Publication Order of Game Of Thrones Graphic Novels" },
+                ],
+            },
+            {
+                role: "model",
+                parts: [
+                    { text: "Game Of Thrones\n" },
+                ],
+            },
           ],
         });
       

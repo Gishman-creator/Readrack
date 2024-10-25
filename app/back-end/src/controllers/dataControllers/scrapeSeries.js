@@ -21,14 +21,14 @@ const scrapeSeries = async (req, res) => {
         // Fetch authors with series_status as null
         const { rows: authors } = await client.query(`
             SELECT id, author_name FROM authors
-            WHERE series_status IS NULL;
+            WHERE good_reads_profile IS NULL;
         `);
 
         if (authors.length === 0) {
             console.log("No authors to scrape.");
             if (req.io) {
                 req.io.emit('scrapeSeriesMessage', "No authors to scrape.");
-            }
+            } 
             client.release();
             isValidating = false;
             return;
@@ -97,6 +97,13 @@ const scrapeSeries = async (req, res) => {
             console.log('validLinks:', validLinks[0]);
             if (validLinks[0]) {
                 await client.query(`UPDATE authors SET good_reads_profile = $1 WHERE id = $2`, [validLinks[0], id]);
+                processedAuthors++;
+    
+                // Calculate progress percentage
+                const progressPercentage = ((processedAuthors / totalAuthors) * 100).toFixed(2);
+                const progress = `${processedAuthors}/${totalAuthors} (${progressPercentage}%)`;
+                console.log(`Progress: ${progress}\n`);
+                continue;
             }
 
 

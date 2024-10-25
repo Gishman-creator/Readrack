@@ -30,7 +30,7 @@ const scrapeBookInfo = async (req, res) => {
         if (books.length === 0) {
             console.log("No books to validate.");
             if (req.io) {
-                req.io.emit('validateMessage', 'No books to validate.');
+                req.io.emit('scrapeBookInfoMessage', 'No books to validate.');
             }
             client.release();
             return;
@@ -124,7 +124,7 @@ const scrapeBookInfo = async (req, res) => {
 
             // Emit progress updates via Socket.IO
             if (req.io) {
-                req.io.emit('scrapeBookProgress', progress);
+                req.io.emit('scrapeBookInfoProgress', progress);
             }
         }
 

@@ -2,8 +2,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const poolpg = require('../../config/dbpg3');
 const { generateRandomUserAgent } = require("../../utils/userAgentGenerator");
-const { processBook } = require("../../utils/scrapeSeriesBooks_utils/processBook");
-const { serieVerification } = require('../../utils/scrapeSeriesBooks_utils/serieVerification');
+const { processBook } = require('../../utils/scrapeSeriesBooks_utils/processBook');
 
 let isValidating = false;
 
@@ -11,7 +10,6 @@ const scrapeSeriesBooks = async (req, res) => {
     if (isValidating) {
         return;
     }
-
     isValidating = true;
 
     try {
@@ -19,7 +17,7 @@ const scrapeSeriesBooks = async (req, res) => {
 
         // Fetch series where book_status is null
         const { rows: seriesList } = await client.query(`
-            SELECT s.id, s.serie_name, s.author_id, a.bookseriesinorder_link, a.author_name 
+            SELECT s.id, s.serie_name, s.author_id, a.good_reads_profile 
             FROM series s 
             JOIN authors a ON s.author_id::text = a.id::text
             WHERE s.book_status IS NULL;
@@ -27,126 +25,131 @@ const scrapeSeriesBooks = async (req, res) => {
 
         if (seriesList.length === 0) {
             console.log("No series to scrape.");
-            if (req.io) {
-                req.io.emit('scrapeSeriesBooksMessage', "No series to scrape.");
-            }
+            if (req.io) req.io.emit('scrapeSeriesBooksMessage', "No series to scrape.");
             client.release();
             isValidating = false;
             return;
         }
 
         const userAgent = await generateRandomUserAgent();
-        console.log('User Agent:', userAgent);
-
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-        let processedSeries = 0; // Counter for processed series
-        const totalSeries = seriesList.length; // Total number of series to process
+        let processedSeries = 0;
+        const totalSeries = seriesList.length;
 
         // Process each series in seriesList
         for (const serie of seriesList) {
-            const { id: seriesId, serie_name, author_id, bookseriesinorder_link, author_name } = serie;
-            // await sleep(2000); // To avoid spamming the server
+            const { id: seriesId, serie_name, author_id, good_reads_profile } = serie;
 
-            console.log(`Processing serie ${serie_name}: ${seriesId} by ${author_name} on ${bookseriesinorder_link}`);
+            let authorNames = '';
+            // Skip if author_id contains a comma (i.e., multiple authors)
+            const authorIds = author_id.includes(',')
+                ? author_id.split(',').map(id => parseInt(id.trim(), 10))
+                : [parseInt(author_id.trim(), 10)]; // Make sure author_id is also an array
 
-            if (!bookseriesinorder_link) {
-                console.log(`No link found for series: ${serie_name}`);
-                continue; // Skip to the next series if no link is found
+            // console.log("AuthorIds:", authorIds);
+
+            // Fetch all author names from the database using the list of author IDs
+            const { rows: authorNamesData } = await client.query(`
+            SELECT author_name 
+            FROM authors
+            WHERE id = ANY($1::int[])
+            `, [authorIds]);
+
+            // Combine all author names into a single string
+            authorNames = authorNamesData.map(author => author.author_name).join(', ');
+
+            console.log(`Processing series: ${serie_name} by ${authorNames}`);
+
+            if (!good_reads_profile || author_id.includes(',')) {
+                console.log(`No Goodreads profile link found for author: ${authorNames}`);
+                processedSeries++;
+                continue;
             }
 
-            // Fetch the book series page
-            const seriesResponse = await axios.get(bookseriesinorder_link, {
+            // Fetch the Goodreads profile page
+            const profileResponse = await axios.get(good_reads_profile, {
+                headers: { 'User-Agent': userAgent }
+            });
+            const profilePage = cheerio.load(profileResponse.data);
+
+            // Find the 'Series by' link
+            const seriesLink = profilePage('div.clearFloats.bigBox a').filter((_, el) => {
+                return profilePage(el).text().startsWith('Series by');
+            }).attr('href');
+
+            if (!seriesLink) {
+                console.log(`No 'Series by' link found for author: ${authorNames}`);
+                processedSeries++;
+                continue;
+            }
+
+            // Navigate to the series list page
+            const fullSeriesLink = `https://www.goodreads.com${seriesLink}`;
+            const seriesResponse = await axios.get(fullSeriesLink, {
                 headers: { 'User-Agent': userAgent }
             });
             const seriesPage = cheerio.load(seriesResponse.data);
 
-            const booksDivs = seriesPage('div.list'); // The divs containing the book data
+            // Select the book rows
+            const booksDivs = seriesPage('div.bookRow.seriesBookRow');
             const books = [];
 
-            // Gather h2 tags for verification
-            const h2Tags = seriesPage('h2').map((_, el) => seriesPage(el).text().trim().toLowerCase()).get();
             let matchedTag = null;
+            let numBooks = 0;
+            let goodreadsLink = '';
 
-            // Match h2 tags with the current series name
-            for (const h2Tag of h2Tags) {
-                if (await serieVerification(h2Tag, serie_name)) { // Ensure correct async function call
-                    matchedTag = h2Tag;
-                    break;
+            // Iterate through each bookRow
+            booksDivs.each((_, row) => {
+                const bookTitle = seriesPage(row).find('a.bookTitle').text().trim().toLowerCase();
+                const serieNameLower = serie_name.toLowerCase();
+
+                // Verify if the book title matches the series name
+                if (serieNameLower.includes(bookTitle)) {
+                    matchedTag = seriesPage(row).find('a.bookTitle');
+                    const bookMetaText = seriesPage(row).find('.bookMeta').text();
+                    const numBooksMatch = bookMetaText.match(/\((\d+) books?\)/);
+
+                    // If the match is found, extract the number of books; otherwise, default to 0
+                    numBooks = numBooksMatch ? numBooksMatch[1] : 0;
+                    goodreadsLink = `https://www.goodreads.com${matchedTag.attr('href')}`;
+                    return false; // Break out of the loop
                 }
-            }
+            });
 
             if (!matchedTag) {
-                console.log(`No matching series for h2 tags for series: ${serie_name}`);
-                // Update the processed series counter
+                console.log(`No matching series found for series: ${serie_name}`);
                 await client.query(`UPDATE series SET book_status = 'done' WHERE id = $1`, [seriesId]);
                 processedSeries++;
-
-                // Calculate progress percentage
                 const progressPercentage = ((processedSeries / totalSeries) * 100).toFixed(2);
                 const progress = `${processedSeries}/${totalSeries} (${progressPercentage}%)`;
                 console.log(`Progress: ${progress}\n`);
-
-                // Emit progress to the client if connected
-                if (req.io) {
-                    req.io.emit('scrapeSeriesBooksProgress', progress);
-                }
-
-                continue; // Skip to the next series if no match is found
+                if (req.io) req.io.emit('scrapeSeriesBooksMessage', `Progress: ${progress}`);
+                continue;
             }
 
-            // Loop over each div with class 'list' and find books associated with the matched h2 tag
-            booksDivs.each((index, bookDiv) => {
-                const currentH2Tag = seriesPage(bookDiv).prevAll('h2').first().text().trim().toLowerCase();
-                const booksTables = seriesPage(bookDiv).find('table[id^="books"]');
+            console.log("Number of books:", numBooks);
+            console.log("Goodreads link:", goodreadsLink);
 
-                if (currentH2Tag !== matchedTag) {
-                    return; // Skip this div if the h2 tag doesn't match
-                }
 
-                booksTables.each((_, table) => {
-                    const rows = seriesPage(table).find('tr').not('.hiderow');
-                    rows.each((i, row) => {
-                        const bookTitle = seriesPage(row).find('td.booktitle').text().trim();
-                        const amazonLink = seriesPage(row).find('td a').attr('href');
-                        if (bookTitle && amazonLink) {
-                            books.push({ title: bookTitle, amazon: amazonLink, author_id, seriesId: seriesId });
-                        }
-                    });
-                });
-            });
+            await processBook(userAgent, numBooks, author_id, seriesId, goodreadsLink);
 
-            // Process books by series
-            for (const book of books) {
-                console.log(`Processing book: ${book.title}`);
-                await processBook(book.title, book.amazon, author_id, seriesId);
-            }
-
-            // Update the status of processed series
-            console.log(`Processed serie: ${serie_name}`);
-            await client.query(`UPDATE series SET book_status = 'done' WHERE id = $1`, [seriesId]);
-
-            // Update the processed series counter
+            await client.query(`UPDATE series SET book_status = 'done', goodreads_link = $1, num_books = $2 WHERE id = $3`, [goodreadsLink, numBooks, seriesId]);
             processedSeries++;
-
-            // Calculate progress percentage
             const progressPercentage = ((processedSeries / totalSeries) * 100).toFixed(2);
             const progress = `${processedSeries}/${totalSeries} (${progressPercentage}%)`;
             console.log(`Progress: ${progress}\n`);
-
-            // Emit progress to the client if connected
-            if (req.io) {
-                req.io.emit('scrapeSeriesBooksProgress', progress);
-            }
+            if (req.io) req.io.emit('scrapeSeriesBooksMessage', `Progress: ${progress}`);
         }
 
         client.release();
         isValidating = false;
 
+        if (req.io) req.io.emit('scrapeSeriesBooksMessage', "Series scraping completed.");
+
     } catch (error) {
-        console.error('Error during scraping:', error.message);
+        console.error("Error in scrapeSeriesBooks:", error);
         isValidating = false;
-        setTimeout(() => scrapeSeriesBooks(req, res), 5000); // Retry after 5 seconds
     }
 };
 

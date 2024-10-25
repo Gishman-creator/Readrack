@@ -1,41 +1,62 @@
-const poolpg = require('../../config/dbpg3'); // Your PostgreSQL pool setup
+const axios = require('axios');
+const cheerio = require('cheerio');
+const poolpg = require('../../config/dbpg3'); // Your PostgreSQL poolpg setup
 const { insertNewBook } = require('./insertNewBook');
 
-exports.processBook = async (book_name, amazon_link, author_id, serie_id) => {
+exports.processBook = async (userAgent, numBooks, author_id, serie_id, goodreadsLink) => {
     try {
-        // Check if the book already exists in the database by book_name
-        const existingBook = await poolpg.query(
-            'SELECT * FROM books WHERE book_name = $1',
-            [book_name]
-        );
+        console.log("Starting processBook...");
+        const axiosConfig = { headers: { 'User-Agent': userAgent } };
+        const response = await axios.get(goodreadsLink, axiosConfig);
 
-        if (existingBook.rows.length > 0) {
-            const book = existingBook.rows[0];
+        const $ = cheerio.load(response.data);
+        const bookElements = $('.listWithDividers__item');
+        console.log(`Number of divs with class 'listWithDividers__item':`, bookElements.length);
 
-            // Update author_id if it's not already associated with the book
-            const existingAuthorIds = book.author_id ? book.author_id.split(',') : [];
-            if (!existingAuthorIds.includes(String(author_id))) {
-                const updatedAuthorIds = [...existingAuthorIds, String(author_id)].join(',');
-                await poolpg.query(
-                    'UPDATE books SET author_id = $1 WHERE book_name = $2',
-                    [updatedAuthorIds, book_name]
-                );
+        let currentBookNum = 1;
+        // console.log("Processing books by:", serie_id);
+
+        for (const element of bookElements.toArray()) {
+            if (currentBookNum > numBooks) return;
+            // console.log("Current book number:", currentBookNum);
+
+            const bookNumText = $(element).find('h3').text().trim();
+            const bookNum = parseInt(bookNumText.replace('Book ', ''));
+            // console.log("Book number:", bookNum);
+            if (bookNum === currentBookNum || parseInt(numBooks) === parseInt(bookElements.length)) {
+
+                // Find book name
+                const bookName = $(element).find('a.gr-h3--serif span[itemprop="name"]').text().trim();
+                const bookGoodreadsLink = `https://www.goodreads.com${$(element).find('a.gr-h3--serif').attr('href')}`;
+                // console.log("Processing book:", bookName);
+
+                // Prepare query-friendly book name
+                const safeBookName = bookName.replace(/'/g, "''").replace(/ /g, '%');
+
+                // Step 3: Database search
+                const findBookQuery = `
+                SELECT * FROM books
+                WHERE book_name ILIKE '%${safeBookName}%' AND author_id = $1;
+                `;
+                const result = await poolpg.query(findBookQuery, [author_id]);
+
+                if (result.rowCount > 0) {
+                    // Book found: update serie_id_2
+                    const bookId = result.rows[0].id;
+                    const updateQuery = `
+                    UPDATE books SET serie_id_2 = $1, serie_index = $2, goodreads_link = $3 WHERE id = $4
+                    `;
+                    await poolpg.query(updateQuery, [serie_id, currentBookNum, bookGoodreadsLink, bookId]);
+                    console.log(`Updated book: ${bookName} index`, currentBookNum, `from ${bookGoodreadsLink}`);
+                } else {
+                    // Book not found: call insertNewBook
+                    await insertNewBook(bookName, author_id, serie_id, currentBookNum, bookGoodreadsLink);
+                    console.log(`Inserted new book: ${bookName} index`,currentBookNum, `from ${bookGoodreadsLink}`);
+                }
             }
-
-            // Insert the serie_id if it doesn't already exist
-            const existingSeriesIds = book.serie_id ? book.serie_id.split(',') : [];
-            if (!existingSeriesIds.includes(String(serie_id))) {
-                const updatedSeriesIds = [...existingSeriesIds, String(serie_id)].join(',');
-                await poolpg.query(
-                    'UPDATE books SET serie_id = $1 WHERE book_name = $2',
-                    [updatedSeriesIds, book_name]
-                );
-            }
-        } else {
-            // If the book does not exist, insert it with the author_id and serie_id
-            await insertNewBook(book_name, amazon_link, author_id, serie_id);
-        }
+            currentBookNum++;
+        };
     } catch (error) {
-        console.error('Error processing book:', error);
+        console.error("Error in processBook:", error);
     }
 };

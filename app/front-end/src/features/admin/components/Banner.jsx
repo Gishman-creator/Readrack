@@ -5,12 +5,14 @@ import { useSocket } from '../../../context/SocketContext';
 function Banner() {
     const [scrapeBookSeriesMessage, setScrapeBookSeriesMessage] = useState('');
     const [scrapeSeriesBooksMessage, setScrapeSeriesBooksMessage] = useState('');
+    const [uploadImagesMessage, setUploadImagesMessage] = useState('');
     const [scrapeBookInfoMessage, setScrapeBookInfoMessage] = useState('');
     const [scrapeSeriesMessage, setScrapeSeriesMessage] = useState('');
     const [ratingMessage, setRatingMessage] = useState('');
     const [validateAuthorMessage, setValidateAuthorMessage] = useState('');
     const [scrapeBookSeriesProgress, setScrapeBookSeriesProgress] = useState('');
     const [scrapeSeriesBooksProgress, setScrapeSeriesBooksProgress] = useState('');
+    const [uploadImagesProgress, setUploadImagesProgress] = useState('');
     const [scrapeBookInfoProgress, setScrapeBookInfoProgress] = useState('');
     const [scrapeSeriesProgress, setScrapeSeriesProgress] = useState('');
     const [authorRatingsProgress, setAuthorRatingsProgress] = useState('');
@@ -30,8 +32,11 @@ function Banner() {
                 // const scrapeSeriesResponse = await axiosUtils('/api/scrapeSeries', 'POST');
                 // console.log('Validate authors response:', scrapeSeriesResponse);
 
-                const scrapeSeriesBooksResponse = await axiosUtils('/api/scrapeSeriesBooks', 'POST');
-                console.log('Validate authors response:', scrapeSeriesBooksResponse);
+                // const scrapeSeriesBooksResponse = await axiosUtils('/api/scrapeSeriesBooks', 'POST');
+                // console.log('Validate authors response:', scrapeSeriesBooksResponse);
+
+                const uploadImagesResponse = await axiosUtils('/api/uploadImages', 'POST');
+                console.log('Validate authors response:', uploadImagesResponse);
 
                 // const scrapeBookInfoResponse = await axiosUtils('/api/scrapeBookInfo', 'POST');
                 // console.log('Validate authors response:', scrapeBookInfoResponse);
@@ -64,12 +69,21 @@ function Banner() {
         // });
 
         // Listen for progress updates from the WebSocket
-        socket.on('scrapeSeriesBooksProgress', (data) => {
-            setScrapeSeriesBooksProgress(data);  // Update progress percentage
+        // socket.on('scrapeSeriesBooksProgress', (data) => {
+        //     setScrapeSeriesBooksProgress(data);  // Update progress percentage
+        // });
+
+        // socket.on('scrapeSeriesBooksMessage', (message) => {
+        //     setScrapeSeriesBooksMessage(message);  // Update progress percentage
+        // });
+
+        // Listen for progress updates from the WebSocket
+        socket.on('uploadImagesProgress', (data) => {
+            setUploadImagesProgress(data);  // Update progress percentage
         });
 
-        socket.on('scrapeSeriesBooksMessage', (message) => {
-            setScrapeSeriesBooksMessage(message);  // Update progress percentage
+        socket.on('uploadImagesMessage', (message) => {
+            setUploadImagesMessage(message);  // Update progress percentage
         });
 
         // Listen for progress updates from the WebSocket
@@ -104,6 +118,8 @@ function Banner() {
         return () => {
             socket.off('validateAuthorProgress');
             socket.off('validateAuthorMessage');
+            socket.off('uploadImagesProgress');
+            socket.off('uploadImagesMessage');
             socket.off('scrapeBookInfoProgress');
             socket.off('scrapeBookInfoMessage');
             socket.off('scrapeSeriesBooksProgress');
@@ -120,7 +136,8 @@ function Banner() {
     return (
         <div className="flex justify-evenly w-full p-2 bg-primary text-white text-center text-sm font-emibold">
             {/* <span>{validateAuthorMessage ? validateAuthorMessage : `Author validation running: ${validateAuthorProgress}`}</span> */}
-            <span>{scrapeSeriesBooksMessage ? scrapeSeriesBooksMessage : `Series books scraping running: ${scrapeSeriesBooksProgress}`}</span>
+            <span>{uploadImagesMessage ? uploadImagesMessage : `Image uploading running: ${uploadImagesProgress}`}</span>
+            {/* <span>{scrapeSeriesBooksMessage ? scrapeSeriesBooksMessage : `Series books scraping running: ${scrapeSeriesBooksProgress}`}</span> */}
             {/* <span>{scrapeBookInfoMessage ? scrapeBookInfoMessage : `Series books scraping running: ${scrapeBookInfoProgress}`}</span> */}
             {/* <span>{scrapeSeriesMessage ? scrapeSeriesMessage : `Series scraping running: ${scrapeSeriesProgress}`}</span> */}
             {/* <span>{scrapeBookSeriesMessage ? scrapeBookSeriesMessage : `Author bookseriesinorder scraping running: ${scrapeBookSeriesProgress}`}</span> */}

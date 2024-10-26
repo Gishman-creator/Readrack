@@ -105,7 +105,7 @@ const scrapeSeriesBooks = async (req, res) => {
                 const serieNameLower = serie_name.toLowerCase();
 
                 // Verify if the book title matches the series name
-                if (serieNameLower.includes(bookTitle)) {
+                if (serieNameLower.includes(bookTitle) || bookTitle.includes(serieNameLower)) {
                     matchedTag = seriesPage(row).find('a.bookTitle');
                     const bookMetaText = seriesPage(row).find('.bookMeta').text();
                     const numBooksMatch = bookMetaText.match(/\((\d+) books?\)/);

@@ -19,7 +19,7 @@ const validateAuthor = async (req, res) => {
         // Fetch authors with missing status
         const { rows: authors } = await client.query(`
             SELECT id, author_name FROM authors 
-            WHERE status IS NULL;
+            WHERE dob is null;
         `);
 
         // Check if there are any authors to validate
@@ -44,7 +44,7 @@ const validateAuthor = async (req, res) => {
         // Loop through authors and validate their information
         for (const author of authors) {
 
-            await sleep(2000);
+            await sleep(5000);
 
             const { id, author_name } = author; // Extract id and author_name
             const searchQuery = `author ${author_name}`; // Use the author's name in the search query
@@ -85,6 +85,7 @@ const validateAuthor = async (req, res) => {
 
                 if (labels.some(label => label.includes('Born'))) {
                     dob = $(section).find('.LrzXr.kno-fv.wHYlTd.z8gr9e').text().trim();
+                    console.log(`Extracted DOB: ${dob}`);
                     dob = formatDate(dob); // Format the date
                     // console.log(`Extracted DOB: ${dob}`);
                 }
@@ -99,7 +100,8 @@ const validateAuthor = async (req, res) => {
             // Update the database with the extracted DOB and DOD
             await client.query(`UPDATE authors SET status = $1, dob = $2, dod = $3 WHERE id = $4;`, ['keep', dob, dod, id]);
 
-            // console.log(`Updated author ID ${id} with DOB: ${dob} and DOD: ${dod}`);
+            console.log('DOB:', dob);
+            console.log('DOD:', dod);
 
             // Increment processed authors count
             processedAuthors++;
@@ -107,7 +109,7 @@ const validateAuthor = async (req, res) => {
             // Calculate progress percentage
             const progressPercentage = ((processedAuthors / totalAuthors) * 100).toFixed(2);
             const progress = `${processedAuthors}/${totalAuthors} (${progressPercentage}%)`;
-            console.log(`Progress: ${progress}`);
+            console.log(`Progress: ${progress}\n`);
 
             // Emit progress updates via Socket.IO
             if (req.io) {
@@ -128,9 +130,20 @@ const validateAuthor = async (req, res) => {
 };
 
 // Helper function to format the date to 'Month D, YYYY'
+// Helper function to format the date to 'Month D, YYYY' | 'Month YYYY' | 'YYYY'
 const formatDate = (dobText) => {
-    const dobMatch = dobText.match(/(\w+\s\d{1,2},\s\d{4})/);
-    return dobMatch ? dobMatch[0] : 'Date of birth not found';
+    // Define the regular expression patterns for each date format
+    const fullDateMatch = dobText.match(/(\w+\s\d{1,2},\s\d{4})/);     // Matches 'Month Day, Year'
+    const monthYearMatch = dobText.match(/(\w+\s\d{4})/);              // Matches 'Month Year'
+    const yearOnlyMatch = dobText.match(/(\d{4})/);                    // Matches 'Year'
+
+    // Check each pattern in order of specificity and return the match
+    if (fullDateMatch) return fullDateMatch[0];
+    if (monthYearMatch) return monthYearMatch[0];
+    if (yearOnlyMatch) return yearOnlyMatch[0];
+
+    // If no pattern matches, return a default message
+    return 'Date of birth not found';
 };
 
 module.exports = { validateAuthor };

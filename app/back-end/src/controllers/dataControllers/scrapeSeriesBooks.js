@@ -39,6 +39,9 @@ const scrapeSeriesBooks = async (req, res) => {
 
         // Process each series in seriesList
         for (const serie of seriesList) {
+
+            await sleep(5000);
+
             const { id: seriesId, serie_name, author_id, good_reads_profile } = serie;
 
             let authorNames = '';

@@ -21,7 +21,7 @@ const scrapeBookImage = async (req, res) => {
             SELECT books.id, books.book_name, books.author_id, books.amazon_link, authors.bookseriesinorder_link 
             FROM books
             JOIN authors ON books.author_id::text = authors.id::text
-            WHERE books.bookInfo_status IS NULL and amazon_link is not null;
+            WHERE books.image_link is null and books.amazon_link is not null;
         `);
 
         if (books.length === 0) {

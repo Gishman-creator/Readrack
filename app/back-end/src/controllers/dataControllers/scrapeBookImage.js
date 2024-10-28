@@ -65,7 +65,7 @@ const scrapeBookImage = async (req, res) => {
                     [image_link, id]
                 );
 
-                console.log(`Image Link: ${image_link || 'null'} from ${amazon_link}`);
+                console.log(`Image Link: ${image_link || 'null'}`);
 
             } catch (error) {
                 console.error(`Error fetching data for book: ${book_name}, Error: ${error.message}`);

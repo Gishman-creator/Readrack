@@ -14,7 +14,7 @@ const getImage = async (userAgent, amazonLink) => {
     //     return null;
     // }
 
-    const maxRetries = 20;
+    const maxRetries = 5;
     let attempts = 0;
     let imageUrl = null;
 

@@ -1,6 +1,10 @@
 const puppeteer = require('puppeteer');
 const poolpg = require('../../config/dbpg3');
 const { generateRandomUserAgent } = require('../../utils/userAgentGenerator');
+const dotenv = require('dotenv');
+dotenv.config();
+
+const prod = process.env.NODE_ENV === "production";
 
 let isValidating = false; // Lock variable
 
@@ -35,67 +39,78 @@ const scrapeBookLink = async (req, res) => {
         let processedBooks = 0;
 
         // Launch Puppeteer browser
-        const browser = await puppeteer.launch({ headless: true });
-        const page = await browser.newPage();
-    
+        const browser = prod ?
+         await puppeteer.launch({ headless: true })
+         : await puppeteer.launch({
+            executablePath: '/usr/bin/google-chrome', // Replace with the correct path if different
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });;
+
         // Set a random User-Agent
         const userAgent = await generateRandomUserAgent();
-        await page.setUserAgent(userAgent);
 
         for (const book of books) {
             try {
                 const { id, book_name, goodreads_link } = book;
 
-                // Go to the Goodreads page for the book
-                await page.goto(goodreads_link, { waitUntil: 'networkidle2' });
-                console.log(`Navigating to Goodreads page for book: ${book.book_name}`);
+                const page = await browser.newPage();
+        
+                await page.setUserAgent(userAgent);
 
-                // Click the "buy" button to reveal the dropdown
+                // Go to the Goodreads page for the book
+                await page.goto(goodreads_link, { waitUntil: 'networkidle2', timeout: 60000 });
+                console.log(`Navigating to Goodreads page for book: ${book_name}`);
+
+                // Click the "buy" button
                 const buyButtonSelector = 'button.Button--buy';
                 await page.waitForSelector(buyButtonSelector);
                 await page.click(buyButtonSelector);
                 await page.keyboard.press('Enter');
 
-                await new Promise(resolve => setTimeout(resolve, 30000));
+                // Allow time for the new tab to open
+                await new Promise(resolve => setTimeout(resolve, 20000));
 
-                // Wait for navigation to Amazon
-                // await page.waitForNavigation({ waitUntil: 'networkidle2' });
-
-                // Get all open tabs
+                // Get the latest open page (Amazon page)
                 const pages = await browser.pages();
-                console.log("Number of open tabs:", pages.length);
-                // The last page is usually the newly opened Amazon page
                 const amazonPage = pages[pages.length - 1];
 
-                const pageUrl = await amazonPage.url();
-                console.log(`Navigated to Amazon page: ${pageUrl}`);
+                if (amazonPage) {
+                    const pageUrl = await amazonPage.url();
 
-                if (pageUrl) {
-                    // await client.query(
-                    //     `UPDATE books SET amazon_link = $1 WHERE id = $2`,
-                    //     [pageUrl, id]
-                    // );
-                } else {
-                    console.error(`No amazon_link found for book: ${book_name}.`);
+                    if (pageUrl.includes("amazon.com")) {
+                        console.log(`Amazon link: ${pageUrl}`);
+                        await client.query(
+                            `UPDATE books SET amazon_link = $1 WHERE id = $2`,
+                            [pageUrl, id]
+                        );
+                    } else {
+                        console.error(`Error: Expected Amazon page but got ${pageUrl}`);
+                    }
+
+                    // Close all extra tabs except the main Goodreads page
+                    for (let i = pages.length - 1; i >= 1; i--) {
+                        await pages[i].close();
+                    }
                 }
 
                 processedBooks++;
-
-                // Emit progress
                 const progressPercentage = ((processedBooks / totalBooks) * 100).toFixed(2);
-                const progress = `${processedBooks}/${totalBooks} (${progressPercentage}%)`;
-                console.log(`Progress: ${progress}\n`);
+                console.log(`Progress: ${processedBooks}/${totalBooks} (${progressPercentage}%)\n`);
+
+                // Emit progress if using Socket.IO
                 if (req.io) {
-                    req.io.emit('scrapeBookLinkProgress', progress);
+                    req.io.emit('scrapeBookLinkProgress', `${processedBooks}/${totalBooks}`);
                 }
 
-                // Delay to avoid being rate-limited
+                // Delay to avoid rate limiting
                 await new Promise(resolve => setTimeout(resolve, 5000));
 
             } catch (bookError) {
                 console.error(`Error processing book ID ${book.id}:`, bookError.message);
             }
         }
+
 
         // Close the browser and release the client connection
         await browser.close();
@@ -104,7 +119,7 @@ const scrapeBookLink = async (req, res) => {
 
     } catch (error) {
         console.error('Error during Amazon link scraping:', error.message);
-        isValidating = false; 
+        isValidating = false;
         setTimeout(() => scrapeBookLink(req, res), 5000);
     }
 };

@@ -39,7 +39,7 @@ const scrapeBookLink = async (req, res) => {
         let processedBooks = 0;
 
         // Launch Puppeteer browser
-        const browser = prod ?
+        const browser = !prod ?
          await puppeteer.launch({ headless: true })
          : await puppeteer.launch({
             executablePath: '/usr/bin/google-chrome', // Replace with the correct path if different

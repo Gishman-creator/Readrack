@@ -9,10 +9,11 @@ const cheerio = require('cheerio');
  * @returns {string|null} - The image link if found, otherwise null.
  */
 const getImage = async (userAgent, amazonLink) => {
-    // const amazonLinkPattern = /^https:\/\/www\.amazon\.com\/gp\/product\/[A-Za-z0-9]+$/;
-    // if (!amazonLinkPattern.test(amazonLink)) {
-    //     return null;
-    // }
+    // Skip URLs that contain '/gp/search'
+    if (amazonLink.includes('/gp/search')) {
+        console.log(`Skipping search URL`);
+        return null;
+    }
 
     const maxRetries = 5;
     let attempts = 0;

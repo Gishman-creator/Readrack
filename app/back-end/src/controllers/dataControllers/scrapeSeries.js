@@ -47,6 +47,8 @@ const scrapeSeries = async (req, res) => {
             const { id, author_name, goodreads_link } = author;
             console.log("Processing author:", author_name)
 
+            if(!goodreads_link) continue;
+
             // Fetch the Goodreads author page
             const authorResponse = await axios.get(goodreads_link, {
                 headers: { 'User-Agent': userAgent }

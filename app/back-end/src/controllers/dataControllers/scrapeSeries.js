@@ -47,7 +47,12 @@ const scrapeSeries = async (req, res) => {
             const { id, author_name, goodreads_link } = author;
             console.log("Processing author:", author_name)
 
-            if(!goodreads_link) continue;
+            if(!goodreads_link) {
+                console.log(`No series found for author: ${author_name}`);
+                await client.query(`UPDATE authors SET series_status = 'done' WHERE id = $1`, [id]);
+                processedAuthors++;
+                continue;
+            }
 
             // Fetch the Goodreads author page
             const authorResponse = await axios.get(goodreads_link, {

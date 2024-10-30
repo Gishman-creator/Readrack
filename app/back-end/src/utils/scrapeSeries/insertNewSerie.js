@@ -1,6 +1,6 @@
 const poolpg = require('../../config/dbpg3');
 
-exports.insertNewSerie = async (serieName, authorId) => {
+exports.insertNewSerie = async (serieName, authorId, goodreads_link) => {
     let serieIdLength = 6; // Start with 6 digits
     let maxIdsForCurrentLength;
     let currentLengthIdsCount;
@@ -20,8 +20,8 @@ exports.insertNewSerie = async (serieName, authorId) => {
         }
     } while (idExists || currentLengthIdsCount >= maxIdsForCurrentLength);
 
-    const insertSerieQuery = `INSERT INTO series (id, serie_name, author_id) VALUES ($1, $2, $3)`;
-    await poolpg.query(insertSerieQuery, [serieId, serieName, authorId]);
+    const insertSerieQuery = `INSERT INTO series (id, serie_name, author_id, goodreads_link) VALUES ($1, $2, $3, $4)`;
+    await poolpg.query(insertSerieQuery, [serieId, serieName, authorId, goodreads_link]);
 };
 
 

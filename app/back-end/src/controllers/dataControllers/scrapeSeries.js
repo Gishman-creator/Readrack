@@ -5,6 +5,7 @@ const { generateRandomUserAgent } = require("../../utils/userAgentGenerator");
 const { areAuthorsSame } = require('../../utils/scrapeSeries/authorVerification');
 const { processSerie } = require('../../utils/scrapeSeries/processSerie');
 const { serieVerification } = require('../../utils/scrapeSeries/serieVerification');
+const { insertNewSerie } = require('../../utils/scrapeSeries/insertNewSerie');
 
 let isValidating = false;
 
@@ -20,8 +21,8 @@ const scrapeSeries = async (req, res) => {
 
         // Fetch authors with series_status as null
         const { rows: authors } = await client.query(`
-            SELECT id, author_name FROM authors
-            WHERE good_reads_profile IS NULL;
+            SELECT id, author_name, goodreads_link FROM authors
+            WHERE series_status IS NULL;
         `);
 
         if (authors.length === 0) {
@@ -31,7 +32,7 @@ const scrapeSeries = async (req, res) => {
             } 
             client.release();
             isValidating = false;
-            return;
+            return; 
         }
 
         const totalAuthors = authors.length;
@@ -42,73 +43,12 @@ const scrapeSeries = async (req, res) => {
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
         for (const author of authors) {
-            await sleep(5000);
 
-            const { id, author_name } = author;
-            // const author_name = 'Jk rowling';
-            const searchQuery = `${author_name} site:goodreads.com`;
-            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
-
-            // Fetch the Google search results page
-            const response = await axios.get(googleSearchUrl, {
-                headers: { 'User-Agent': userAgent }
-            });
-
-            const $ = cheerio.load(response.data);
-
-            // Find all links that point to Goodreads author pages
-            const goodreadsLinks = $('a').filter((i, el) => {
-                const href = $(el).attr('href');
-                return href && href.includes("www.goodreads.com/author/show");
-            });
-
-            // console.log('goodreadsLinks:', goodreadsLinks);
-
-            if (goodreadsLinks.length === 0) {
-                console.log(`No Goodreads author link found for: ${author_name}`);
-                await client.query(`UPDATE authors SET series_status = 'done' WHERE id = $1`, [id]);
-                processedAuthors++;
-                continue;
-            }
-
-            const authorCheckPromises = Array.from(goodreadsLinks).map(async (el) => {
-                const href = $(el).attr('href');
-                const h3Text = $(el).find('h3').text();
-                console.log(`Checking author: ${h3Text}`);
-
-                // Check if the author name matches
-                const isSameAuthor = await areAuthorsSame(h3Text, author_name);
-                return isSameAuthor ? href : null; // Return the link if the authors match
-            });
-
-            // Wait for all promises to resolve
-            const authorCheckResults = await Promise.all(authorCheckPromises);
-
-            // Filter out the valid links
-            const validLinks = authorCheckResults.filter(link => link !== null);
-
-            if (validLinks.length < 0) {
-                console.log(`No valid Goodreads author link found for: ${author_name}`);
-                await client.query(`UPDATE authors SET series_status = 'done' WHERE id = $1`, [id]);
-                processedAuthors++;
-                continue;
-            }
-
-            console.log('validLinks:', validLinks[0]);
-            if (validLinks[0]) {
-                await client.query(`UPDATE authors SET good_reads_profile = $1 WHERE id = $2`, [validLinks[0], id]);
-                processedAuthors++;
-    
-                // Calculate progress percentage
-                const progressPercentage = ((processedAuthors / totalAuthors) * 100).toFixed(2);
-                const progress = `${processedAuthors}/${totalAuthors} (${progressPercentage}%)`;
-                console.log(`Progress: ${progress}\n`);
-                continue;
-            }
-
+            const { id, author_name, goodreads_link } = author;
+            console.log("Processing author:", author_name)
 
             // Fetch the Goodreads author page
-            const authorResponse = await axios.get(validLinks[0], {
+            const authorResponse = await axios.get(goodreads_link, {
                 headers: { 'User-Agent': userAgent }
             });
             const authorPage = cheerio.load(authorResponse.data);
@@ -126,41 +66,38 @@ const scrapeSeries = async (req, res) => {
                 continue;
             }
 
-            // Navigate to the series list page
-            const seriesUrl = `https://www.goodreads.com${seriesLink}`;
-            const seriesResponse = await axios.get(seriesUrl, {
-                headers: { 'User-Agent': userAgent }
-            });
-            const seriesPage = cheerio.load(seriesResponse.data);
+            let page = 1;  // Start with page 1
 
-            // Scrape the series names from the series page
-            const seriesTitles = seriesPage('a.bookTitle').map((i, el) => {
-                return seriesPage(el).text().trim();
-            }).get();
-
-            if (seriesTitles.length === 0) {
-                console.log(`No series titles found for author: ${author_name}`);
-                await client.query(`UPDATE authors SET series_status = 'done' WHERE id = $1`, [id]);
-                processedAuthors++;
-                continue;
+            while (true) {
+                const pagedSeriesUrl = `https://www.goodreads.com${seriesLink}&page=${page}`;
+                // const pagedSeriesUrl = `https://www.goodreads.com/series/list?id=1221698.Neil_Gaiman&page=${page}`;
+                console.log(`Fetching series page: ${pagedSeriesUrl}`);
+            
+                const seriesResponse = await axios.get(pagedSeriesUrl, {
+                    headers: { 'User-Agent': userAgent }
+                });
+            
+                const seriesPage = cheerio.load(seriesResponse.data);
+            
+                // Scrape the series names from the current page
+                const bookTitleElements = seriesPage('a.bookTitle').toArray();
+            
+                if (bookTitleElements.length === 0) {
+                    console.log(`No more series found on page ${page}. Ending pagination.`);
+                    break;  // Exit the loop if there are no book titles on this page
+                }
+            
+                for (const el of bookTitleElements) {
+                    const serie_name = seriesPage(el).text().trim();
+                    const href = seriesPage(el).attr('href');
+                    const link = `https://www.goodreads.com${href}`;
+                    console.log(`Serie: ${serie_name} from: ${link}`);
+                    await insertNewSerie(serie_name, id, link);
+                }
+            
+                page++;  // Go to the next page
             }
-
-            // Verify each series title
-            const verifiedSeries = await serieVerification(seriesTitles.join(', '));
-            console.log(`Verified series: ${verifiedSeries}`);
-            const verifiedSeriesList = verifiedSeries.split(',').map(serie => serie.trim());
-
-            if (verifiedSeriesList.length === 0) {
-                console.log(`No valid series after verification for author: ${author_name}`);
-                await client.query(`UPDATE authors SET series_status = 'done' WHERE id = $1`, [id]);
-                processedAuthors++;
-                continue;
-            }
-
-            // Process each verified series title
-            for (const seriesTitle of verifiedSeriesList) {
-                await processSerie(seriesTitle, id);
-            }
+            
 
             // Mark series scraping as done 
             await client.query(`UPDATE authors SET series_status = 'done' WHERE id = $1`, [id]);
@@ -171,7 +108,7 @@ const scrapeSeries = async (req, res) => {
             // Calculate progress percentage
             const progressPercentage = ((processedAuthors / totalAuthors) * 100).toFixed(2);
             const progress = `${processedAuthors}/${totalAuthors} (${progressPercentage}%)`;
-            console.log(`Progress: ${progress}`);
+            console.log(`Progress: ${progress}\n`);
 
             if (req.io) {
                 req.io.emit('scrapeSeriesProgress', progress);

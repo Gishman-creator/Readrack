@@ -48,7 +48,7 @@ const scrapeBookSeriesInOrder = async (req, res) => {
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
 
             // Fetch the Google search results page
-            const response = await axios.get(googleSearchUrl, {
+            const response = await axios.get(googleSearchUrl, { 
                 headers: { 'User-Agent': userAgent }
             });
 

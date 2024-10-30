@@ -1,0 +1,36 @@
+services:
+  api:
+    build: .
+    restart: unless-stopped
+    labels:
+      api.description: "Backend Service"
+    depends_on:
+      - postgres
+    ports:
+      - 8000:8000
+    networks:
+      - backend
+    env_file:
+      - .env
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    networks:
+      - backend
+    environment:
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=readrack
+      - POSTGRES_USER=postgres
+
+    labels:
+      api.description: "Postgres Database"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+volumes:
+  postgres-data:
+
+networks:
+  backend:

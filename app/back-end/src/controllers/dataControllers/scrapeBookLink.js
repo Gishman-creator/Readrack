@@ -54,7 +54,7 @@ const scrapeBookLink = async (req, res) => {
             try {
                 const { id, book_name, goodreads_link } = book;
 
-                const page = await browser.newPage();
+                const page = await browser.newPage(); 
         
                 await page.setUserAgent(userAgent);
 

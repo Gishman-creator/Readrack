@@ -2,7 +2,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const poolpg = require('../../config/dbpg3');
 const { generateRandomUserAgent } = require("../../utils/userAgentGenerator");
-const { processBook } = require('../../utils/scrapeSeriesBooks_utils/processBook');
+const { insertNewBook } = require('../../utils/scrapeSeriesBooks_utils/insertNewBook');
 
 let isValidating = false;
 
@@ -17,7 +17,7 @@ const scrapeSeriesBooks = async (req, res) => {
 
         // Fetch series where book_status is null
         const { rows: seriesList } = await client.query(`
-            SELECT s.id, s.serie_name, s.author_id, a.good_reads_profile 
+            SELECT s.id, s.serie_name, s.author_id, s.goodreads_link 
             FROM series s 
             JOIN authors a ON s.author_id::text = a.id::text
             WHERE s.book_status IS NULL;
@@ -40,102 +40,71 @@ const scrapeSeriesBooks = async (req, res) => {
         // Process each series in seriesList
         for (const serie of seriesList) {
 
-            const { id: seriesId, serie_name, author_id, good_reads_profile } = serie;
+            const { id: serieId, serie_name, author_id, goodreads_link } = serie;
+            console.log("Processing serie:", serie_name, "from:", goodreads_link);
 
-            let authorNames = '';
-            // Skip if author_id contains a comma (i.e., multiple authors)
-            const authorIds = author_id.includes(',')
-                ? author_id.split(',').map(id => parseInt(id.trim(), 10))
-                : [parseInt(author_id.trim(), 10)]; // Make sure author_id is also an array
+            const axiosConfig = { headers: { 'User-Agent': userAgent } };
+            const response = await axios.get(goodreads_link, axiosConfig);
+            // const response = await axios.get('https://www.goodreads.com/series/45175-harry-potter', axiosConfig);
 
-            // console.log("AuthorIds:", authorIds);
+            const $ = cheerio.load(response.data);
 
-            // Fetch all author names from the database using the list of author IDs
-            const { rows: authorNamesData } = await client.query(`
-            SELECT author_name 
-            FROM authors
-            WHERE id = ANY($1::int[])
-            `, [authorIds]);
+            const subtitleText = $('.responsiveSeriesHeader__subtitle').text();
+            const numBooksMatch = subtitleText.match(/(\d+)\s+primary works/);
+            const numBooks = numBooksMatch ? parseInt(numBooksMatch[1]) : 0;
+            console.log("Number of primary works:", numBooks);
 
-            // Combine all author names into a single string
-            authorNames = authorNamesData.map(author => author.author_name).join(', ');
+            const bookElements = $('.listWithDividers__item');
+            console.log(`Number of divs with class 'listWithDividers__item':`, bookElements.length);
 
-            console.log(`Processing series: ${serie_name} by ${authorNames}`);
+            let currentBookNum = 1; 
+            // console.log("Processing books by:", serieId);
+            
+            for (const element of bookElements.toArray()) {
+                if (currentBookNum > numBooks) break;
+                // console.log("Current book number:", currentBookNum);
 
-            if (!good_reads_profile || author_id.includes(',')) {
-                console.log(`No Goodreads profile link found for author: ${authorNames}`);
-                processedSeries++;
-                continue;
-            }
+                const bookNumText = $(element).find('h3').text().trim();
+                const bookNum = parseInt(bookNumText.replace('Book ', ''));
+                // console.log("Book number:", bookNum);
+                if (bookNum === currentBookNum || parseInt(numBooks) === parseInt(bookElements.length)) {
 
-            // Fetch the Goodreads profile page
-            const profileResponse = await axios.get(good_reads_profile, {
-                headers: { 'User-Agent': userAgent }
-            });
-            const profilePage = cheerio.load(profileResponse.data);
+                    // Find book name
+                    const bookName = $(element).find('a.gr-h3--serif span[itemprop="name"]').text().trim();
+                    const bookGoodreads_link = `https://www.goodreads.com${$(element).find('a.gr-h3--serif').attr('href')}`;
+                    // console.log("Processing book:", bookName);
 
-            // Find the 'Series by' link
-            const seriesLink = profilePage('div.clearFloats.bigBox a').filter((_, el) => {
-                return profilePage(el).text().startsWith('Series by');
-            }).attr('href');
+                    // Prepare query-friendly book name
+                    const safeBookName = bookName.replace(/'/g, "''").replace(/’/g, "''").replace(/ /g, '%'); 
+                    // console.log("Safe book name:", safeBookName);
 
-            if (!seriesLink) {
-                console.log(`No 'Series by' link found for author: ${authorNames}`);
-                processedSeries++;
-                continue;
-            }
+                    // Step 3: Database search
+                    const findBookQuery = `
+                        SELECT * FROM books
+                        WHERE book_name ILIKE '%${safeBookName}%' AND author_id = $1;
+                        `;
+                    const result = await poolpg.query(findBookQuery, [author_id]);
 
-            // Navigate to the series list page
-            const fullSeriesLink = `https://www.goodreads.com${seriesLink}`;
-            const seriesResponse = await axios.get(fullSeriesLink, {
-                headers: { 'User-Agent': userAgent }
-            });
-            const seriesPage = cheerio.load(seriesResponse.data);
-
-            // Select the book rows
-            const booksDivs = seriesPage('div.bookRow.seriesBookRow');
-            const books = [];
-
-            let matchedTag = null;
-            let numBooks = 0;
-            let goodreadsLink = '';
-
-            // Iterate through each bookRow
-            booksDivs.each((_, row) => {
-                const bookTitle = seriesPage(row).find('a.bookTitle').text().trim().toLowerCase();
-                const serieNameLower = serie_name.toLowerCase();
-
-                // Verify if the book title matches the series name
-                if (serieNameLower.includes(bookTitle) || bookTitle.includes(serieNameLower)) {
-                    matchedTag = seriesPage(row).find('a.bookTitle');
-                    const bookMetaText = seriesPage(row).find('.bookMeta').text();
-                    const numBooksMatch = bookMetaText.match(/\((\d+) books?\)/);
-
-                    // If the match is found, extract the number of books; otherwise, default to 0
-                    numBooks = numBooksMatch ? numBooksMatch[1] : 0;
-                    goodreadsLink = `https://www.goodreads.com${matchedTag.attr('href')}`;
-                    return false; // Break out of the loop
-                }
-            });
-
-            if (!matchedTag) {
-                console.log(`No matching series found for series: ${serie_name}`);
-                await client.query(`UPDATE series SET book_status = 'done' WHERE id = $1`, [seriesId]);
-                processedSeries++;
-                const progressPercentage = ((processedSeries / totalSeries) * 100).toFixed(2);
-                const progress = `${processedSeries}/${totalSeries} (${progressPercentage}%)`;
-                console.log(`Progress: ${progress}\n`);
-                if (req.io) req.io.emit('scrapeSeriesBooksMessage', `Progress: ${progress}`);
-                continue;
-            }
+                    if (result.rowCount > 0) {
+                        // Book found: update serie_id_2
+                        const bookId = result.rows[0].id;
+                        const updateQuery = `
+                            UPDATE books SET serie_id = $1, serie_index = $2, goodreads_link = $3 WHERE id = $4
+                            `;
+                        await poolpg.query(updateQuery, [serieId, currentBookNum, bookGoodreads_link, bookId]);
+                        console.log(`Updated book: ${bookName} index`, currentBookNum, `from ${bookGoodreads_link}`);
+                    } else {
+                        // Book not found: call insertNewBook
+                        await insertNewBook(bookName, author_id, serieId, currentBookNum, bookGoodreads_link);
+                        console.log(`Inserted new book: ${bookName} index`, currentBookNum, `from ${bookGoodreads_link}`);
+                    }
+                } else continue; 
+                currentBookNum++;
+            };
 
             console.log("Number of books:", numBooks);
-            console.log("Goodreads link:", goodreadsLink);
 
-
-            await processBook(userAgent, numBooks, author_id, seriesId, goodreadsLink);
-
-            await client.query(`UPDATE series SET book_status = 'done', goodreads_link = $1, num_books = $2 WHERE id = $3`, [goodreadsLink, numBooks, seriesId]);
+            await client.query(`UPDATE series SET book_status = 'done', num_books = $1 WHERE id = $2`, [numBooks, serieId]);
             processedSeries++;
             const progressPercentage = ((processedSeries / totalSeries) * 100).toFixed(2);
             const progress = `${processedSeries}/${totalSeries} (${progressPercentage}%)`;

@@ -16,11 +16,21 @@ const scrapeSeriesBooks = async (req, res) => {
         const client = await poolpg.connect();
 
         // Fetch series where book_status is null
+        // const { rows: seriesList } = await client.query(`
+        //     SELECT s.id, s.serie_name, s.author_id, s.goodreads_link 
+        //     FROM series s 
+        //     JOIN authors a ON s.author_id::text = a.id::text
+        //     WHERE s.book_status IS NULL;
+        // `);
+
+        // Fetch series where book_status is null
         const { rows: seriesList } = await client.query(`
-            SELECT s.id, s.serie_name, s.author_id, s.goodreads_link 
-            FROM series s 
-            JOIN authors a ON s.author_id::text = a.id::text
-            WHERE s.book_status IS NULL;
+            SELECT series.id, series.serie_name, series.num_books, series.goodreads_link, series.author_id,
+            COUNT(DISTINCT books.id) AS "current_books"
+            FROM series
+            LEFT JOIN books ON books.serie_id::text = series.id::text
+            GROUP BY series.id
+            HAVING series.num_books > COUNT(DISTINCT books.id);
         `);
 
         if (seriesList.length === 0) {
@@ -41,6 +51,12 @@ const scrapeSeriesBooks = async (req, res) => {
         for (const serie of seriesList) {
 
             const { id: serieId, serie_name, author_id, goodreads_link } = serie;
+
+            // const serieId = 131406;
+            // const serie_name = 'Thor (2007) (Single Issues)';
+            // const author_id = 963957;
+            // const goodreads_link = 'https://www.goodreads.com/series/260780-thor-2007-single-issues';
+
             console.log("Processing serie:", serie_name, "from:", goodreads_link);
 
             const axiosConfig = { headers: { 'User-Agent': userAgent } };
@@ -57,17 +73,31 @@ const scrapeSeriesBooks = async (req, res) => {
             const bookElements = $('.listWithDividers__item');
             console.log(`Number of divs with class 'listWithDividers__item':`, bookElements.length);
 
-            let currentBookNum = 1; 
+            const bookNumTexts = bookElements.map((i, element) => {
+                return $(element).find('h3').text().trim();
+            }).get();
+
+            const bookNumOne = bookNumTexts.find(text => /^Book 1Shelve/.test(text)) || null;
+
+            let currentBookNum = 1;
             // console.log("Processing books by:", serieId);
-            
+
             for (const element of bookElements.toArray()) {
                 if (currentBookNum > numBooks) break;
                 // console.log("Current book number:", currentBookNum);
 
                 const bookNumText = $(element).find('h3').text().trim();
-                const bookNum = parseInt(bookNumText.replace('Book ', ''));
-                // console.log("Book number:", bookNum);
-                if (bookNum === currentBookNum || parseInt(numBooks) === parseInt(bookElements.length)) {
+                // console.log(bookNumText);
+                const bookNumMatch = bookNumText.match(/^Book (\d+(\.\d+)?)Shelve/); // Match "Book" followed by a full number, including 0
+                // console.log(bookNumMatch);
+                 
+                // If the bookNumText matches "Book <number>", extract the number; otherwise, set bookNum to null
+                const bookNum = bookNumMatch ? parseFloat(bookNumMatch[1]) : null;
+                // console.log(bookNum);
+                
+                if (
+                    Number.isInteger(bookNum) || parseInt(numBooks) === parseInt(bookElements.length) || !bookNumOne
+                ) {
 
                     // Find book name
                     const bookName = $(element).find('a.gr-h3--serif span[itemprop="name"]').text().trim();
@@ -75,14 +105,15 @@ const scrapeSeriesBooks = async (req, res) => {
                     // console.log("Processing book:", bookName);
 
                     // Prepare query-friendly book name
-                    const safeBookName = bookName.replace(/'/g, "''").replace(/’/g, "''").replace(/ /g, '%'); 
+                    const safeBookName = bookName.replace(/'/g, "''").replace(/’/g, "''").replace(/ /g, '%');
                     // console.log("Safe book name:", safeBookName);
 
                     // Step 3: Database search
                     const findBookQuery = `
                         SELECT * FROM books
-                        WHERE book_name ILIKE '%${safeBookName}%' AND author_id = $1;
+                        WHERE book_name ILIKE '%${safeBookName}%' AND author_id = $1 and serie_id is null;
                         `;
+                    // console.log(findBookQuery, author_id);
                     const result = await poolpg.query(findBookQuery, [author_id]);
 
                     if (result.rowCount > 0) {
@@ -98,7 +129,7 @@ const scrapeSeriesBooks = async (req, res) => {
                         await insertNewBook(bookName, author_id, serieId, currentBookNum, bookGoodreads_link);
                         console.log(`Inserted new book: ${bookName} index`, currentBookNum, `from ${bookGoodreads_link}`);
                     }
-                } else continue; 
+                } else continue;
                 currentBookNum++;
             };
 

@@ -1,5 +1,6 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const poolpg = require('../../config/dbpg3');
 const { getImage } = require('../scrapeBookInfo_utils/getImage');
 
 /**
@@ -20,7 +21,7 @@ const getAmazonLink = async (serieId) => {
         if (rows.length > 0 && rows[0].amazon_link) {
             return rows[0].amazon_link;
         } else {
-            console.error(`No amazon_link found for series ID ${serieId} at index ${serieIndex}`);
+            console.error(`No amazon_link found for series ID ${serieId}`);
             return null;
         }
     } catch (error) {
@@ -30,14 +31,14 @@ const getAmazonLink = async (serieId) => {
 };
 
 const getSerieImage = async (userAgent, amazonLink, serieId) => {
-    // Skip URLs that contain '/gp/search'
-    if (amazonLink.includes('/gp/search')) {
-        console.log(`Skipping search URL`);
-        return null;
-    }
 
-    if(!amazonLink) {
+    const maxRetries = 5;
+    let attempts = 0;
+    let imageUrl = null;
+
+    if (!amazonLink || (amazonLink && amazonLink.includes('/gp/search'))) {
         const amazon_link = await getAmazonLink(serieId);
+        console.log("First book amazon_link:", amazon_link);
         if (amazon_link) {
             imageUrl = getImage(userAgent, amazon_link);
             return imageUrl || null;
@@ -46,10 +47,6 @@ const getSerieImage = async (userAgent, amazonLink, serieId) => {
             return null;
         }
     }
-
-    const maxRetries = 5;
-    let attempts = 0;
-    let imageUrl = null;
 
     while (attempts < maxRetries) {
         try {
@@ -65,6 +62,7 @@ const getSerieImage = async (userAgent, amazonLink, serieId) => {
                 return imageUrl;
             } else {
                 const amazon_link = await getAmazonLink(serieId);
+                console.log("First book amazon_link:", amazon_link);
                 if (amazon_link) {
                     imageUrl = getImage(userAgent, amazon_link);
                     return imageUrl || null;

@@ -18,16 +18,15 @@ const scrapeSerieImage = async (req, res) => {
 
         // Fetch series with missing publish_date (where serieInfo_status is null)
         const { rows: series } = await client.query(`
-            SELECT series.id, series.serie_name, series.author_id, series.amazon_link, authors.serieseriesinorder_link 
+            SELECT id, serie_name, author_id, amazon_link
             FROM series
-            JOIN authors ON series.author_id::text = authors.id::text
-            WHERE series.image_link is null;
+            WHERE image_link is null;
         `);
 
         if (series.length === 0) {
             console.log("No series to validate.");
             if (req.io) {
-                req.io.emit('scrapeSerieImageMessage', 'No series to validate.'); 
+                req.io.emit('scrapeSerieImageMessage', 'No series to validate.');
             }
             client.release();
             return;
@@ -42,7 +41,7 @@ const scrapeSerieImage = async (req, res) => {
 
         // Loop through series and attempt to scrape the publish date and genre
         for (const serie of series) { // Combine author names
-            const { id, serie_name, amazon_link, serieseriesinorder_link } = serie;
+            const { id, serie_name, amazon_link } = serie;
 
             console.log(`Processing serie: ${serie_name} from ${amazon_link}`);
 
@@ -51,13 +50,9 @@ const scrapeSerieImage = async (req, res) => {
             try {
                 // Validate the Amazon link
                 let image_link = null;
-                if (amazon_link) {
-                    // Valid link, fetch image
-                    image_link = await getSerieImage(userAgent, amazon_link, id);
-                } else {
-                    // Invalid or no link, skip image fetch
-                    image_link = null;
-                }
+
+                // Valid link, fetch image
+                image_link = await getSerieImage(userAgent, amazon_link, id);
 
                 // Update the database with publish date and genre
                 await client.query(
@@ -72,7 +67,7 @@ const scrapeSerieImage = async (req, res) => {
             }
 
             // Increment processed series count
-            processedSeries++;
+            processedSeries++; 
 
             // Calculate progress percentage
             const progressPercentage = ((processedSeries / totalSeries) * 100).toFixed(2);

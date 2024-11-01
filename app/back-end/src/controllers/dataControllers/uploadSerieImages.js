@@ -29,7 +29,7 @@ const uploadSerieImages = async (req, res) => {
         `);
 
         if (series.length === 0) {
-            console.log("No images to upload.");
+            console.log("No images to upload."); 
             if (req.io) {
                 req.io.emit('uploadMessage', 'No images to upload.');
             }

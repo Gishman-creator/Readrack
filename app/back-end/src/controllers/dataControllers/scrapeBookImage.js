@@ -50,7 +50,7 @@ const scrapeBookImage = async (req, res) => {
 
             try {
                 // Validate the Amazon link
-                let image_link = null;
+                let image_link = null; 
                 if (amazon_link) {
                     // Valid link, fetch image
                     image_link = await getImage(userAgent, amazon_link);

@@ -98,7 +98,7 @@ const validateDuplicateLinks = async (req, res) => {
                 await client.query(`UPDATE books SET amazon_link = $1 WHERE id = $2`, [validatedLink, id]);
             }
 
-            await client.query(`UPDATE series SET amazon_link = $1 WHERE id = $2`, [validatedLink, serie_id]);
+            await client.query(`UPDATE series SET amazon_link = $1 WHERE id = $2`, [amazon_link, serie_id]);
             processedLinks++;
             const progressPercentage = ((processedLinks / totalDuplicates) * 100).toFixed(2);
             const progress = `${processedLinks}/${totalDuplicates} (${progressPercentage}%)`;

@@ -27,7 +27,7 @@ const scrapeSerieImage = async (req, res) => {
         if (series.length === 0) {
             console.log("No series to validate.");
             if (req.io) {
-                req.io.emit('scrapeSerieImageMessage', 'No series to validate.');
+                req.io.emit('scrapeSerieImageMessage', 'No series to validate.'); 
             }
             client.release();
             return;

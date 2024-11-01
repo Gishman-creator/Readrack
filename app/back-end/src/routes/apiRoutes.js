@@ -47,6 +47,8 @@ const { scrapeBookImage } = require('../controllers/dataControllers/scrapeBookIm
 const { scrapeBookLink } = require('../controllers/dataControllers/scrapeBookLink');
 const { validateBookName } = require('../controllers/dataControllers/validateBookName');
 const { validateDuplicateLinks } = require('../controllers/dataControllers/validateDuplicateLinks');
+const { uploadAuthorImages } = require('../controllers/dataControllers/uploadAuthorImages');
+const { uploadSerieImages } = require('../controllers/dataControllers/uploadSerieImages');
 // const dataController = require('../controllers/dataControllers/dataController')
 // const generateDataController = require('../controllers/dataControllers/generateDataController');
 // const getRandomBufferByType = require('../controllers/dataControllers/getRandomBufferByType')
@@ -128,6 +130,8 @@ router.post('/scrapeBookImage', scrapeBookImage);
 router.post('/scrapeBookLink', scrapeBookLink);
 router.post('/validateBookName', validateBookName);
 router.post('/validateDuplicateLinks', validateDuplicateLinks);
+router.post('/uploadAuthorImages', uploadAuthorImages);
+router.post('/uploadSerieImages', uploadSerieImages);
 
 router.post('/updateAuthorRatings', updateAuthorRatings);
 router.get('/convertPublishDate/:id', convertPublishDateController);

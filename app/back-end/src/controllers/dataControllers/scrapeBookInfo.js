@@ -64,7 +64,9 @@ const scrapeBookInfo = async (req, res) => {
                     image_link = null;
                 }
 
-                const bookYear = await getBookYear(bookseriesinorder_link, book_name, userAgent);
+                if (bookseriesinorder_link) {
+                    const bookYear = await getBookYear(bookseriesinorder_link, book_name, userAgent);
+                }
 
                 // Fetch the Google search result page
                 const response = await axios.get(googleSearchUrl, {

@@ -27,7 +27,7 @@ directories:
 
 **Exporting a db:
 
-pg_dump -U postgres -F c -b -v -f readrack3.dump readrack3
+pg_dump -U postgres -F c -b -v -f readrackP1.dump readrackp1
 
 **Copying the db file to the container and restoring it in the container
 
@@ -39,6 +39,7 @@ pg_restore -U postgres -d readrackp1 -v /readrackP1.dump
 
 psql -U postgres -h localhost -c "CREATE DATABASE your_database_name;"
 scp -i "./home/ssh/rwanda-mig.pem" ubuntu@ec2-3-88-21-240.compute-1.amazonaws.com:~/readrackP1.dump ./home/dumps/readrackP1.dump
+scp -i "./home/ssh/readrack-dev-1.pem" ubuntu@ec2-54-235-19-84.compute-1.amazonaws.com:~/readrackP1.dump ./home/dumps/readrackP1.dump
 
 **Installing chrome:
 
@@ -52,3 +53,7 @@ apt install ./google-chrome-stable_current_amd64.deb
 **Check the current ip:
 
 torsocks curl https://icanhazip.com
+
+**Making requests:
+
+curl -X POST http://localhost:8000/api/scrapeBookLink

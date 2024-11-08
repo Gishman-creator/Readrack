@@ -70,7 +70,7 @@ const scrapeBookInfo = async (req, res) => {
             try {
                 // Initialize bookYear to null by default
                 let bookYear = null;
-                
+
                 // Validate the Amazon link
                 let image_link = null;
                 if (amazon_link) {
@@ -80,12 +80,14 @@ const scrapeBookInfo = async (req, res) => {
                     // Invalid or no link, skip image fetch
                     image_link = null;
                 }
-
+                
                 if (bookseriesinorder_link) {
                     // console.log("Getting book year from:", bookseriesinorder_link);
                     bookYear = await getBookYear(bookseriesinorder_link, book_name, userAgent);
                     // console.log("Book yaer:", bookYear); 
                 }
+                
+                let genre = await getBookGenres(author_name, book_name);
 
                 // Fetch the Google search result page
                 const response = await axios.get(googleSearchUrl, {
@@ -98,7 +100,6 @@ const scrapeBookInfo = async (req, res) => {
                 const bookInfoDiv = $('.Z1hOCe'); // Select the div with class 'Z1hOCe'
 
                 let publishDate = null;
-                let genre = null;
 
                 if (bookInfoDiv.length > 0) {
                     // Find the span with 'Originally published'
@@ -115,8 +116,6 @@ const scrapeBookInfo = async (req, res) => {
 
                     if (genreContent.length > 0) {
                         genre = genreContent.text().trim();
-                    } else {
-                        genre = await getBookGenres(author_name, book_name);
                     }
                 }
 

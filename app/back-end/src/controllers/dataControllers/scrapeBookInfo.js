@@ -21,13 +21,13 @@ const scrapeBookInfo = async (req, res) => {
 
         // Fetch books with missing publish_date (where bookInfo_status is null)
         const { rows: books } = await client.query(`
-            SELECT books.id, books.book_name, books.author_id, books.amazon_link, authors.bookseriesinorder_link, authors.author_name 
+            SELECT books.id, books.book_name, books.author_id, books.amazon_link
             FROM books
             JOIN authors ON books.author_id::text = authors.id::text
             WHERE books.bookInfo_status IS NULL;
         `);
 
-        if (books.length === 0) {
+        if (books.length === 0) { 
             console.log("No books to validate.");
             if (req.io) {
                 req.io.emit('scrapeBookInfoMessage', 'No books to validate.');
@@ -45,7 +45,21 @@ const scrapeBookInfo = async (req, res) => {
 
         // Loop through books and attempt to scrape the publish date and genre
         for (const book of books) { // Combine author names
-            const { id, book_name, amazon_link, author_name, bookseriesinorder_link } = book;
+            const { id, book_name, amazon_link, author_id } = book;
+
+            // Split author_id into an array
+            const authorIds = author_id.split(',').map(id => id.trim());
+
+            // Fetch author details
+            const { rows: authors } = await client.query(
+                `SELECT author_name, bookseriesinorder_link FROM authors WHERE id = ANY($1::int[])`,
+                [authorIds]
+            );
+
+            // Concatenate author names and get the first bookseriesinorder_link
+            const author_name = authors.map(author => author.author_name).join(', ');
+            const bookseriesinorder_link = authors[0]?.bookseriesinorder_link || null;
+
             const searchQuery = `${book_name} book by ${author_name}`;
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
 
@@ -54,6 +68,9 @@ const scrapeBookInfo = async (req, res) => {
             await sleep(5000); // Delay to avoid overwhelming the server
 
             try {
+                // Initialize bookYear to null by default
+                let bookYear = null;
+                
                 // Validate the Amazon link
                 let image_link = null;
                 if (amazon_link) {
@@ -65,7 +82,9 @@ const scrapeBookInfo = async (req, res) => {
                 }
 
                 if (bookseriesinorder_link) {
-                    const bookYear = await getBookYear(bookseriesinorder_link, book_name, userAgent);
+                    // console.log("Getting book year from:", bookseriesinorder_link);
+                    bookYear = await getBookYear(bookseriesinorder_link, book_name, userAgent);
+                    // console.log("Book yaer:", bookYear); 
                 }
 
                 // Fetch the Google search result page

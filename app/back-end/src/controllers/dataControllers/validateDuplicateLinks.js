@@ -42,7 +42,7 @@ const validateDuplicateLinks = async (req, res) => {
         for (const duplicate of duplicates) {
             const { amazon_link } = duplicate;
             console.log(`Validating link: ${amazon_link}`);
-
+ 
             // Fetch book names for this duplicate link
             const { rows: books } = await client.query(`
                 SELECT id, book_name, serie_id FROM books

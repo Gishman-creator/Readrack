@@ -11,15 +11,15 @@ const { getImage } = require('../scrapeBookInfo_utils/getImage');
  * @returns {string|null} - The image link if found, otherwise null.
  */
 
-const getAmazonLink = async (serieId) => {
+const getAmazonLinks = async (serieId) => {
     try {
         const { rows } = await poolpg.query(
-            'SELECT amazon_link FROM books WHERE serie_id = $1 AND serie_index = 1 LIMIT 1',
+            'SELECT amazon_link FROM books WHERE serie_id = $1 AND amazon_link IS NOT NULL ORDER BY serie_index',
             [serieId]
         );
 
-        if (rows.length > 0 && rows[0].amazon_link) {
-            return rows[0].amazon_link;
+        if (rows.length > 0) {
+            return rows.map(row => row.amazon_link);
         } else {
             console.error(`No amazon_link found for series ID ${serieId}`);
             return null;
@@ -36,16 +36,21 @@ const getSerieImage = async (userAgent, amazonLink, serieId) => {
     let attempts = 0;
     let imageUrl = null;
 
+    const amazonLinks = (!amazonLink || amazonLink.includes('/gp/search'))
+        ? await getAmazonLinks(serieId)
+        : [amazonLink];
+
+
     if (!amazonLink || (amazonLink && amazonLink.includes('/gp/search'))) {
-        const amazon_link = await getAmazonLink(serieId);
-        console.log("First book amazon_link:", amazon_link);
-        if (amazon_link) {
-            imageUrl = getImage(userAgent, amazon_link);
-            return imageUrl || null;
-        } else {
-            console.error(`No image found for ${amazonLink}.`);
-            return null;
+        for (const amazonLink of amazonLinks) {
+            const image = await getImage(userAgent, amazonLink);
+            if (image) {
+                return image;
+            } else {
+                console.error(`No image found for ${amazonLink}.`);
+            }
         }
+        return null;
     }
 
     while (attempts < maxRetries) {
@@ -61,15 +66,15 @@ const getSerieImage = async (userAgent, amazonLink, serieId) => {
             if (imageUrl) {
                 return imageUrl;
             } else {
-                const amazon_link = await getAmazonLink(serieId);
-                console.log("First book amazon_link:", amazon_link);
-                if (amazon_link) {
-                    imageUrl = getImage(userAgent, amazon_link);
-                    return imageUrl || null;
-                } else {
-                    console.error(`No image found for ${amazonLink}.`);
-                    return null;
+                for (const amazonLink of amazonLinks) {
+                    const image = await getImage(userAgent, amazonLink);
+                    if (image) {
+                        return image;
+                    } else {
+                        console.error(`No image found for ${amazonLink}.`);
+                    }
                 }
+                return null;
             }
             // getImage(userAgent, amazon_link)
 

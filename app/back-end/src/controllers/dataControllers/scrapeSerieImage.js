@@ -13,7 +13,7 @@ const scrapeSerieImage = async (req, res) => {
 
     isScraping = true; // Set lock to prevent multiple simultaneous runs
 
-    try {
+    try { 
         const client = await poolpg.connect();
 
         // Fetch series with missing publish_date (where serieInfo_status is null)

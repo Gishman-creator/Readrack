@@ -11,7 +11,7 @@ let isScraping = false; // Lock variable
 
 const scrapeBookInfo = async (req, res) => {
     if (isScraping) {
-        return;
+        return; 
     }
 
     isScraping = true; // Set lock to prevent multiple simultaneous runs
@@ -21,10 +21,10 @@ const scrapeBookInfo = async (req, res) => {
 
         // Fetch books with missing publish_date (where bookInfo_status is null)
         const { rows: books } = await client.query(`
-            SELECT books.id, books.book_name, books.author_id, books.amazon_link
+            SELECT books.id, books.book_name, books.author_id, books.goodreads_link, books.amazon_link
             FROM books
             JOIN authors ON books.author_id::text = authors.id::text
-            WHERE books.bookInfo_status IS NULL;
+            WHERE books.bookInfo_status IS NULL OR publish_date IS NULL or publish_year IS NULL;
         `);
 
         if (books.length === 0) { 
@@ -45,7 +45,7 @@ const scrapeBookInfo = async (req, res) => {
 
         // Loop through books and attempt to scrape the publish date and genre
         for (const book of books) { // Combine author names
-            const { id, book_name, amazon_link, author_id } = book;
+            const { id, book_name, amazon_link, author_id, goodreads_link } = book;
 
             // Split author_id into an array
             const authorIds = author_id.split(',').map(id => id.trim());
@@ -83,7 +83,7 @@ const scrapeBookInfo = async (req, res) => {
                 
                 if (bookseriesinorder_link) {
                     // console.log("Getting book year from:", bookseriesinorder_link);
-                    bookYear = await getBookYear(bookseriesinorder_link, book_name, userAgent);
+                    bookYear = await getBookYear(bookseriesinorder_link, goodreads_link, book_name, userAgent);
                     // console.log("Book yaer:", bookYear); 
                 }
                 

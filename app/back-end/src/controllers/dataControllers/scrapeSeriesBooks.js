@@ -30,7 +30,7 @@ const scrapeSeriesBooks = async (req, res) => {
             FROM series
             LEFT JOIN books ON books.serie_id::text = series.id::text
             GROUP BY series.id
-            HAVING COUNT(DISTINCT books.id) = 0;
+            HAVING COUNT(DISTINCT books.id) = 0 OR COUNT(DISTINCT books.book_name) < series.num_books;
         `);
 
         if (seriesList.length === 0) {

@@ -30,7 +30,7 @@ const scrapeSeriesBooks = async (req, res) => {
             FROM series
             LEFT JOIN books ON books.serie_id::text = series.id::text
             GROUP BY series.id
-            HAVING series.num_books > COUNT(DISTINCT books.id);
+            HAVING COUNT(DISTINCT books.id) = 0;
         `);
 
         if (seriesList.length === 0) {
@@ -66,9 +66,10 @@ const scrapeSeriesBooks = async (req, res) => {
             const $ = cheerio.load(response.data);
 
             const subtitleText = $('.responsiveSeriesHeader__subtitle').text();
-            const numBooksMatch = subtitleText.match(/(\d+)\s+primary works/);
+            console.log("Subtitle:", subtitleText);
+            const numBooksMatch = subtitleText.match(/(\d+)\s+primary work/);
             const numBooks = numBooksMatch ? parseInt(numBooksMatch[1]) : 0;
-            console.log("Number of primary works:", numBooks);
+            console.log("Number of primary works:", numBooks); 
 
             const bookElements = $('.listWithDividers__item');
             console.log(`Number of divs with class 'listWithDividers__item':`, bookElements.length);

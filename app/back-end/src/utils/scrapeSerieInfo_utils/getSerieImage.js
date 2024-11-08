@@ -22,7 +22,7 @@ const getAmazonLinks = async (serieId) => {
             return rows.map(row => row.amazon_link);
         } else {
             console.error(`No amazon_link found for series ID ${serieId}`);
-            return null;
+            return [];
         }
     } catch (error) {
         console.error(`Database error fetching amazon_link: ${error.message}`);
@@ -39,6 +39,11 @@ const getSerieImage = async (userAgent, amazonLink, serieId) => {
     const amazonLinks = (!amazonLink || amazonLink.includes('/gp/search'))
         ? await getAmazonLinks(serieId)
         : [amazonLink];
+
+    if (!amazonLinks || amazonLinks.length === 0) {
+        console.error(`No valid amazonLink for series ID ${serieId}`);
+        return null; // Exit early if there are no links to process
+    }
 
 
     if (!amazonLink || (amazonLink && amazonLink.includes('/gp/search'))) {

@@ -47,8 +47,6 @@ const scrapeBookInfo = async (req, res) => {
         for (const book of books) { // Combine author names
             const { id, book_name, amazon_link, author_id, goodreads_link } = book;
 
-            await sleep(15000); // Delay to avoid overwhelming the server
-
             // Split author_id into an array
             const authorIds = author_id.split(',').map(id => id.trim());
 
@@ -66,6 +64,8 @@ const scrapeBookInfo = async (req, res) => {
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
 
             console.log(`Processing book: ${book_name} by ${author_name}`);
+
+            await sleep(8000); // Delay to avoid overwhelming the server
 
             try {
                 // Initialize bookYear to null by default

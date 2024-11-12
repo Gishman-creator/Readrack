@@ -26,7 +26,7 @@ async function getBookGenres(author_name, book_name) {
             {
                 role: "user",
                 parts: [
-                    { text: "write down the genres only of the book Silverwood: The Door by Brian Keene" },
+                    { text: "write down the genre only of the book Silverwood: The Door by Brian Keene" },
                 ],
             },
             {

@@ -13,11 +13,7 @@ const buildExactOrderQuery = (query, columnName) => {
   // Construct SQL condition using ILIKE (for case-insensitive matching)
   let condition;
 
-  if (columnName === 'nickname') {
-    condition = `"${columnName}" ILIKE $2`;
-  } else {
-    condition = `"${columnName}" ILIKE $1`;
-  }
+  condition = `"${columnName}" ILIKE $1`;
 
   // Return the condition and parameters
   return { condition, queryParams: [`%${sqlPattern}%`] };
@@ -30,11 +26,10 @@ exports.search = async (req, res) => {
   };
 
   const query = req.query.query ? req.query.query.trim().replace(/%/g, '\\%').replace(/_/g, '\\_') : null;
+  // console.log("Query:", req.query);
   const type = req.query.type;
   const seriePageLimitStart = validatePagination(parseInt(req.query.seriePageLimitStart, 10));
   const seriePageLimitEnd = validatePagination(parseInt(req.query.seriePageLimitEnd, 10));
-  const collectionPageLimitStart = validatePagination(parseInt(req.query.collectionPageLimitStart, 10));
-  const collectionPageLimitEnd = validatePagination(parseInt(req.query.collectionPageLimitEnd, 10));
   const authorPageLimitStart = validatePagination(parseInt(req.query.authorPageLimitStart, 10));
   const authorPageLimitEnd = validatePagination(parseInt(req.query.authorPageLimitEnd, 10));
   const bookPageLimitStart = validatePagination(parseInt(req.query.bookPageLimitStart, 10));
@@ -43,16 +38,13 @@ exports.search = async (req, res) => {
   try {
     // Initialize queries
     let seriesQuery = 'SELECT * FROM series';
-    let collectionsQuery = 'SELECT * FROM collections';
-    let authorsQuery = `SELECT a.*, COUNT(DISTINCT s.id) AS "numSeries", COUNT(DISTINCT b.id) AS "numBooks" FROM authors a LEFT JOIN series s ON s.author_id::text LIKE '%' || a.id::text || '%' LEFT JOIN books b ON b.author_id::text LIKE '%' || a.id::text || '%' `;
-    let booksQuery = 'SELECT books.*, series."serieName" AS serie_name, collections."collectionName" AS collection_name FROM books LEFT JOIN series ON books.serie_id = series.id LEFT JOIN collections ON books.collection_id = collections.id';
+    let authorsQuery = `SELECT a.*, COUNT(DISTINCT s.id) AS num_series, COUNT(DISTINCT b.id) AS num_books FROM authors a LEFT JOIN series s ON s.author_id::text LIKE '%' || a.id::text || '%' LEFT JOIN books b ON b.author_id::text LIKE '%' || a.id::text || '%' `;
+    let booksQuery = 'SELECT books.*, series.serie_name FROM books LEFT JOIN series ON books.serie_id::text = series.id::text';
     let seriesCountQuery = 'SELECT COUNT(*) AS "totalCount" FROM series';
-    let collectionsCountQuery = 'SELECT COUNT(*) AS "totalCount" FROM collections';
     let authorsCountQuery = 'SELECT COUNT(*) AS "totalCount" FROM authors';
     let booksCountQuery = 'SELECT COUNT(*) AS "totalCount" FROM books';
 
     let seriesQueryParams = [];
-    let collectionsQueryParams = [];
     let authorsQueryParams = [];
     let booksQueryParams = [];
     let countQueryParams = [];
@@ -61,41 +53,32 @@ exports.search = async (req, res) => {
     // Apply query filter if available (for any order search)
     if (query) {
       // Use the new buildExactOrderQuery function
-      const { condition: seriesCondition, queryParams: seriesParams } = buildExactOrderQuery(query, "serieName");
-      const { condition: collectionsCondition, queryParams: collectionsParams } = buildExactOrderQuery(query, "collectionName");
-      const { condition: authorsCondition, queryParams: authorsParams } = buildExactOrderQuery(query, "authorName");
-      const { condition: authorsNicknameCondition, queryParams: authorsNicknameParams } = buildExactOrderQuery(query, "nickname");
-      const { condition: booksCondition, queryParams: booksParams } = buildExactOrderQuery(query, "bookName");
+      const { condition: seriesCondition, queryParams: seriesParams } = buildExactOrderQuery(query, "serie_name");
+      const { condition: authorsCondition, queryParams: authorsParams } = buildExactOrderQuery(query, "author_name");
+      const { condition: booksCondition, queryParams: booksParams } = buildExactOrderQuery(query, "book_name");
 
       // Append WHERE clauses
-      seriesQuery += ` WHERE ${seriesCondition} ORDER BY "searchCount" DESC`;
-      collectionsQuery += ` WHERE ${collectionsCondition} ORDER BY "searchCount" DESC`;
-      authorsQuery += ` WHERE ${authorsCondition} OR ${authorsNicknameCondition} GROUP BY a.id ORDER BY "searchCount" DESC`;
-      booksQuery += ` WHERE ${booksCondition} ORDER BY "searchCount" DESC`;
+      seriesQuery += ` WHERE ${seriesCondition} ORDER BY search_count DESC`;
+      authorsQuery += ` WHERE ${authorsCondition} GROUP BY a.id ORDER BY search_count DESC`;
+      booksQuery += ` WHERE ${booksCondition} ORDER BY search_count DESC`;
 
       seriesCountQuery += ` WHERE ${seriesCondition}`;
-      collectionsCountQuery += ` WHERE ${collectionsCondition}`;
-      authorsCountQuery += ` WHERE ${authorsCondition} OR ${authorsNicknameCondition}`;
+      authorsCountQuery += ` WHERE ${authorsCondition}`;
       booksCountQuery += ` WHERE ${booksCondition}`;
 
       // Append params
       seriesQueryParams.push(...seriesParams);
-      collectionsQueryParams.push(...collectionsParams);
-      authorsQueryParams.push(...authorsParams, ...authorsNicknameParams);
+      authorsQueryParams.push(...authorsParams);
       booksQueryParams.push(...booksParams);
 
       countQueryParams.push(...seriesParams);
-      authorsCountQueryParams.push(...seriesParams, ...authorsNicknameParams);
+      authorsCountQueryParams.push(...seriesParams);
     }
 
     // Apply limits and offsets
     if (typeof seriePageLimitStart === 'number' && typeof seriePageLimitEnd === 'number') {
       seriesQuery += ` LIMIT $${seriesQueryParams.length + 1} OFFSET $${seriesQueryParams.length + 2}`;
       seriesQueryParams.push(seriePageLimitEnd - seriePageLimitStart, seriePageLimitStart);
-    }
-    if (typeof collectionPageLimitStart === 'number' && typeof collectionPageLimitEnd === 'number') {
-      collectionsQuery += ` LIMIT $${collectionsQueryParams.length + 1} OFFSET $${collectionsQueryParams.length + 2}`;
-      collectionsQueryParams.push(collectionPageLimitEnd - collectionPageLimitStart, collectionPageLimitStart);
     }
     if (typeof authorPageLimitStart === 'number' && typeof authorPageLimitEnd === 'number') {
       authorsQuery += ` LIMIT $${authorsQueryParams.length + 1} OFFSET $${authorsQueryParams.length + 2}`;
@@ -108,13 +91,12 @@ exports.search = async (req, res) => {
 
     // Execute queries
     const seriesResult = await poolpg.query(seriesQuery, seriesQueryParams);
-    const collectionsResult = await poolpg.query(collectionsQuery, collectionsQueryParams);
-    console.log('authorsQueryParams', authorsQueryParams)
+    // console.log('authorsQueryParams', authorsQueryParams)
+    // console.log("Author query:", authorsQuery)
     const authorsResult = await poolpg.query(authorsQuery, authorsQueryParams);
     const booksResult = await poolpg.query(booksQuery, booksQueryParams);
 
     const seriesRows = seriesResult.rows;
-    const collectionsRows = collectionsResult.rows;
     const authorsRows = authorsResult.rows;
     const booksRows = booksResult.rows;
 
@@ -122,12 +104,6 @@ exports.search = async (req, res) => {
       // Fetch authors for each serie
       const authors = await getAuthorsByIds(serie.author_id);
       serie.authors = authors;
-    }
-
-    for (const collection of collectionsRows) {
-      // Fetch authors for each collection
-      const authors = await getAuthorsByIds(collection.author_id);
-      collection.authors = authors;
     }
 
     for (const book of booksRows) {
@@ -139,9 +115,6 @@ exports.search = async (req, res) => {
     // Execute count queries
     const totalSeriesResult = await poolpg.query(seriesCountQuery, countQueryParams);
     const totalSeries = totalSeriesResult.rows[0]?.totalCount || 0;
-
-    const totalCollectionsResult = await poolpg.query(collectionsCountQuery, countQueryParams);
-    const totalCollections = totalCollectionsResult.rows[0]?.totalCount || 0;
 
     console.log('authorsCountQuery', authorsCountQuery)
     console.log('authorsCountQueryParams', authorsCountQueryParams)
@@ -157,13 +130,10 @@ exports.search = async (req, res) => {
     if (type === 'all') {
       results = [
         ...seriesRows.map((series) => ({ ...series, type: 'serie' })),
-        ...collectionsRows.map((collections) => ({ ...collections, type: 'collection' })),
         ...authorsRows.map((author) => ({ ...author, type: 'author' })),
       ];
     } else if (type === 'series') {
       results = seriesRows.map((series) => ({ ...series, type: 'serie' }));
-    } else if (type === 'collections') {
-      results = collectionsRows.map((collections) => ({ ...collections, type: 'collection' }));
     } else if (type === 'author' || type === 'authors') {
       results = authorsRows.map((author) => ({ ...author, type: 'author' }));
     } else if (type === 'book' || type === 'books') {
@@ -183,7 +153,6 @@ exports.search = async (req, res) => {
     res.json({
       results,
       totalSeriesCount: totalSeries,
-      totalCollectionsCount: totalCollections,
       totalAuthorsCount: totalAuthors,
       totalBooksCount: totalBooks,
     });

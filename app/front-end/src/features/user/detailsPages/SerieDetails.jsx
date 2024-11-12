@@ -9,14 +9,13 @@ import NotFoundPage from '../../../pages/NotFoundPage';
 import blank_image from '../../../assets/brand_blank_image.png';
 import DeatailsPageSkeleton from '../../../components/skeletons/DeatailsPageSkeleton';
 import { useSocket } from '../../../context/SocketContext';
-import RelatedCollections from '../related_collections/RelatedCollections';
 import NetworkErrorPage from '../../../pages/NetworkErrorPage';
 import { sortByPublishDateAsc, sortBySerieIndexAsc } from '../../../utils/sortingUtils';
 
 function SerieDetails() {
 
   const activeTab = useSelector((state) => state.user.activeTab);
-  const { serieId, serieName } = useParams();
+  const { serieId, serie_name } = useParams();
   const [serieData, setSerieData] = useState({});
   const [books, setBooks] = useState([]);
   const [IsLoading, setIsLoading] = useState(true);
@@ -27,8 +26,6 @@ function SerieDetails() {
   const [booksRange, setBooksRange] = useState();
   const [booksCount, SetBooksCount] = useState();
   const socket = useSocket();
-
-  const [relatedCollections, setRelatedCollections] = useState([]);
 
   const navigate = useNavigate();
 
@@ -55,33 +52,18 @@ function SerieDetails() {
   useEffect(() => {
     const fetchSeriesData = async () => {
       setIsLoading(true);
-      setRelatedCollections([]);
       try {
         const serieResponse = await axiosUtils(`/api/getSerieById/${serieId}`, 'GET');
         setSerieData(serieResponse.data);
-        // console.log('The serie data are:', serieResponse.data);
+        console.log('The serie data are:', serieResponse.data);
 
-        // If serieName is not in the URL, update it
-        if (!serieName || serieName !== serieResponse.data.serieName) {
-          navigate(`/series/${serieId}/${spacesToHyphens(serieResponse.data.serieName)}`, { replace: true });
-        }
-
-        // Fetch related collections and convert images to Blob URLs
-        if (serieResponse.data.related_collections) {
-          const collectionIds = serieResponse.data.related_collections.split(',');
-          const fetchedRelatedCollections = await Promise.all(
-            collectionIds.map(async (id) => {
-              const res = await axiosUtils(`/api/getCollectionById/${id}`, 'GET');
-              const collectionData = res.data;
-
-              return collectionData;
-            })
-          );
-          setRelatedCollections(fetchedRelatedCollections);
+        // If serie_name is not in the URL, update it
+        if (!serie_name || serie_name !== serieResponse.data.serie_name) {
+          navigate(`/series/${serieId}/${spacesToHyphens(serieResponse.data.serie_name)}`, { replace: true });
         }
 
         const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}`, 'GET');
-        // console.log('Books response:', booksResponse.data); // Debugging
+        console.log('Books response:', booksResponse.data); // Debugging
 
         // Sort the books by publish date or custom date
         const sortedBooks = booksResponse.data.books.sort(sortBySerieIndexAsc);
@@ -167,7 +149,7 @@ function SerieDetails() {
       socket.off('dataDeleted');
     };
 
-  }, [serieId, serieName, navigate, socket]);
+  }, [serieId, serie_name, navigate, socket]);
 
   const handleSetLimit = () => {
     if (window.innerWidth >= 1024) {
@@ -195,10 +177,10 @@ function SerieDetails() {
             <img src={serieData.imageURL || blank_image} alt="" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' loading="lazy" />
             <div className='w-full mx-auto'>
               <p
-                title={capitalize(serieData.serieName)}
+                title={capitalize(serieData.serie_name)}
                 className='font-poppins font-medium text-lg text-center md:text-left mt-2 md:overflow-hidden md:whitespace-nowrap md:text-ellipsis cursor-default'
               >
-                {capitalize(serieData.serieName)}
+                {capitalize(serieData.serie_name)}
               </p>
               <p
                 className='font-arima text-center md:text-left'
@@ -210,21 +192,21 @@ function SerieDetails() {
                     className='hover:underline cursor-pointer'
                     onClick={() => navigate(`/authors/${author.author_id}/${spacesToHyphens(author.author_name)}`)}
                   >
-                    {capitalize(author.nickname || author.author_name)}
+                    {capitalize(author.author_name)}
                   </span>
                 )).reduce((prev, curr) => [prev, ', ', curr])}
               </p>
               <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
                 <p className='md:inline font-medium font-poppins text-center md:text-left text-sm'>Genres:</p>
                 <div className='md:inline flex flex-wrap gap-x-2 md:ml-1 text-sm text-center md:text-left font-arima items-center justify-center md:justify-start w-[90%] mx-auto'>
-                  {capitalizeGenres(serieData.genres)}
+                  {capitalizeGenres(serieData.genre)}
                 </div>
               </div>
             </div>
           </div>
-          {serieData.link &&
+          {serieData.amazon_link &&
             <a
-              href={serieData.link}
+              href={serieData.amazon_link}
               target="_blank"
               rel="noopener noreferrer"
               className='bg-[#37643B] block w-[60%] md:w-full text-center text-white text-sm font-semibold font-poppins p-3 rounded-lg mx-auto mt-6 on-click-amzn'>
@@ -235,7 +217,7 @@ function SerieDetails() {
         <div className='w-full '>
           <div className='flex justify-between items-center mt-12 md:mt-0'>
             <p className='font-poppins font-semibold text-xl 2xl:text-center'>
-              {capitalize(serieData.serieName)} Books:
+              {capitalize(serieData.serie_name)} Books:
             </p>
           </div>
           <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
@@ -248,17 +230,17 @@ function SerieDetails() {
                   loading="lazy"
                 />
                 <div className='min-h-full w-full flex flex-col'>
-                  <div className='flex justify-between items-center'>
+                  <div className='flex justify-between items-center max-w-full'>
                     <p className='font-semibold m-0 leading-5 text-lg'>
-                      {capitalize(item.bookName)}
+                      {capitalize(item.book_name)}
                     </p>
                   </div>
-                  <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
+                  <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.author_name)).join(', ')}</p>
                   <p className='font-arima text-slate-400 text-sm mt-1'>
-                    #{item.serieIndex}, published {item.publishDate}
+                    #{item.serie_index}, published {item.publish_date}
                   </p>
                   <a
-                    href={item.link}
+                    href={item.amazon_link}
                     target="_blank"
                     rel="noopener noreferrer"
                     className='bg-[#37643B] block w-full text-center text-white text-sm font-semibold font-poppins p-3 rounded-lg mt-auto on-click-amzn'
@@ -279,7 +261,6 @@ function SerieDetails() {
           )}
         </div>
       </div>
-      {relatedCollections.length > 0 && <RelatedCollections data={relatedCollections} />}
       <Recommendations data={serieData} />
     </div>
   );

@@ -61,6 +61,7 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     }, [searchTerm]);
 
     const searchInstant = async (term) => {
+        if(!term) return;
         setIsInputFocused(true);
         setIsLoading(true); // Set loading to true when search starts
         try {
@@ -91,8 +92,6 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
             navigate(`/series/${result.id}/${spacesToHyphens(result.name)}`);
         } else if (result.type == 'author') {
             navigate(`/authors/${result.id}/${spacesToHyphens(result.name)}`);
-        } else if (result.type == 'collection') {
-            navigate(`/collections/${result.id}/${spacesToHyphens(result.name)}`);
         }
         setIsInputFocused(false);
         incrementSearchCount(result.type, result.id);
@@ -107,7 +106,7 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     };
 
     return (
-        <div ref={searchBarRef} className={` ${isSearchOpen ? 'w-full' : 'w-fit'} sm:w-fit relative flex items-center`}>
+        <div ref={searchBarRef} className={`${isSearchOpen ? 'w-full sm:w-fit' : 'w-fit'} sm:w-fit relative flex items-center`}>
             {isSearchOpen ? (
                 <div className='flex items-center w-full space-x-2'>
                     <ArrowLeftIcon
@@ -172,9 +171,8 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
                                 className='p-2 cursor-pointer on-click rounded-lg text-sm font-poppins font-medium'
                                 onClick={() => handleSelectResult(result)} // Make sure this is correctly bound
                             >
-                                {result.type === 'serie' && capitalize(result.serieName)}
-                                {result.type === 'author' && capitalize(result.nickname || result.authorName)}
-                                {result.type === 'collection' && capitalize(result.collectionName)}
+                                {result.type === 'serie' && capitalize(result.serie_name)}
+                                {result.type === 'author' && capitalize(result.author_name)}
                                 <span className='font-arima text-green-700'>({capitalize(result.type)})</span>
                             </div>
                         ))}

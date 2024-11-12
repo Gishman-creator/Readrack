@@ -5,7 +5,7 @@ const { putImage, getImageURL } = require('../../utils/imageUtils');
 
 const updateSerie = async (req, res) => {
   const { id } = req.params;
-  const { serieName, numBooks, genres, link, author_id, related_collections, imageName } = req.body;
+  const { serie_name, num_books, genre, amazon_link, author_id, imageName } = req.body;
 
   const image = req.file ? await putImage(id, req.file, 'series') : imageName;
 
@@ -13,9 +13,9 @@ const updateSerie = async (req, res) => {
     // Update the series data in the database
     const result = await poolpg.query(
       `UPDATE series 
-       SET "serieName" = $1, "numBooks" = $2, genres = $3, link = $4, author_id = $5, related_collections = $6, image = $7 
-       WHERE id = $8`,
-      [serieName, numBooks, genres, link, author_id || null, related_collections, image, id]
+       SET "serie_name" = $1, num_books = $2, genre = $3, amazon_link = $4, author_id = $5, image = $6 
+       WHERE id = $7`,
+      [serie_name, num_books, genre, amazon_link, author_id || null, image, id]
     );
 
     if (result.rowCount === 0) {
@@ -27,7 +27,7 @@ const updateSerie = async (req, res) => {
       SELECT series.*,
       COUNT(DISTINCT books.id) AS "currentBooks"
       FROM series
-      LEFT JOIN books ON books.serie_id = series.id
+      LEFT JOIN books ON books.serie_id::text = series.id::text
       WHERE series.id = $1
       GROUP BY series.id
     `, [id]);

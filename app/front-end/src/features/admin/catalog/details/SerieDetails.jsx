@@ -19,7 +19,7 @@ import { sortByPublishDateAsc, sortBySerieIndexAsc } from '../../../../utils/sor
 
 function SerieDetails() {
 
-  const { serieId, serieName } = useParams();
+  const { serieId, serie_name } = useParams();
   const [serieData, setSerieData] = useState({});
   const [books, setBooks] = useState([]);
   const [IsLoading, setIsLoading] = useState(true);
@@ -76,9 +76,9 @@ function SerieDetails() {
         setSerieData(serieResponse.data);
         // console.log('Fetched serie data:', serieResponse.data);
 
-        // If serieName is not in the URL, update it
-        if (!serieName || serieName !== serieResponse.data.serieName) {
-          navigate(`/admin/catalog/series/${serieId}/${spacesToHyphens(serieResponse.data.serieName)}`, { replace: true });
+        // If serie_name is not in the URL, update it
+        if (!serie_name || serie_name !== serieResponse.data.serie_name) {
+          navigate(`/admin/catalog/series/${serieId}/${spacesToHyphens(serieResponse.data.serie_name)}`, { replace: true });
         }
 
         const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}`, 'GET');
@@ -184,7 +184,7 @@ function SerieDetails() {
       socket.off('dataDeleted');
     };
 
-  }, [serieId, serieName, navigate, socket]);
+  }, [serieId, serie_name, navigate, socket]);
 
   const handleSetLimit = () => {
     if (window.innerWidth >= 1024) {
@@ -229,10 +229,10 @@ function SerieDetails() {
           <img src={serieData.imageURL || blank_image} alt="serie image" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' loading="lazy" />
           <div className='w-full mx-auto'>
             <p
-              title={capitalize(serieData.serieName)}
+              title={capitalize(serieData.serie_name)}
               className='font-poppins font-medium text-lg text-center md:text-left mt-2 md:overflow-hidden md:whitespace-nowrap md:text-ellipsis cursor-default'
             >
-              {capitalize(serieData.serieName)}
+              {capitalize(serieData.serie_name)}
             </p>
             <p
               className='font-arima text-center md:text-left'
@@ -244,7 +244,7 @@ function SerieDetails() {
                   className='hover:underline cursor-pointer'
                   onClick={() => navigate(`/admin/catalog/authors/${author.author_id}/${spacesToHyphens(author.author_name)}`)}
                 >
-                  {capitalize(author.nickname || author.author_name)}
+                  {capitalize(author.author_name)}
                 </span>
               )).reduce((prev, curr) => [prev, ', ', curr])}
             </p>
@@ -256,9 +256,9 @@ function SerieDetails() {
             </div>
           </div>
         </div>
-        {serieData.link &&
+        {serieData.amazon_link &&
           <a
-            href={serieData.link}
+            href={serieData.amazon_link}
             target="_blank"
             rel="noopener noreferrer"
             className='bg-[#37643B] block w-[60%] md:w-full text-center text-white text-sm font-semibold font-poppins p-3 rounded-lg mx-auto mt-6 on-click-amzn'>
@@ -269,7 +269,7 @@ function SerieDetails() {
       <div className='w-full '>
         <div className='sticky top-[4rem] bg-[#f9f9f9] flex justify-between items-center py-2 md:pt-4 mt-6 md:mt-0'>
           <p className='font-poppins font-semibold text-xl 2xl:text-center'>
-            {capitalize(serieData.serieName)} Books:
+            {capitalize(serieData.serie_name)} Books:
           </p>
           <div
             className='bg-green-700 flex items-center space-x-2 text-center text-white text-sm font-semibold font-poppins px-3 p-2 rounded cursor-pointer on-click-amzn'
@@ -291,19 +291,19 @@ function SerieDetails() {
               <div className='min-h-full w-full flex flex-col justify-between'>
                 <div className='flex justify-between items-center'>
                   <p className='font-semibold m-0 leading-5 text-lg'>
-                    {capitalize(item.bookName)}
+                    {capitalize(item.book_name)}
                   </p>
                   <PencilSquareIcon
                     className="w-4 h-4 inline ml-2 cursor-pointer"
                     onClick={() => handleEditClick(item)}  // Handle click to open modal
                   />
                 </div>
-                <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
+                <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.author_name)).join(', ')}</p>
                 <p className='font-arima text-slate-400 text-sm mt-1'>
-                  #{item.serieIndex}, published {item.publishDate}
+                  #{item.serie_index}, published {item.publish_date}
                 </p>
                 <a
-                  href={item.link}
+                  href={item.amazon_link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className='bg-[#37643B] block w-full text-center text-white text-sm font-semibold font-poppins p-3 rounded-lg mt-auto on-click-amzn'

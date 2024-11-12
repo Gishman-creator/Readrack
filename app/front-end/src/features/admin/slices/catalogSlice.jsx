@@ -8,11 +8,8 @@ const catalogSlice = createSlice({
     selectedRowIds: [], // State for selected row IDs
     bookId: null,
     serieId: null,
-    collectionId: null,
     serie: null,
-    collection: null,
     serieBookCount: null,
-    collectionBookCount: null,
     author: null,
     authors: [],
     tableLimitStart: 0,
@@ -45,14 +42,8 @@ const catalogSlice = createSlice({
     setSerieId: (state, action) => {
       state.serieId = action.payload; // Set the currently edited book ID
     },
-    setCollectionId: (state, action) => {
-      state.collectionId = action.payload; // Set the currently edited book ID
-    },
     setSerie: (state, action) => {
       state.serie = action.payload;
-    },
-    setCollection: (state, action) => {
-      state.collection = action.payload;
     },
     setAuthor: (state, action) => {
       state.author = action.payload;
@@ -62,9 +53,6 @@ const catalogSlice = createSlice({
     },
     setSerieBookCount: (state, action) => {
       state.serieBookCount = action.payload;
-    },
-    setCollectionBookCount: (state, action) => {
-      state.collectionBookCount = action.payload;
     },
     setTableLimitStart: (state, action) => {
       state.tableLimitStart = action.payload;
@@ -81,5 +69,5 @@ const catalogSlice = createSlice({
   },
 });
 
-export const { setActiveTab, toggleRowSelection, clearSelection, selectAllRows, setBookId, setSerie, setAuthor, setAuthors, setTableLimitStart, setTableLimitEnd, setTableTotalItems, setSearchTerm, setSerieId, setCollectionId, setCollection, setSerieBookCount, setCollectionBookCount } = catalogSlice.actions;
+export const { setActiveTab, toggleRowSelection, clearSelection, selectAllRows, setBookId, setSerie, setAuthor, setAuthors, setTableLimitStart, setTableLimitEnd, setTableTotalItems, setSearchTerm, setSerieId, setSerieBookCount } = catalogSlice.actions;
 export default catalogSlice.reducer;

@@ -11,7 +11,7 @@ const generateRandomId = () => {
 };
 
 const addSeries = async (req, res) => {
-    const { serieName, author_id, numBooks, genres, link } = req.body;
+    const { serie_name, author_id, num_books, genre, amazon_link } = req.body;
 
     const image = req.file ? await putImage('', req.file, 'series') : null; // Await the function to resolve the promise
 
@@ -33,8 +33,8 @@ const addSeries = async (req, res) => {
 
         // Insert series data into the database with the unique ID
         await poolpg.query(
-            'INSERT INTO series (id, "serieName", author_id, "numBooks", genres, link, image) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-            [uniqueId, serieName, author_id, numBooks, genres, link, image]
+            'INSERT INTO series (id, "serie_name", author_id, num_books, genre, amazon_link, image) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+            [uniqueId, serie_name, author_id, num_books, genre, amazon_link, image]
         );
 
         const { rows: serieData } = await poolpg.query(`
@@ -42,10 +42,10 @@ const addSeries = async (req, res) => {
             series.*,
             COUNT(DISTINCT books.id) AS "currentBooks"
             FROM series
-            LEFT JOIN books ON books.serie_id = series.id
+            LEFT JOIN books ON books.serie_id::text = series.id::text
             WHERE series.id = $1
             GROUP BY series.id
-            ORDER BY books.publishDate ASC;
+            ORDER BY books.publish_date ASC;
         `, [uniqueId]);
 
         // Fetch authors for the serieData

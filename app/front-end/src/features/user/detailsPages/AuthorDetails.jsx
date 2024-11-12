@@ -18,22 +18,19 @@ import { sortByFirstBookYearAsc, sortByPublishDateAsc } from '../../../utils/sor
 function AuthorDetails() {
 
   const activeTab = useSelector((state) => state.user.activeTab);
-  const { authorId, authorName } = useParams();
+  const { authorId, author_name } = useParams();
   const [authorData, setAuthorData] = useState({});
   const [series, setSeries] = useState([]);
-  const [collections, setCollections] = useState([]);
   const [books, setBooks] = useState([]);
   const [IsLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [networkError, setNetworkError] = useState(false);
 
   const [seriesLimit, setSeriesLimit] = useState();
-  const [collectionsLimit, setCollectionsLimit] = useState();
   const [booksLimit, setBooksLimit] = useState();
   const [groupRange, setGroupRange] = useState();
   const [booksRange, setBooksRange] = useState();
   const [seriesCount, SetSeriesCount] = useState();
-  const [collectionsCount, SetCollectionsCount] = useState();
   const [booksCount, SetBooksCount] = useState();
 
   const dispatch = useDispatch();
@@ -46,13 +43,11 @@ function AuthorDetails() {
       const width = window.innerWidth;
       if (width >= 1024) {
         setSeriesLimit(4);
-        setCollectionsLimit(4);
         setGroupRange(4);
         setBooksLimit(6);
         setBooksRange(6);
       } else {
         setSeriesLimit(3);
-        setCollectionsLimit(3);
         setGroupRange(3);
         setBooksLimit(5);
         setBooksRange(5);
@@ -82,34 +77,25 @@ function AuthorDetails() {
 
         setAuthorData(authorDataWithAge);
 
-        // console.log('The author name is:', authorName);
+        // console.log('The author name is:', author_name);
 
-        // If authorName is not in the URL, update it
-        if (!authorName || authorName !== authorResponse.data.authorName) {
-          navigate(`/authors/${authorId}/${spacesToHyphens(authorResponse.data.authorName)}`, { replace: true });
+        // If author_name is not in the URL, update it
+        if (!author_name || author_name !== authorResponse.data.author_name) {
+          navigate(`/authors/${authorId}/${spacesToHyphens(authorResponse.data.author_name)}`, { replace: true });
         }
 
         // Fetching series by the author
         const seriesResponse = await axiosUtils(`/api/getSeriesByAuthorId/${authorResponse.data.id}`, 'GET');
-        // console.log('Series response:', seriesResponse.data); // Debugging
+        console.log('Series response:', seriesResponse.data); // Debugging
 
         const sortedSeries = seriesResponse.data.series.sort(sortByFirstBookYearAsc);
 
         setSeries(sortedSeries);
-        SetSeriesCount(seriesResponse.data.totalCount);
-
-        // Fetching collections by the author
-        const collectionsResponse = await axiosUtils(`/api/getCollectionsByAuthorId/${authorResponse.data.id}`, 'GET');
-        // console.log('Collections response:', collectionsResponse.data); // Debugging
-
-        const sortedCollections = collectionsResponse.data.collections.sort(sortByFirstBookYearAsc);
-
-        setCollections(sortedCollections);
-        SetCollectionsCount(collectionsResponse.data.totalCount);
+        SetSeriesCount(seriesResponse.data.series.length);
 
         // Fetching books by the author
         const booksResponse = await axiosUtils(`/api/getBooksByAuthorId/${authorResponse.data.id}`, 'GET');
-        // console.log('Books response:', booksResponse.data); // Debugging
+        console.log('Books response:', booksResponse.data); // Debugging
 
         // Sort the books by publish date or custom date
         const sortedBooks = booksResponse.data.books.sort(sortByPublishDateAsc);
@@ -164,19 +150,6 @@ function AuthorDetails() {
       });
     });
 
-    // Listen for collections updates via socket
-    socket.on('collectionsUpdated', (updatedCollections) => {
-      // console.log("Collections updated via socket:", updatedCollections);
-      setCollections((prevData) => {
-        const updatedData = prevData.map((collections) =>
-          collections.id === updatedCollections.id ? updatedCollections : collections
-        );
-
-        // Sort the updatedData by date in ascending order (oldest first)
-        return updatedData.sort(sortByFirstBookYearAsc);
-      });
-    });
-
     // Event listener for booksUpdated
     socket.on('booksUpdated', (updatedBooks) => {
       // console.log('Books updated via socket:', updatedBooks);
@@ -205,21 +178,6 @@ function AuthorDetails() {
       }
     });
 
-    // New event listener for collectionAdded
-    socket.on('collectionAdded', (collectionData) => {
-      // console.log('New collection added via socket:', collectionData);
-      if (collectionData.author_id === parseInt(authorId)) {
-        setCollections((prevData) => {
-          const updatedData = [...prevData, collectionData];
-
-          // Sort the updatedData by date in ascending order (oldest first)
-          return updatedData.sort(sortByFirstBookYearAsc);
-        });
-        SetCollectionsCount((prevCount) => prevCount + 1);
-        if (collectionsLimit >= groupRange) setCollectionsLimit((prevCount) => prevCount + 1);
-      }
-    });
-
     // Event listener for bookAdded
     socket.on('bookAdded', (bookData) => {
       // Split the author_id string into an array of individual author IDs
@@ -243,9 +201,6 @@ function AuthorDetails() {
       if (type = 'series') {
         setSeries((prevData) => prevData.filter((item) => !ids.includes(item.id)));
         SetSeriesCount((prevCount) => prevCount - ids.length);
-      } else if (type = 'collections') {
-        setCollections((prevData) => prevData.filter((item) => !ids.includes(item.id)));
-        SetCollectionsCount((prevCount) => prevCount - ids.length);
       } else if (type = 'books') {
         setBooks((prevData) => prevData.filter((item) => !ids.includes(item.id)));
         SetBooksCount((prevCount) => prevCount - ids.length);
@@ -256,15 +211,13 @@ function AuthorDetails() {
     return () => {
       socket.off('authorsUpdated');
       socket.off('seriesUpdated');
-      socket.off('collectionsUpdated');
       socket.off('booksUpdated');
       socket.off('serieAdded');
-      socket.off('collectionAdded');
       socket.off('bookAdded');
       socket.off('dataDeleted');
     };
 
-  }, [authorId, authorName, navigate, socket]);
+  }, [authorId, author_name, navigate, socket]);
 
   const handleSetLimit = (type) => {
     if (type == 'series') {
@@ -272,13 +225,6 @@ function AuthorDetails() {
         setSeriesLimit(seriesLimit === 4 ? seriesCount : 4);
       } else {
         setSeriesLimit(seriesLimit === 3 ? seriesCount : 3);
-      }
-      // console.log('Series limit set to:', seriesLimit);
-    } else if (type == 'collections') {
-      if (window.innerWidth >= 1024) {
-        setCollectionsLimit(collectionsLimit === 4 ? collectionsCount : 4);
-      } else {
-        setCollectionsLimit(collectionsLimit === 3 ? collectionsCount : 3);
       }
       // console.log('Series limit set to:', seriesLimit);
     } else {
@@ -307,10 +253,10 @@ function AuthorDetails() {
             <img src={authorData.imageURL || blank_image} alt="" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' loading="lazy" />
             <div className='w-full mx-auto'>
               <p
-                title={capitalize(authorData.authorName)}
+                title={capitalize(authorData.author_name)}
                 className='font-poppins text-lg text-center md:text-left mt-2 mb-2 cursor-default'
               >
-                {authorData.nickname ? capitalize(authorData.nickname) : capitalize(authorData.authorName)}
+                {capitalize(authorData.author_name)}
               </p>
               <div className='font-arima font-medium text-sm text-center md:text-left'>
                 <span>{capitalize(authorData.nationality)}</span>
@@ -326,7 +272,7 @@ function AuthorDetails() {
               <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
                 <p className='md:inline font-poppins font-semibold text-center md:text-left text-sm'>Genres:</p>
                 <div className='md:inline flex flex-wrap gap-x-2 md:ml-1 text-sm text-center md:text-left font-arima items-center justify-center md:justify-start w-[90%] mx-auto'>
-                  {capitalizeGenres(authorData.genres)}
+                  {capitalizeGenres(authorData.genre)}
                 </div>
               </div>
               <div className='flex justify-evenly items-center mt-4'>
@@ -336,7 +282,7 @@ function AuthorDetails() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <NewspaperIcon title={`${authorData.nickname ? capitalize(authorData.nickname) : capitalize(authorData.authorName)}'s Website`} className="w-10 h-10 inline p-2 cursor-pointer rounded-lg on-click" />
+                    <NewspaperIcon title={`${capitalize(authorData.author_name)}'s Website`} className="w-10 h-10 inline p-2 cursor-pointer rounded-lg on-click" />
                   </a>
                 }
                 {authorData.x &&
@@ -345,7 +291,7 @@ function AuthorDetails() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <FaXTwitter title={`${authorData.nickname ? capitalize(authorData.nickname) : capitalize(authorData.authorName)}'s X`} className="w-10 h-10 inline p-2 cursor-pointer rounded-lg on-click" />
+                    <FaXTwitter title={`${capitalize(authorData.author_name)}'s X`} className="w-10 h-10 inline p-2 cursor-pointer rounded-lg on-click" />
                   </a>
                 }
                 {authorData.instagram &&
@@ -354,7 +300,7 @@ function AuthorDetails() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <FaInstagram title={`${authorData.nickname ? capitalize(authorData.nickname) : capitalize(authorData.authorName)}'s Instagram`} className="w-10 h-10 inline p-2 cursor-pointer rounded-lg on-click" />
+                    <FaInstagram title={`${capitalize(authorData.author_name)}'s Instagram`} className="w-10 h-10 inline p-2 cursor-pointer rounded-lg on-click" />
                   </a>
                 }
                 {authorData.facebook &&
@@ -363,7 +309,7 @@ function AuthorDetails() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <FaFacebook title={`${authorData.nickname ? capitalize(authorData.nickname) : capitalize(authorData.authorName)}'s Facebook`} className="w-10 h-10 inline p-2 cursor-pointer rounded-lg on-click" />
+                    <FaFacebook title={`${capitalize(authorData.author_name)}'s Facebook`} className="w-10 h-10 inline p-2 cursor-pointer rounded-lg on-click" />
                   </a>
                 }
               </div>
@@ -372,7 +318,7 @@ function AuthorDetails() {
         </div>
         <div className='w-full md:mt-2 mb-2'>
           <div className='mt-6 md:mt-0'>
-            <p className='font-poppins font-semibold text-lg 2xl:text-center mb-2'>About {authorData.nickname ? capitalize(authorData.nickname) : capitalize(authorData.authorName)}:</p>
+            <p className='font-poppins font-semibold text-lg 2xl:text-center mb-2'>About {capitalize(authorData.author_name)}:</p>
             <p className='font-arima'>{authorData.biography}</p>
             <div className={`${authorData.awards ? 'block' : 'hidden'} mt-2`}>
               <p className='inline font-medium font-poppinstext-left text-sm'>Awards:</p>
@@ -387,18 +333,18 @@ function AuthorDetails() {
             <>
               <div className='flex justify-between items-center mt-8 md:mt-6'>
                 <p className='font-poppins font-semibold text-lg 2xl:text-center'>
-                  {authorData.nickname ? capitalize(authorData.nickname) : capitalize(authorData.authorName)} Series:
+                  {capitalize(authorData.author_name)} Series:
                 </p>
               </div>
               <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
                 {series.slice(0, seriesLimit).map((item, index) => (
                   <a
-                    href={`/series/${item.id}/${spacesToHyphens(item.serieName)}`}
+                    href={`/series/${item.id}/${spacesToHyphens(item.serie_name)}`}
                     key={item.id}
                     className='flex space-x-2 mt-4 pb-3 border-b-2 border-gray-300 cursor-pointer'
                     onClick={(e) => {
                       e.preventDefault(); 
-                      navigate(`/series/${item.id}/${spacesToHyphens(item.serieName)}`);
+                      navigate(`/series/${item.id}/${spacesToHyphens(item.serie_name)}`);
                     }}
                   >
                     <img
@@ -413,16 +359,16 @@ function AuthorDetails() {
                       // onClick={(e) => e.stopPropagation()}
                       >
                         <p className='font-semibold m-0 leading-5 text-lg'>
-                          {capitalize(item.serieName)}
+                          {capitalize(item.serie_name)}
                         </p>
                       </div>
-                      <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
+                      <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.author_name)).join(', ')}</p>
                       <p className='font-arima text-gray-400 text-sm mt-1'>
                         {item.first_book_year && item.last_book_year ? `from ${item.first_book_year} to ${item.last_book_year}` : 'Coming soon'}
                       </p>
-                      {item.link &&
+                      {item.amazon_link &&
                         <a
-                          href={item.link}
+                          href={item.amazon_link}
                           target="_blank"
                           rel="noopener noreferrer"
                           className='bg-primary block w-full text-center text-white text-sm font-semibold font-poppins p-3 rounded-lg mt-auto on-click-amzn'
@@ -445,73 +391,10 @@ function AuthorDetails() {
             </>
           )}
 
-          {/* Author collection */}
-          {collections.length > 0 && (
-            <>
-              <div className='flex justify-between items-center mt-8 md:mt-12'>
-                <p className='font-poppins font-semibold text-lg 2xl:text-center'>
-                  Other {authorData.nickname ? capitalize(authorData.nickname) : capitalize(authorData.authorName)} book Collections:
-                </p>
-              </div>
-              <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
-                {collections.slice(0, collectionsLimit).map((item, index) => (
-                  <a
-                    href={`/collections/${item.id}/${spacesToHyphens(item.collectionName)}`}
-                    key={item.id}
-                    className='flex space-x-2 mt-4 pb-3 border-b-2 border-gray-300 cursor-pointer'
-                    onClick={(e) => {
-                      e.preventDefault(); 
-                      navigate(`/collections/${item.id}/${spacesToHyphens(item.collectionName)}`);
-                    }}
-                  >
-                    <img
-                      src={item.imageURL || blank_image} // Fallback image if Blob URL is null
-                      alt='book image'
-                      className='bg-[rgba(3,149,60,0.08)] min-h-[9rem] w-[6rem] rounded-lg object-cover'
-                      loading="lazy"
-                    />
-                    <div className='min-h-full w-full flex flex-col'>
-                      <div
-                        className='flex justify-between items-center'
-                      // onClick={(e) => e.stopPropagation()}
-                      >
-                        <p className='font-semibold m-0 leading-5 text-lg'>
-                          {capitalize(item.collectionName)}
-                        </p>
-                      </div>
-                      <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
-                      <p className='font-arima text-gray-400 text-sm mt-1'>
-                        {item.first_book_year && item.last_book_year ? `from ${item.first_book_year} to ${item.last_book_year}` : 'Coming soon'}
-                      </p>
-                      {item.link &&
-                        <a
-                          href={item.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className='bg-primary block w-full text-center text-white text-sm font-semibold font-poppins p-3 rounded-lg mt-auto on-click-amzn'
-                        >
-                          Find on Amazon
-                        </a>
-                      }
-                    </div>
-                  </a>
-                ))}
-              </div>
-              {(collectionsCount > collectionsLimit || collectionsLimit > groupRange) && (
-                <span
-                  onClick={() => handleSetLimit('collections')}
-                  className='text-sm max-w-fit mt-2 hover:underline text-green-700 font-semibold font-arima cursor-pointer'
-                >
-                  {collectionsLimit < collectionsCount ? 'Show more' : 'Show less'}
-                </span>
-              )}
-            </>
-          )}
-
           {/* Author Books */}
           <div className='flex justify-between items-center mt-8 md:mt-12'>
             <p className='font-poppins font-semibold text-lg 2xl:text-center'>
-              Other {capitalize(authorData.nickname || authorData.authorName)} Books:
+              Other {capitalize(authorData.author_name)} Books:
             </p>
           </div>
           <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
@@ -526,15 +409,15 @@ function AuthorDetails() {
                 <div className='min-h-full w-full flex flex-col justify-between'>
                   <div className='flex justify-between items-center'>
                     <p className='font-semibold m-0 leading-5 text-lg'>
-                      {capitalize(item.bookName)}
+                      {capitalize(item.book_name)}
                     </p>
                   </div>
-                  <p className='font-arima text-sm'>by  {item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</p>
+                  <p className='font-arima text-sm'>by  {item.authors.map(author => capitalize(author.author_name)).join(', ')}</p>
                   <p className='font-arima text-slate-400 text-sm mt-1'>
-                    published {item.publishDate}
+                    published {item.publish_date}
                   </p>
                   <a
-                    href={item.link}
+                    href={item.amazon_link}
                     target="_blank"
                     rel="noopener noreferrer"
                     className='bg-primary block w-full text-center text-white text-sm font-semibold font-poppins p-3 rounded-lg mt-auto on-click-amzn'

@@ -101,6 +101,7 @@ const SearchResults = () => {
     useEffect(() => {
 
         const fetchResults = async () => {
+            if (!initialQuery) return;
             setIsLoading(true);
             try {
                 const response = await axiosUtils(`/api/search?query=${initialQuery}&type=${type}`, 'GET');
@@ -184,13 +185,21 @@ const SearchResults = () => {
                 <Dropdown types={types} selectedType={type} onSelectType={handleTypeChange} />
             </div>
 
+            {!initialQuery && (
+                <div>
+                <p className="font-arima my-10">
+                    Search for a serie or an author.
+                </p>
+                </div>
+            )}                                                                                                  
+
             {/* Handle case when no results are found */}
             {series.length === 0 && authors.length === 0 && !isLoading ? (
                 <p className="font-arima my-10">
                     No results found for "{searchTerm}"
                     {type == 'all' ? '.' : ` in ${type}.`}
                 </p>
-            ) : (isLoading ? (
+            ) : (isLoading && initialQuery ? (
                 <>
                     <div className='mt-8 mb-4 bg-gray-200 h-5 w-[8rem] animate-pulse rounded-lg'></div>
                     <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-6 gap-6 md:gap-0'>

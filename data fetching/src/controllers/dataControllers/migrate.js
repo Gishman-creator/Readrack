@@ -6,14 +6,13 @@ async function migrateAuthors() {
     const [authors] = await pool.query('SELECT * FROM authors');
     for (const author of authors) {
       await poolpg.query(
-        `INSERT INTO authors (id, image, authorName, nickname, dob, nationality, biography, x, facebook, instagram, website, genres, awards, searchCount, dod, customDob)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) 
+        `INSERT INTO authors (id, image, author_name, dob, nationality, biography, x, facebook, instagram, website, genres, awards, searchCount, dod, customDob)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) 
         ON CONFLICT (id) DO NOTHING`, // Handle potential conflicts
         [
           author.id,
           author.image,
-          author.authorName,
-          author.nickname,
+          author.author_name,
           author.dob,
           author.nationality,
           author.biography,
@@ -41,15 +40,15 @@ async function migrateSeries() {
     const [series] = await pool.query('SELECT * FROM series');
     for (const serie of series) {
       await poolpg.query(
-        `INSERT INTO series (id, image, serieName, author_id, numBooks, genres, link, searchCount, related_collections) 
+        `INSERT INTO series (id, image, serie_name, author_id, num_books, genres, link, searchCount, related_collections) 
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
         ON CONFLICT (id) DO NOTHING`,
         [
           serie.id,
           serie.image,
-          serie.serieName,
+          serie.serie_name,
           serie.author_id,
-          serie.numBooks,
+          serie.num_books,
           serie.genres,
           serie.link,
           serie.searchCount,
@@ -97,13 +96,13 @@ async function migrateBooks() {
     const [books] = await pool.query('SELECT * FROM books');
     for (const book of books) {
       await poolpg.query(
-        `INSERT INTO books (id, image, bookName, author_id, serie_id, collection_id, genres, publishDate, link, searchCount, customDate, serieIndex) 
+        `INSERT INTO books (id, image, book_name, author_id, serie_id, collection_id, genres, publishDate, link, searchCount, customDate, serieIndex) 
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
         ON CONFLICT (id) DO NOTHING`,
         [
           book.id,
           book.image,
-          book.bookName,
+          book.book_name,
           book.author_id,
           book.serie_id,
           book.collection_id,

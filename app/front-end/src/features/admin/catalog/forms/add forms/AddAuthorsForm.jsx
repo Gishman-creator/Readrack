@@ -23,7 +23,7 @@ function AddAuthorsForm({ onClose }) {
     const formData = new FormData(event.target);
 
     // Extract last name from the full name
-    const fullName = formData.get('authorName') || '';
+    const fullName = formData.get('author_name') || '';
     const nameParts = fullName.trim().split(' ');
     const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0];
 
@@ -80,17 +80,9 @@ function AddAuthorsForm({ onClose }) {
             <label className="block text-sm font-medium">Author name:</label>
             <input
               type="text"
-              name="authorName"
+              name="author_name"
               className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
-            />
-          </div>
-          <div className="mb-2">
-            <label className="block text-sm font-medium">Author nickname: (optional)</label>
-            <input
-              type="text"
-              name="nickname"
-              className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
             />
           </div>
           {/* Other form fields */}

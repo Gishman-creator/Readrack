@@ -14,10 +14,9 @@ exports.getBooks = async (req, res) => {
   try {
     
     let dataQuery = `
-    SELECT books.*, series."serieName" AS serie_name, collections."collectionName" AS collection_name
+    SELECT books.*, series.serie_name
     FROM books
-    LEFT JOIN series ON books.serie_id = series.id
-    LEFT JOIN collections ON books.collection_id = collections.id
+    LEFT JOIN series ON books.serie_id::text = series.id::text
     `;
     const queryParams = [];
     
@@ -31,12 +30,12 @@ exports.getBooks = async (req, res) => {
 
     // Query to count total books
     const countQuery = `
-    SELECT COUNT(*) AS total_count 
+    SELECT COUNT(*) AS "totalCount" 
     FROM books
     `;
     
     const countResult = await poolpg.query(countQuery);
-    const totalCount = parseInt(countResult.rows[0].total_count, 10);
+    const totalCount = parseInt(countResult.rows[0].totalCount, 10);
 
     for (const book of books) {
       // Fetch authors for each book
@@ -65,10 +64,9 @@ exports.getBookById = async (req, res) => {
 
   try {
     let query = `
-      SELECT books.*, series."serieName" AS serie_name, collections."collectionName" AS collection_name
+      SELECT books.*, series.serie_name
       FROM books
-      LEFT JOIN series ON books.serie_id = series.id
-      LEFT JOIN collections ON books.collection_id = collections.id
+      LEFT JOIN series ON books.serie_id::text = series.id::text
       WHERE books.id = $1
     `;
     const queryParams = [id];
@@ -112,12 +110,10 @@ exports.getBooksBySerieId = async (req, res) => {
   try {
     // Fetch books by serie_id and join with authors and series to get their names
     let query = `
-      SELECT books.*, series."serieName" AS serie_name, collections."collectionName" AS collection_name
+      SELECT books.*, series.serie_name
       FROM books
-      LEFT JOIN series ON books.serie_id = series.id
-      LEFT JOIN collections ON books.collection_id = collections.id
-      WHERE books.serie_id = $1
-      ORDER BY books."publishDate" ASC
+      LEFT JOIN series ON books.serie_id::text = series.id::text
+      WHERE books.serie_id::text = $1::text
     `;
     const queryParams = [serie_id];
 
@@ -150,45 +146,6 @@ exports.getBooksBySerieId = async (req, res) => {
   }
 };
 
-exports.getBooksByCollectionId = async (req, res) => {
-  const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
-  let { collection_id } = req.params;
-
-  try {
-    let query = `
-      SELECT books.*, series."serieName" AS serie_name, collections."collectionName" AS collection_name
-      FROM books
-      LEFT JOIN series ON books.serie_id = series.id
-      LEFT JOIN collections ON books.collection_id = collections.id
-      WHERE books.collection_id = $1
-      ORDER BY books."publishDate" ASC
-    `;
-    const queryParams = [collection_id];
-
-    if (limit) {
-      query += ' LIMIT $2';
-      queryParams.push(limit);
-    }
-
-    const booksResult = await poolpg.query(query, queryParams);
-    const books = booksResult.rows;
-    const totalCount = booksResult.rowCount;
-
-    for (const book of books) {
-      const authors = await getAuthorsByIds(book.author_id);
-      book.authors = authors;
-
-      // Fetch image URL if available
-      book.imageURL = book.image && book.image !== 'null' ? await getImageURL(book.image) : null;
-    }
-
-    res.json({ books: books, totalCount: totalCount });
-  } catch (error) {
-    console.error('Error fetching books by collection:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
-
 exports.getBooksByAuthorId = async (req, res) => {
   const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
   let { author_id } = req.params;
@@ -197,14 +154,12 @@ exports.getBooksByAuthorId = async (req, res) => {
     const likePattern = `%${author_id}%`;
 
     let query = `
-      SELECT books.*, series."serieName" AS serie_name, collections."collectionName" AS collection_name
+      SELECT books.*, series.serie_name
       FROM books
-      LEFT JOIN series ON books.serie_id = series.id
-      LEFT JOIN collections ON books.collection_id = collections.id
+      LEFT JOIN series ON books.serie_id::text = series.id::text
       WHERE books.author_id ILIKE $1
-      AND (books.serie_id IS NULL OR books.serie_id = 0)
-      AND (books.collection_id IS NULL OR books.collection_id = 0)
-      ORDER BY books."publishDate" ASC
+      AND books.serie_id IS NULL
+      ORDER BY books.publish_date ASC
     `;
     const queryParams = [likePattern];
 
@@ -232,12 +187,12 @@ exports.getBooksByAuthorId = async (req, res) => {
 };
 
 exports.getBookNames = async (req, res) => {
-  const bookName = req.query.bookName;
+  const book_name = req.query.book_name;
 
   try {
     const booksResult = await poolpg.query(
-      'SELECT count(*) as bookNameCount FROM books WHERE "bookName" ILIKE $1',
-      [`%${bookName}%`]
+      'SELECT count(*) as book_name_count FROM books WHERE "book_name" ILIKE $1',
+      [`%${book_name}%`]
     );
     const books = booksResult.rows;
 

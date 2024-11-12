@@ -68,8 +68,8 @@ const scrapeSeriesBooks = async (req, res) => {
             const subtitleText = $('.responsiveSeriesHeader__subtitle').text();
             console.log("Subtitle:", subtitleText);
             const numBooksMatch = subtitleText.match(/(\d+)\s+primary work/);
-            const numBooks = numBooksMatch ? parseInt(numBooksMatch[1]) : 0;
-            console.log("Number of primary works:", numBooks); 
+            const num_books = numBooksMatch ? parseInt(numBooksMatch[1]) : 0;
+            console.log("Number of primary works:", num_books); 
 
             const bookElements = $('.listWithDividers__item');
             console.log(`Number of divs with class 'listWithDividers__item':`, bookElements.length);
@@ -84,7 +84,7 @@ const scrapeSeriesBooks = async (req, res) => {
             // console.log("Processing books by:", serieId);
 
             for (const element of bookElements.toArray()) {
-                if (currentBookNum > numBooks) break;
+                if (currentBookNum > num_books) break;
                 // console.log("Current book number:", currentBookNum);
 
                 const bookNumText = $(element).find('h3').text().trim();
@@ -97,22 +97,22 @@ const scrapeSeriesBooks = async (req, res) => {
                 // console.log(bookNum);
                 
                 if (
-                    Number.isInteger(bookNum) || parseInt(numBooks) === parseInt(bookElements.length) || !bookNumOne
+                    Number.isInteger(bookNum) || parseInt(num_books) === parseInt(bookElements.length) || !bookNumOne
                 ) {
 
                     // Find book name
-                    const bookName = $(element).find('a.gr-h3--serif span[itemprop="name"]').text().trim();
+                    const book_name = $(element).find('a.gr-h3--serif span[itemprop="name"]').text().trim();
                     const bookGoodreads_link = `https://www.goodreads.com${$(element).find('a.gr-h3--serif').attr('href')}`;
-                    // console.log("Processing book:", bookName);
+                    // console.log("Processing book:", book_name);
 
                     // Prepare query-friendly book name
-                    const safeBookName = bookName.replace(/'/g, "''").replace(/’/g, "''").replace(/ /g, '%');
-                    // console.log("Safe book name:", safeBookName);
+                    const safeBook_name = book_name.replace(/'/g, "''").replace(/’/g, "''").replace(/ /g, '%');
+                    // console.log("Safe book name:", safeBook_name);
 
                     // Step 3: Database search
                     const findBookQuery = `
                         SELECT * FROM books
-                        WHERE book_name ILIKE '%${safeBookName}%' AND author_id = $1 and serie_id is null;
+                        WHERE book_name ILIKE '%${safeBook_name}%' AND author_id = $1 and serie_id is null;
                         `;
                     // console.log(findBookQuery, author_id);
                     const result = await poolpg.query(findBookQuery, [author_id]);
@@ -124,19 +124,19 @@ const scrapeSeriesBooks = async (req, res) => {
                             UPDATE books SET serie_id = $1, serie_index = $2, goodreads_link = $3 WHERE id = $4
                             `;
                         await poolpg.query(updateQuery, [serieId, currentBookNum, bookGoodreads_link, bookId]);
-                        console.log(`Updated book: ${bookName} index`, currentBookNum, `from ${bookGoodreads_link}`);
+                        console.log(`Updated book: ${book_name} index`, currentBookNum, `from ${bookGoodreads_link}`);
                     } else {
                         // Book not found: call insertNewBook
-                        await insertNewBook(bookName, author_id, serieId, currentBookNum, bookGoodreads_link);
-                        console.log(`Inserted new book: ${bookName} index`, currentBookNum, `from ${bookGoodreads_link}`);
+                        await insertNewBook(book_name, author_id, serieId, currentBookNum, bookGoodreads_link);
+                        console.log(`Inserted new book: ${book_name} index`, currentBookNum, `from ${bookGoodreads_link}`);
                     }
                 } else continue;
                 currentBookNum++;
             };
 
-            console.log("Number of books:", numBooks);
+            console.log("Number of books:", num_books);
 
-            await client.query(`UPDATE series SET book_status = 'done', num_books = $1 WHERE id = $2`, [numBooks, serieId]);
+            await client.query(`UPDATE series SET book_status = 'done', num_books = $1 WHERE id = $2`, [num_books, serieId]);
             processedSeries++;
             const progressPercentage = ((processedSeries / totalSeries) * 100).toFixed(2);
             const progress = `${processedSeries}/${totalSeries} (${progressPercentage}%)`;

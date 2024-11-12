@@ -65,7 +65,7 @@ const scrapeBookInfo = async (req, res) => {
 
             console.log(`Processing book: ${book_name} by ${author_name}`);
 
-            await sleep(8000); // Delay to avoid overwhelming the server
+            await sleep(20000); // Delay to avoid overwhelming the server
 
             try {
                 // Initialize bookYear to null by default

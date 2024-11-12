@@ -1,7 +1,7 @@
 // controllers/genreController.js
 const poolpg = require('../../config/dbpg');
 
-const genres = [
+const genre = [
     "Fiction", "Biography", "Autobiography", "Memoir", "History", "Science", "Technology",
     "Self-Help", "Business", "Cookbooks", "Travelogues", "Essays", "Poetry", "Humor",
     "Fantasy", "Mystery", "Thriller", "Romance", "Horror", "Adventure", "Young Adult",
@@ -30,32 +30,34 @@ exports.getGenresController = async (req, res) => {
     try {
         // Construct the query with ILIKE for PostgreSQL and array of placeholders
         const query = `
-            SELECT genres
+            SELECT genre
             FROM ${tableName}
-            WHERE ${genres.map((_, index) => `genres ILIKE $${index + 1}`).join(' OR ')}
+            WHERE ${genre.map((_, index) => `genre ILIKE $${index + 1}`).join(' OR ')}
         `;
 
         // Generate the parameters for the ILIKE clauses
-        const params = genres.map(genre => `%${genre}%`);
+        const params = genre.map(genre => `%${genre}%`);
 
         const result = await poolpg.query(query, params);
 
-        // Initialize a set to track matched genres
+        // Initialize a set to track matched genre
         const genresWithResults = new Set();
 
-        // Iterate over each row and match genres with flexible comparison
+        // Iterate over each row and match genre with flexible comparison
         result.rows.forEach(row => {
-            const rowGenres = row.genres.split(',').map(g => g.trim().toLowerCase()); // Normalize and split
-            genres.forEach(genre => {
+            const rowGenres = row.genre.split(',').map(g => g.trim().toLowerCase()); // Normalize and split
+            genre.forEach(genre => {
                 if (rowGenres.some(rg => rg.includes(genre.toLowerCase()))) {
                     genresWithResults.add(genre); // Add the genre if any part of it matches
                 }
             });
         });
 
-        res.json({ genres: Array.from(genresWithResults) });
+        // console.log("Genres:", Array.from(genresWithResults));
+
+        res.json({ genre: Array.from(genresWithResults) });
     } catch (error) {
-        console.error('Error fetching genres:', error);
-        res.status(500).json({ message: 'Error fetching genres' });
+        console.error('Error fetching genre:', error);
+        res.status(500).json({ message: 'Error fetching genre' });
     }
 };

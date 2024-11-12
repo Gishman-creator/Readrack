@@ -3,7 +3,7 @@ const poolpg = require('../../config/dbpg'); // Adjust path as necessary
 /**
  * Deletes data from the specified table based on the type and ids provided.
  * 
- * @param {string} type - The type of data to delete ('authors', 'series', 'collections', or 'books').
+ * @param {string} type - The type of data to delete ('authors', 'series' or 'books').
  * @param {Array<number>} ids - An array of ids to delete from the specified table.
  * @returns {Object} - Result of the deletion query.
  */
@@ -14,9 +14,9 @@ exports.deleteData = async (req, res) => {
         return res.status(400).json({ error: "Invalid request. 'type' and 'ids' must be provided." });
     }
 
-    const validTypes = ['authors', 'series', 'collections', 'books'];
+    const validTypes = ['authors', 'series', 'books'];
     if (!validTypes.includes(type)) {
-        return res.status(400).json({ error: "Invalid type. Valid types are 'authors', 'series', 'collections', or 'books'." });
+        return res.status(400).json({ error: "Invalid type. Valid types are 'authors', 'series' or 'books'." });
     }
 
     try {

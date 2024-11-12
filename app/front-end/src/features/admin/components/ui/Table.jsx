@@ -11,7 +11,7 @@ import NetworkErrorPage from "../../../../pages/NetworkErrorPage";
 import { debounce } from "lodash";
 import { sortByNumBooks } from "../../../../utils/sortingUtils";
 
-function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, openEditCollectionsModal }) {
+function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal }) {
 
     const socket = useSocket();
     const dispatch = useDispatch();
@@ -75,12 +75,6 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                     if (activeTab === "Series") {
                         response = await axiosUtils(
                             `/api/getSeries?limitStart=${limitStart}&limitEnd=${limitEnd}`,
-                            'GET',
-                            {}, {}, {}, signal  // Pass signal here
-                        );
-                    } else if (activeTab === "Collections") {
-                        response = await axiosUtils(
-                            `/api/getCollections?limitStart=${limitStart}&limitEnd=${limitEnd}`,
                             'GET',
                             {}, {}, {}, signal  // Pass signal here
                         );
@@ -151,17 +145,6 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
             });
         });
 
-        // Listen for collections updates via socket
-        socket.on('collectionsUpdated', (updatedCollections) => {
-            // console.log("Collections updated via socket:", updatedCollections);
-            setTableData((prevData) => {
-                const updatedData = prevData.map((collections) =>
-                    collections.id === updatedCollections.id ? updatedCollections : collections
-                );
-                return updatedData;
-            });
-        });
-
         socket.on('booksUpdated', (updatedBooks) => {
             // console.log('Books updated via socket:', updatedBooks);
             setTableData((prevData) => {
@@ -199,12 +182,6 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
             setTableData((prevData) => [...prevData, serieData]);
         });
 
-        // New event listener for collectionAdded
-        socket.on('collectionAdded', (collectionData) => {
-            // console.log('New collection added via socket:', collectionData);
-            setTableData((prevData) => [...prevData, collectionData]);
-        });
-
         // New event listener for bookAdded
         socket.on('bookAdded', (bookData) => {
             // console.log('New book added via socket:', bookData);
@@ -213,12 +190,10 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
 
         return () => {
             socket.off('seriesUpdated');
-            socket.off('collectionsUpdated');
             socket.off('booksUpdated');
             socket.off('authorsUpdated');
             socket.off('authorAdded');
             socket.off('serieAdded');
-            socket.off('collectionAdded');
             socket.off('bookAdded');
             socket.off('dataDeleted');
         };
@@ -252,11 +227,9 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
 
         // Navigate based on the activeTab
         if (activeTab === "Series") {
-            navigate(`series/${item.id}/${spacesToHyphens(item.serieName)}`); // Navigate to SerieDetails
-        } else if (activeTab === "Collections") {
-            navigate(`collections/${item.id}/${spacesToHyphens(item.collectionName)}`); // Navigate to AuthorDetails
+            navigate(`series/${item.id}/${spacesToHyphens(item.serie_name)}`); // Navigate to SerieDetails
         } else if (activeTab === "Authors") {
-            navigate(`authors/${item.id}/${spacesToHyphens(item.authorName)}`); // Navigate to AuthorDetails
+            navigate(`authors/${item.id}/${spacesToHyphens(item.author_name)}`); // Navigate to AuthorDetails
         } else if (activeTab === "Books") {
             dispatch(toggleRowSelection(rowId));
         }
@@ -295,18 +268,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                     <th className="px-4 py-2 text-slate-500">Author</th>
                     <th className="px-4 py-2 text-slate-500">Number of Books</th>
                     <th className="px-4 py-2 text-slate-500">Genres</th>
-                    <th className="px-4 py-2 text-slate-500">Link</th>
-                    <th className="px-4 py-2 text-slate-500">Search Count</th>
-                </>
-            );
-        } else if (activeTab === "Collections") {
-            return (
-                <>
-                    <th className="px-4 py-2 text-slate-500">Collections Name</th>
-                    <th className="px-4 py-2 text-slate-500">Author</th>
-                    <th className="px-4 py-2 text-slate-500">Number of Books</th>
-                    <th className="px-4 py-2 text-slate-500">Genres</th>
-                    <th className="px-4 py-2 text-slate-500">Link</th>
+                    <th className="px-4 py-2 text-slate-500">Amazon Link</th>
                     <th className="px-4 py-2 text-slate-500">Search Count</th>
                 </>
             );
@@ -317,7 +279,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                     <th className="px-4 py-2 text-slate-500">Series Name</th>
                     <th className="px-4 py-2 text-slate-500">Author</th>
                     <th className="px-4 py-2 text-slate-500">Publish Date</th>
-                    <th className="px-4 py-2 text-slate-500">Link</th>
+                    <th className="px-4 py-2 text-slate-500">Amazon Link</th>
                 </>
             );
         } else if (activeTab === "Authors") {
@@ -364,7 +326,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
         return tableData.map((item) => (
             <tr
                 key={item.id} // Use unique item ID as key
-                className={`${activeTab === "Series" && parseInt(item.currentBooks) < item.numBooks ? "bg-orange-200 hover:bg-orange-100" : ""} cursor-pointer border-b border-slate-200 hover:bg-gray-100 ${selectedRowIds.includes(item.id) ? "bg-blue-100 hover:bg-blue-100" : ""}`}
+                className={`${activeTab === "Series" && parseInt(item.currentBooks) < item.num_books ? "bg-orange-200 hover:bg-orange-100" : ""} cursor-pointer border-b border-slate-200 hover:bg-gray-100 ${selectedRowIds.includes(item.id) ? "bg-blue-100 hover:bg-blue-100" : ""}`}
                 onClick={() => handleRowClick(item.id, item)} // Pass the item data
             >
                 <td
@@ -383,30 +345,14 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                 </td>
                 {activeTab === "Series" && (
                     <>
-                        <td className="px-4 py-2">{capitalize(item.serieName)}</td>
-                        <td className="px-4 py-2">{item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</td>
-                        <td className="px-4 py-2">{`${parseInt(item.currentBooks)}/${item.numBooks}`}</td>
+                        <td className="px-4 py-2">{capitalize(item.serie_name)}</td>
+                        <td className="px-4 py-2">{item.authors.map(author => capitalize(author.author_name)).join(', ')}</td>
+                        <td className="px-4 py-2">{`${parseInt(item.currentBooks)}/${item.num_books}`}</td>
                         <td className="px-4 py-2 overflow-hidden whitespace-nowrap text-ellipsis">
                             {`${item.genres.substring(0, 15)}...`}
                         </td>
                         <td className="px-4 py-2">
-                            <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-                                Link
-                            </a>
-                        </td>
-                        <td className="px-4 py-2">{item.searchCount}</td>
-                    </>
-                )}
-                {activeTab === "Collections" && (
-                    <>
-                        <td className="px-4 py-2">{capitalize(item.collectionName)}</td>
-                        <td className="px-4 py-2">{item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</td>
-                        <td className="px-4 py-2">{item.numBooks}</td>
-                        <td className="px-4 py-2 overflow-hidden whitespace-nowrap text-ellipsis">
-                            {`${item.genres.substring(0, 15)}...`}
-                        </td>
-                        <td className="px-4 py-2">
-                            <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                            <a href={item.amazon_link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
                                 Link
                             </a>
                         </td>
@@ -415,12 +361,12 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                 )}
                 {activeTab === "Books" && (
                     <>
-                        <td className="px-4 py-2">{capitalize(item.bookName)}</td>
-                        <td className="px-4 py-2">{item.serie_name ? item.serie_name : item.collection_name}</td>
-                        <td className="px-4 py-2">{item.authors.map(author => capitalize(author.nickname || author.author_name)).join(', ')}</td>
-                        <td className="px-4 py-2">{item.publishDate}</td>
+                        <td className="px-4 py-2">{capitalize(item.book_name)}</td>
+                        <td className="px-4 py-2">{item.serie_name}</td>
+                        <td className="px-4 py-2">{item.authors.map(author => capitalize(author.author_name)).join(', ')}</td>
+                        <td className="px-4 py-2">{item.publish_date}</td>
                         <td className="px-4 py-2">
-                            <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                            <a href={item.amazon_link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
                                 Link
                             </a>
                         </td>
@@ -428,8 +374,8 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                 )}
                 {activeTab === "Authors" && (
                     <>
-                        <td className="px-4 py-2">{item.nickname ? capitalize(item.nickname) : capitalize(item.authorName)}</td>
-                        <td className="px-4 py-2">{item.numBooks}</td>
+                        <td className="px-4 py-2">{capitalize(item.author_name)}</td>
+                        <td className="px-4 py-2">{item.num_books}</td>
                         <td className="px-4 py-2">{item.dob}</td>
                         <td className="px-4 py-2">
                             {item.nationality}
@@ -454,7 +400,6 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal, o
                 openEditAuthorModal={openEditAuthorModal}
                 openEditBooksModal={openEditBooksModal}
                 openEditSeriesModal={openEditSeriesModal}
-                openEditCollectionsModal={openEditCollectionsModal}
             />
             <div ref={containerRef} className="overflow-auto max-h-custom1">
                 <table className="min-w-full bg-[#fff] text-sm text-left">

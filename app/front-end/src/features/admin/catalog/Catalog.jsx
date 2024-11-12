@@ -13,8 +13,6 @@ import EditAuthorForm from './forms/edit forms/EditAuthorsForm';
 import EditBooksForm from './forms/edit forms/EditBooksForm';
 import EditSeriesForm from './forms/edit forms/EditSeriesForm';
 import { PlusIcon } from '@heroicons/react/24/outline';
-import AddCollectionsForm from './forms/add forms/AddCollectionsForm';
-import EditCollectionsForm from './forms/edit forms/EditCollectionsForm';
 
 function Catalog() {
   const navigate = useNavigate();
@@ -61,8 +59,6 @@ function Catalog() {
     switch (modalContent) {
       case 'Series':
         return <AddSeriesForm onClose={closeModal} />;
-      case 'Collections':
-        return <AddCollectionsForm onClose={closeModal} />;
       case 'Authors':
         return <AddAuthorsForm onClose={closeModal} />;
       case 'Books':
@@ -73,8 +69,6 @@ function Catalog() {
         return <EditBooksForm onClose={closeModal} />;
       case 'EditSeries':
         return <EditSeriesForm onClose={closeModal} />;
-      case 'EditCollections':
-        return <EditCollectionsForm onClose={closeModal} />;
       default:
         return null;
     }
@@ -93,12 +87,6 @@ function Catalog() {
             onClick={() => handleTabClick('series')}
           >
             Series
-          </p>
-          <p
-            className={`text-center px-4 py-1 ${activeTab === 'Collections' ? 'border-b-2 border-green-700' : ''}`}
-            onClick={() => handleTabClick('collections')}
-          >
-            Collections
           </p>
           <p
             className={`text-center px-4 py-1 ${activeTab === 'Authors' ? 'border-b-2 border-green-700' : ''}`}
@@ -126,7 +114,6 @@ function Catalog() {
           openEditAuthorModal={() => openModal('EditAuthor')}
           openEditBooksModal={() => openModal('EditBooks')}
           openEditSeriesModal={() => openModal('EditSeries')}
-          openEditCollectionsModal={() => openModal('EditCollections')}
         />
       </div>
 

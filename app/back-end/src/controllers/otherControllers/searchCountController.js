@@ -7,15 +7,13 @@ exports.incrementSearchCount = async (req, res) => {
         let tableName;
         if (type === 'series' || type === 'serie') {
             tableName = 'series';
-        } else if (type === 'collections' || type === 'collection') {
-            tableName = 'collections';
         } else if (type === 'authors' || type === 'author') {
             tableName = 'authors';
         } else {
             return res.status(400).json({ error: 'Invalid type' });
         }
 
-        const query = `UPDATE ${tableName} SET "searchCount" = "searchCount" + 1 WHERE id = $1`;
+        const query = `UPDATE ${tableName} SET search_count = search_count + 1 WHERE id = $1`;
         const { rowCount } = await poolpg.query(query, [id]);
 
         if (rowCount === 0) {

@@ -49,7 +49,7 @@ const NavBar = () => {
     }
 
     return (
-        <div className={`fixed top-0 flex min-w-full max-w-full h-14 justify-between items-center px-[2%] sm:px-[12%] bg-white z-20`}>
+        <div className={`bg-white fixed top-0 flex min-w-full max-w-full h-14 justify-between items-center px-[2%] sm:px-[12%] z-20`}>
             <a href="/" className={`z-24 sm:flex items-center ${isSearchOpen ? 'hidden' : 'flex'}`} onClick={(e) => { e.preventDefault(); navigateToHome() }}>
                 {/* Logo */}
                 <div>
@@ -76,7 +76,7 @@ const NavBar = () => {
                 <a className='sm:hidden'>Donate</a>
             </div>
 
-            <div className={`${isSearchOpen && 'w-full'} flex items-center space-x-2`}>
+            <div className={`${isSearchOpen && 'w-full sm:w-fit'} flex items-center space-x-2`}>
                 <a
                     href='/series'
                     onClick={(e) => { e.preventDefault(); handleTabClick('Series') }}

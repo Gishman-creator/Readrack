@@ -10,8 +10,7 @@ const generateRandomId = () => {
 const addAuthor = async (req, res) => {
   try {
     const {
-      authorName,
-      nickname,
+      author_name,
       dob,
       dod,
       nationality,
@@ -21,7 +20,7 @@ const addAuthor = async (req, res) => {
       instagram,
       facebook,
       website,
-      genres,
+      genre,
     } = req.body;
 
     const image = req.file ? await putImage('', req.file, 'authors') : null;
@@ -44,15 +43,14 @@ const addAuthor = async (req, res) => {
     // Insert author data into the PostgreSQL database
     const insertQuery = `
       INSERT INTO authors (
-        id, image, "authorName", nickname, dob, dod, nationality, biography, x, facebook, instagram, website, genres, awards
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        id, image, author_name, dob, dod, nationality, biography, x, facebook, instagram, website, genre, awards
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     `;
 
     const insertValues = [
       uniqueId,
       image,
-      authorName,
-      nickname || null,
+      author_name,
       dob || null,
       dod || null,
       nationality || null,
@@ -61,7 +59,7 @@ const addAuthor = async (req, res) => {
       facebook || null,
       instagram || null,
       website || null,
-      genres || null,
+      genre || null,
       awards || null,
     ];
 
@@ -71,8 +69,8 @@ const addAuthor = async (req, res) => {
     // Fetch the newly added author data with the number of series and books
     const fetchQuery = `
       SELECT a.*, 
-        COUNT(DISTINCT s.id) AS "numSeries", 
-        COUNT(DISTINCT b.id) AS "numBooks"
+        COUNT(DISTINCT s.id) AS num_series, 
+        COUNT(DISTINCT b.id) AS num_books
       FROM authors a
       LEFT JOIN series s ON s.author_id LIKE '%' || a.id || '%'
       LEFT JOIN books b ON b.author_id LIKE '%' || a.id || '%'

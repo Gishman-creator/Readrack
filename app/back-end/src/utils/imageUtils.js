@@ -9,10 +9,10 @@ dotenv.config();
 
 const randomImageName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex');
 
-const bucketName = process.env.BUCKET_NAME;
-const bucketRegion = process.env.BUCKET_REGION;
-const accessKey = process.env.ACCESS_KEY;
-const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+const bucketName = process.env.BUCKET_NAME_2;
+const bucketRegion = process.env.BUCKET_REGION_2;
+const accessKey = process.env.ACCESS_KEY_2;
+const secretAccessKey = process.env.SECRET_ACCESS_KEY_2;
 
 const s3 = new S3Client({
     credentials: {

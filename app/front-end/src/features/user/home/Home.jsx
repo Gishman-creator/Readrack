@@ -59,7 +59,7 @@ export default function Home() {
             window.removeEventListener('resize', updatePageLimitAndInterval);
         };
 
-    }, [activeTab, activeGenre, pageLimitStart, pageLimitEnd])
+    }, [activeTab, activeGenre])
 
 
     useEffect(() => {

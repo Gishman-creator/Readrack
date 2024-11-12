@@ -3,9 +3,9 @@ const { getAuthorsByIds } = require('../../utils/getUtils');
 const { getImageURL } = require('../../utils/imageUtils');
 
 /**
- * Get recommended authors based on the genres provided by the user.
- * @param {Array} userGenres - An array of genres that the user prefers.
- * @returns {Array} - An array of recommended authors sorted by searchCount.
+ * Get recommended authors based on the genre provided by the user.
+ * @param {Array} userGenres - An array of genre that the user prefers.
+ * @returns {Array} - An array of recommended authors sorted by search_count.
  */
 
 const mapGenresToGlobalGenres = (userGenres, globalGenres) => {
@@ -35,30 +35,30 @@ const globalGenres = [
 
 exports.recommendAuthors = async (req, res) => {
     const data = req.body.data;
-    const genres = data.genres;
+    const genre = data.genre;
     const excludeId = data.id;
 
-    if (!genres || genres.length === 0) {
-        return res.status(400).json({ message: 'No genres provided' });
+    if (!genre || genre.length === 0) {
+        return res.status(400).json({ message: 'No genre provided' });
     }
 
     try {
-        // Split genres and map to global genres
-        const userGenres = genres.split(',');
+        // Split genre and map to global genre
+        const userGenres = genre.split(',');
         const mappedGenres = mapGenresToGlobalGenres(userGenres, globalGenres);
-        console.log('Mapped Genres', mappedGenres);
+        console.log('Mapped Genre', mappedGenres);
 
         const query = `
             SELECT a.*, 
-              COUNT(DISTINCT s.id) AS "numSeries", 
-              COUNT(DISTINCT b.id) AS "numBooks"
+              COUNT(DISTINCT s.id) AS num_series, 
+              COUNT(DISTINCT b.id) AS num_books
             FROM authors a
             LEFT JOIN series s ON s.author_id::TEXT ILIKE CONCAT('%', a.id::TEXT, '%')
             LEFT JOIN books b ON b.author_id::TEXT ILIKE CONCAT('%', a.id::TEXT, '%')
-            WHERE (${mappedGenres.map((genre, index) => `s.genres::TEXT ILIKE $${index + 1}`).join(' OR ')})
+            WHERE (${mappedGenres.map((genre, index) => `s.genre::TEXT ILIKE $${index + 1}`).join(' OR ')})
             AND a.id != $${mappedGenres.length + 1}
             GROUP BY a.id
-            ORDER BY a."searchCount" DESC
+            ORDER BY a."search_count" DESC
             LIMIT 10;
         `;
 
@@ -84,23 +84,23 @@ exports.recommendAuthors = async (req, res) => {
 
 exports.recommendSeries = async (req, res) => {
     const { data } = req.body;
-    const genres = data.genres;
+    const genre = data.genre;
     const excludeId = data.id;
 
-    if (!genres || genres.length === 0) {
-        return res.status(400).json({ message: 'No genres provided' });
+    if (!genre || genre.length === 0) {
+        return res.status(400).json({ message: 'No genre provided' });
     }
 
     try {
-        const userGenres = genres.split(',');
+        const userGenres = genre.split(',');
         const mappedGenres = mapGenresToGlobalGenres(userGenres, globalGenres);
 
         const query = `
             SELECT s.*
             FROM series s
-            WHERE (${mappedGenres.map((genre, index) => `s.genres::TEXT ILIKE $${index + 1}`).join(' OR ')})
+            WHERE (${mappedGenres.map((genre, index) => `s.genre::TEXT ILIKE $${index + 1}`).join(' OR ')})
             AND s.id != $${mappedGenres.length + 1}
-            ORDER BY s."searchCount" DESC
+            ORDER BY s."search_count" DESC
             LIMIT 10;
         `;
 

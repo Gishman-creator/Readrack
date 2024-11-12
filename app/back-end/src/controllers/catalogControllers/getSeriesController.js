@@ -17,16 +17,16 @@ exports.getSeries = async (req, res) => {
       SELECT series.* ,
       COUNT(DISTINCT books.id) AS "currentBooks"
       FROM series
-      LEFT JOIN books ON books.serie_id = series.id
+      LEFT JOIN books ON books.serie_id::text = series.id::text
     `;
     const queryParams = [];
 
     if (genre && genre !== 'null') {
-      dataQuery += ' WHERE series.genres ILIKE $1';
+      dataQuery += ' WHERE series.genre ILIKE $1';
       queryParams.push(`%${genre}%`);
     }
 
-    dataQuery += ' GROUP BY series.id ORDER BY series."searchCount" DESC';
+    dataQuery += ' GROUP BY series.id ORDER BY series.search_count DESC';
 
     if (typeof limitStart === 'number' && typeof limitEnd === 'number') {
       dataQuery += ` LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`;
@@ -39,12 +39,12 @@ exports.getSeries = async (req, res) => {
 
     // Query to count total books
     const countQuery = `
-    SELECT COUNT(*) AS total_count 
+    SELECT COUNT(*) AS "totalCount" 
     FROM series
     `;
 
     const countResult = await poolpg.query(countQuery);
-    const totalCount = parseInt(countResult.rows[0].total_count, 10);
+    const totalCount = parseInt(countResult.rows[0].totalCount, 10);
 
     for (const dataRow of dataRows) {
       const authors = await getAuthorsByIds(dataRow.author_id);
@@ -99,8 +99,8 @@ exports.getSeriesByAuthorId = async (req, res) => {
       SELECT series.*,
       COUNT(DISTINCT books.id) AS "currentBooks"
       FROM series
-      LEFT JOIN books ON books.serie_id = series.id
-      WHERE series.author_id ILIKE $1
+      LEFT JOIN books ON books.serie_id::text = series.id::text
+      WHERE series.author_id::text ILIKE '%' || $1::text || '%'
       GROUP BY series.id
     `;
 

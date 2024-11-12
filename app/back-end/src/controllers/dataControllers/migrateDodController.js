@@ -4,14 +4,14 @@ const poolpg2 = require('../../config/dbpg');
 exports.migrateDod = async (req, res) => {
     try {
         // Step 1: Get all DOD (Date of Death) from the authors table in poolpg
-        const { rows } = await poolpg.query('SELECT id, "authorName", dod FROM authors WHERE dod IS NOT NULL');
+        const { rows } = await poolpg.query('SELECT id, author_name, dod FROM authors WHERE dod IS NOT NULL');
 
         // Step 2: Format the dates to 'MMMM d, yyyy' format (e.g., September 4, 2022)
         const formattedDates = rows.map(author => {
             const dodDate = new Date(author.dod);
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             const dodFormatted = dodDate.toLocaleDateString('en-US', options);
-            return { id: author.id, authorName: author.authorName, dodFormatted };
+            return { id: author.id, author_name: author.author_name, dodFormatted };
         });
 
         // Step 3: Update the authors table in poolpg2 with formatted DODs

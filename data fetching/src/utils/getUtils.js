@@ -6,7 +6,7 @@ exports.getAuthorsByIds = async (authorIds) => {
     const idsArray = authorIds.split(',').map(id => id.trim()); // Split the string and trim any spaces
     const placeholders = idsArray.map((_, index) => `$${index + 1}`).join(','); // Prepare placeholders for SQL IN clause
 
-    const query = `SELECT id AS author_id, "authorName" AS author_name, nickname FROM authors WHERE id IN (${placeholders})`;
+    const query = `SELECT id AS author_id, author_name, pen_name FROM authors WHERE id IN (${placeholders})`;
     
     try {
         const { rows } = await poolpg.query(query, idsArray); // Use idsArray directly

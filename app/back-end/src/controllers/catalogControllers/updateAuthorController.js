@@ -5,7 +5,7 @@ const updateAuthor = async (req, res) => {
 
     const { id } = req.params;
 
-    const { authorName, nickname, dob, dod, nationality, biography, awards, x, instagram, facebook, website, genres, imageName } = req.body;
+    const { author_name, dob, dod, nationality, biography, awards, x, instagram, facebook, website, genre, imageName } = req.body;
 
     const image = req.file ? await putImage(id, req.file, 'authors') : imageName;
 
@@ -13,18 +13,18 @@ const updateAuthor = async (req, res) => {
         // Update author information
         const result = await poolpg.query(
             `UPDATE authors 
-             SET "authorName" = $1, nickname = $2, dob = $3, dod = $4, 
-                 nationality = $5, biography = $6, awards = $7, x = $8, instagram = $9, 
-                 facebook = $10, website = $11, genres = $12, image = $13 
+             SET author_name = $1, dob = $2, dod = $3, 
+                 nationality = $4, biography = $5, awards = $6, x = $7, instagram = $8, 
+                 facebook = $9, website = $10, genre = $11, image = $12 
              WHERE id = $15`,
-            [authorName, nickname || null, dob, dod || null, nationality, biography, awards, x, instagram, facebook, website, genres, image, id]
+            [author_name, dob, dod || null, nationality, biography, awards, x, instagram, facebook, website, genre, image, id]
         );
 
         // Fetch updated author data
         const authorResult = await poolpg.query(`
             SELECT a.*, 
-              COUNT(DISTINCT s.id) AS "numSeries", 
-              COUNT(DISTINCT b.id) AS "numBooks"
+              COUNT(DISTINCT s.id) AS num_series, 
+              COUNT(DISTINCT b.id) AS num_books
             FROM authors a
             LEFT JOIN series s ON s.author_id::text LIKE '%' || a.id::text || '%'
             LEFT JOIN books b ON b.author_id::text LIKE '%' || a.id::text || '%'

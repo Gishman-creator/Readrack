@@ -6,14 +6,13 @@ async function migrateAuthors() {
     const [authors] = await pool.query('SELECT * FROM authors');
     for (const author of authors) {
       await poolpg.query(
-        `INSERT INTO authors (id, image, authorName, nickname, dob, nationality, biography, x, facebook, instagram, website, genres, awards, searchCount, dod, customDob)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) 
+        `INSERT INTO authors (id, image, author_name, dob, nationality, biography, x, facebook, instagram, website, genre, awards, search_count, dod, customDob)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) 
         ON CONFLICT (id) DO NOTHING`, // Handle potential conflicts
         [
           author.id,
           author.image,
-          author.authorName,
-          author.nickname,
+          author.author_name,
           author.dob,
           author.nationality,
           author.biography,
@@ -21,9 +20,9 @@ async function migrateAuthors() {
           author.facebook,
           author.instagram,
           author.website,
-          author.genres,
+          author.genre,
           author.awards,
-          author.searchCount,
+          author.search_count,
           author.dod,
           author.customDob,
         ]
@@ -41,19 +40,18 @@ async function migrateSeries() {
     const [series] = await pool.query('SELECT * FROM series');
     for (const serie of series) {
       await poolpg.query(
-        `INSERT INTO series (id, image, serieName, author_id, numBooks, genres, link, searchCount, related_collections) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+        `INSERT INTO series (id, image, serie_name, author_id, num_books, genre, link, search_count) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
         ON CONFLICT (id) DO NOTHING`,
         [
           serie.id,
           serie.image,
-          serie.serieName,
+          serie.serie_name,
           serie.author_id,
-          serie.numBooks,
-          serie.genres,
+          serie.num_books,
+          serie.genre,
           serie.link,
-          serie.searchCount,
-          serie.related_collections,
+          serie.search_count,
         ]
       );
     }
@@ -70,7 +68,7 @@ async function migrateCollections() {
     const [collections] = await pool.query('SELECT * FROM collections');
     for (const collection of collections) {
       await poolpg.query(
-        `INSERT INTO collections (id, image, collectionName, author_id, genres, link, searchCount) 
+        `INSERT INTO collections (id, image, collectionName, author_id, genre, link, search_count) 
         VALUES ($1, $2, $3, $4, $5, $6, $7) 
         ON CONFLICT (id) DO NOTHING`,
         [
@@ -78,9 +76,9 @@ async function migrateCollections() {
           collection.image,
           collection.collectionName,
           collection.author_id,
-          collection.genres,
+          collection.genre,
           collection.link,
-          collection.searchCount,
+          collection.search_count,
         ]
       );
     }
@@ -97,22 +95,22 @@ async function migrateBooks() {
     const [books] = await pool.query('SELECT * FROM books');
     for (const book of books) {
       await poolpg.query(
-        `INSERT INTO books (id, image, bookName, author_id, serie_id, collection_id, genres, publishDate, link, searchCount, customDate, serieIndex) 
+        `INSERT INTO books (id, image, book_name, author_id, serie_id, collection_id, genre, publishDate, link, search_count, customDate, serie_index) 
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
         ON CONFLICT (id) DO NOTHING`,
         [
           book.id,
           book.image,
-          book.bookName,
+          book.book_name,
           book.author_id,
           book.serie_id,
           book.collection_id,
-          book.genres,
+          book.genre,
           book.publishDate,
           book.link,
-          book.searchCount,
+          book.search_count,
           book.customDate,
-          book.serieIndex,
+          book.serie_index,
         ]
       );
     }

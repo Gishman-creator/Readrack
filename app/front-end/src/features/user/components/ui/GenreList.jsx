@@ -19,7 +19,7 @@ function GenreList() {
             setIsLoading(true); // Set loading to true when fetching starts
             try {
                 const response = await axiosUtils(`/api/getGenres?tab=${activeTab}`, 'GET');
-                setGenres(response.data.genres);
+                setGenres(response.data.genre);
             } catch (error) {
                 console.error('Error fetching genres:', error);
             } finally {

@@ -5,20 +5,19 @@ const { putImage, getImageURL } = require('../../utils/imageUtils');
 const updateBook = async (req, res) => {
   const { id } = req.params;
 
-  const { bookName, serie_id, collection_id, author_id, publishDate, genres, link, imageName } = req.body;
+  const { book_name, serie_id, author_id, publish_date, genre, amazon_link, imageName } = req.body;
 
   const image = req.file ? await putImage(id, req.file, 'books') : imageName;
   const serieId = Number.isNaN(parseInt(serie_id)) ? 0 : parseInt(serie_id);
-  const collectionId = Number.isNaN(parseInt(collection_id)) ? 0 : parseInt(collection_id);
 
   try {
     // Update the book in the database
     const updateResult = await poolpg.query(
       `UPDATE books 
-       SET "bookName" = $1, serie_id = $2, collection_id = $3, author_id = $4, 
-           "publishDate" = $5, genres = $6, link = $7, image = $8
-       WHERE id = $9`,
-      [bookName, serieId, collectionId, author_id || null, publishDate || null, genres, link, image, id]
+       SET book_name = $1, serie_id = $2, author_id = $3, 
+        publish_date = $4, genre = $5, amazon_link = $6, image = $7
+       WHERE id = $8`,
+      [book_name, serieId, author_id || null, publish_date || null, genre, amazon_link, image, id]
     );
 
     if (updateResult.rowCount === 0) {
@@ -27,12 +26,11 @@ const updateBook = async (req, res) => {
 
     // Fetch the updated book data
     const bookResult = await poolpg.query(`
-      SELECT books.*, authors."authorName" AS author_name, authors.nickname, 
-             series."serieName" AS serie_name, collections."collectionName" AS collection_name
+      SELECT books.*, authors.author_name, 
+             series.serie_name
       FROM books
-      LEFT JOIN authors ON books.author_id = authors.id
-      LEFT JOIN series ON books.serie_id = series.id
-      LEFT JOIN collections ON books.collection_id = collections.id
+      LEFT JOIN authors ON books.author_id::text = authors.id::text
+      LEFT JOIN series ON books.serie_id::text = series.id::text
       WHERE books.id = $1
     `, [id]);
 

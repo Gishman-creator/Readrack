@@ -1,5 +1,6 @@
 import React from 'react';
 import blank_image from '../../../assets/brand_blank_image.png';
+// import blank_image from '../../../assets/brand_blank_image_2.jpg';
 import { capitalize, spacesToHyphens } from '../../../utils/stringUtils';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -15,13 +16,10 @@ function Card({ card, activeTab, fixedWidth }) {
     const navigateToDetails = (id) => {
         if (activeTab === 'Series') {
             incrementSearchCount('series', id);
-            navigate(`/series/${card.id}/${spacesToHyphens(card.serieName)}`);
-        } else if (activeTab === 'Collections') {
-            incrementSearchCount('collections', id);
-            navigate(`/collections/${card.id}/${spacesToHyphens(card.collectionName)}`);
+            navigate(`/series/${card.id}/${spacesToHyphens(card.serie_name)}`);
         } else {
             incrementSearchCount('authors', id);
-            navigate(`/authors/${card.id}/${spacesToHyphens(card.authorName)}`);
+            navigate(`/authors/${card.id}/${spacesToHyphens(card.author_name)}`);
         }
         dispatch(setActiveGenre(''));
         window.scrollTo({ top: 0 });
@@ -37,11 +35,9 @@ function Card({ card, activeTab, fixedWidth }) {
     // Dynamic href based on the activeTab
     const getHref = () => {
         if (activeTab === 'Series') {
-            return `/series/${card.id}/${spacesToHyphens(card.serieName)}`;
-        } else if (activeTab === 'Collections') {
-            return `/collections/${card.id}/${spacesToHyphens(card.collectionName)}`;
+            return `/series/${card.id}/${spacesToHyphens(card.serie_name)}`;
         } else {
-            return `/authors/${card.id}/${spacesToHyphens(card.authorName)}`;
+            return `/authors/${card.id}/${spacesToHyphens(card.author_name)}`;
         }
     };
 
@@ -71,15 +67,13 @@ function Card({ card, activeTab, fixedWidth }) {
             <div className="flex-col justify-center items-center py-1">
                 <p
                     title={`
-                        ${activeTab === 'Series' ? `${capitalize(card.serieName)} Series` : ''}
-                        ${activeTab === 'Authors' ? (card.nickname ? capitalize(card.nickname) : capitalize(card.authorName)) : ''}
-                        ${activeTab === 'Collections' ? capitalize(card.collectionName) : ''}
+                        ${activeTab === 'Series' ? `${capitalize(card.serie_name)} Series` : ''}
+                        ${activeTab === 'Authors' ? (capitalize(card.author_name)) : ''}
                     `}
                     className="font-poppins font-medium overflow-hidden whitespace-nowrap text-ellipsis"
                 >
-                    {activeTab === 'Series' && `${capitalize(card.serieName)} Series`}
-                    {activeTab === 'Authors' && (card.nickname ? capitalize(card.nickname) : capitalize(card.authorName))}
-                    {activeTab === 'Collections' && capitalize(card.collectionName)}
+                    {activeTab === 'Series' && `${capitalize(card.serie_name)} Series`}
+                    {activeTab === 'Authors' && (capitalize(card.author_name))}
                 </p>
                 {activeTab === 'Series' ? (
                     <>
@@ -95,44 +89,19 @@ function Card({ card, activeTab, fixedWidth }) {
                                     className='hover:underline cursor-pointer'
                                     onClick={(e) => {navigateToAuthor(e, author)}}
                                 >
-                                    {capitalize(author.nickname || author.author_name)}
+                                    {capitalize(author.author_name)}
                                 </a>
                             )).reduce((prev, curr) => [prev, ', ', curr])}
                         </p>
                         <p className="font-arima font-bold text-xs text-green-700 mt-4">
-                            {card.numBooks} books
-                        </p>
-                    </>
-                ) : activeTab === 'Collections' ? (
-                    <>
-                        {card.author_id ? (
-                            <p
-                                className='text-sm font-arima overflow-hidden whitespace-nowrap text-ellipsis '
-                            >
-                                <span>by </span>
-                                {card.authors.map(author => (
-                                    <span
-                                        key={author.author_id}
-                                        title={capitalize(author.author_name)}
-                                        className="hover:underline cursor-pointer"
-                                        onClick={(e) => navigateToAuthor(e, author)}
-                                    >
-                                        {capitalize(author.nickname || author.author_name)}
-                                    </span>
-                                )).reduce((prev, curr) => [prev, ', ', curr])}
-                            </p>
-                        ) : (
-                            <p className='mt-9'></p>
-                        )}
-                        <p className="font-arima font-bold text-xs text-green-700 mt-4">
-                            {card.numBooks} books
+                            {card.num_books} books
                         </p>
                     </>
                 ) : (
                     <>
                         <p className="font-arima text-sm leading-4">{capitalize(card.nationality)}</p>
                         <p className="font-arima font-bold text-xs text-green-700 mt-2">
-                            about {card.numBooks} books
+                            about {card.num_books} books
                         </p>
                     </>
                 )}

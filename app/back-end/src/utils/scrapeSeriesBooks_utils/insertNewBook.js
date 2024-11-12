@@ -1,6 +1,6 @@
 const poolpg = require('../../config/dbpg3');
 
-exports.insertNewBook = async (bookName, authorId, seriesId, serieIndex, bookGoodreadsLink) => {
+exports.insertNewBook = async (book_name, authorId, seriesId, serieIndex, bookGoodreadsLink) => {
     let bookIdLength = 6; // Start with 6 digits
     let maxIdsForCurrentLength;
     let currentLengthIdsCount;
@@ -21,7 +21,7 @@ exports.insertNewBook = async (bookName, authorId, seriesId, serieIndex, bookGoo
     } while (idExists || currentLengthIdsCount >= maxIdsForCurrentLength);
 
     const insertBookQuery = `INSERT INTO books (id, book_name, author_id, serie_id, serie_index, goodreads_link) VALUES ($1, $2, $3, $4, $5, $6)`;
-    await poolpg.query(insertBookQuery, [bookId, bookName, authorId, seriesId, serieIndex, bookGoodreadsLink]); // Insert serie_id
+    await poolpg.query(insertBookQuery, [bookId, book_name, authorId, seriesId, serieIndex, bookGoodreadsLink]); // Insert serie_id
 };
 
 // Helper function to calculate the maximum number of IDs for a given length

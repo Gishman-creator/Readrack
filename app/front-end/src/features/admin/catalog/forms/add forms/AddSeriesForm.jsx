@@ -8,7 +8,7 @@ import { setAuthor } from '../../../slices/catalogSlice';
 
 function AddSeriesForm({ onClose }) {
   const authorDetailsAuthor = useSelector((state) => state.catalog.author);
-  const detailsAuthor = authorDetailsAuthor ? { id: authorDetailsAuthor.id, authorName: authorDetailsAuthor.nickname || authorDetailsAuthor.authorName } : {};
+  const detailsAuthor = authorDetailsAuthor ? { id: authorDetailsAuthor.id, author_name: authorDetailsAuthor.author_name } : {};
   const [seriesImageURL, setSeriesImageURL] = useState('');
   const [selectedImageFile, setSelectedImageFile] = useState(null);
 
@@ -30,14 +30,14 @@ function AddSeriesForm({ onClose }) {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       // console.log('Selected authors:', selectedAuthors);
-      if (authorSearch && !selectedAuthors.some(author => author.authorName === authorSearch)) {
+      if (authorSearch && !selectedAuthors.some(author => author.author_name === authorSearch)) {
         const fetchAuthors = async () => {
           setAuthorIsLoading(true);
           try {
             const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
             setAuthorOptions(response.data.results.map(author => ({
               id: author.id,
-              authorName: author.nickname ? author.nickname : author.authorName
+              author_name: author.author_name
             })));
             setAuthorIsLoading(false);
           } catch (error) {
@@ -86,7 +86,7 @@ function AddSeriesForm({ onClose }) {
     event.preventDefault();
     const formData = new FormData(event.target);
 
-    const seriesName = formData.get('serieName') || '';
+    const seriesName = formData.get('serie_name') || '';
 
     if (selectedImageFile) {
       formData.append('seriesImage', selectedImageFile); // Add the uploaded image file to form data
@@ -137,7 +137,7 @@ function AddSeriesForm({ onClose }) {
             <label className="block text-sm font-medium">Series Name:</label>
             <input
               type="text"
-              name="serieName"
+              name="serie_name"
               className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               required
             />
@@ -164,7 +164,7 @@ function AddSeriesForm({ onClose }) {
                     onClick={() => handleAuthorSelect(author)}
                     className="cursor-pointer px-4 py-2 hover:bg-gray-100"
                   >
-                    {author.authorName}
+                    {author.author_name}
                   </li>
                 ))}
               </ul>
@@ -182,7 +182,7 @@ function AddSeriesForm({ onClose }) {
             <div className="bg-green-700 rounded-lg my-2 flex flex-wrap gap-2 p-2">
               {selectedAuthors.map((author, index) => (
                 <span key={index} className="bg-[rgba(255,255,255,0.3)] flex items-center max-w-fit max-h-fit text-white font-poppins font-semibold px-2 py-1 rounded-lg text-sm space-x-1">
-                  <span>{author.authorName}</span>
+                  <span>{author.author_name}</span>
                   <span
                     className='text-xl cursor-pointer'
                     onClick={() => handleAuthorRemove(index)}
@@ -202,7 +202,7 @@ function AddSeriesForm({ onClose }) {
           <div className="mb-2 flex space-x-2">
             <div>
               <label className="block text-sm font-medium">Number of Books:</label>
-              <input type="number" name="numBooks" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
+              <input type="number" name="num_books" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
             <div>
               <label className="block text-sm font-medium">Genres:</label>
@@ -210,10 +210,10 @@ function AddSeriesForm({ onClose }) {
             </div>
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium">Series Link:</label>
+            <label className="block text-sm font-medium">Series link:</label>
             <input
               type="text"
-              name="link"
+              name="amazon_link"
               className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               onClick={(e) => e.target.select()}
             />

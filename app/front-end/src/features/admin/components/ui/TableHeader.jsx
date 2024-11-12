@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import Modal from '../Modal'; // Import your Modal component
 import { useSocket } from '../../../../context/SocketContext';
 
-function TableHeader({ hasShadow, openEditAuthorModal, openEditBooksModal, openEditSeriesModal, openEditCollectionsModal }) {
+function TableHeader({ hasShadow, openEditAuthorModal, openEditBooksModal, openEditSeriesModal }) {
   const dispatch = useDispatch();
   const socket = useSocket();
   const { activeTab, selectedRowIds } = useSelector((state) => state.catalog);
@@ -28,9 +28,6 @@ function TableHeader({ hasShadow, openEditAuthorModal, openEditBooksModal, openE
           break;
         case 'Series':
           openEditSeriesModal();
-          break;
-        case 'Collections':
-          openEditCollectionsModal();
           break;
         default:
           break;

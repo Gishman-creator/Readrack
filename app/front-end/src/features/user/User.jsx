@@ -13,7 +13,6 @@ import AboutUs from './about us/AboutUs';
 import SerieDetails from './detailsPages/SerieDetails';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 import Footer from './components/Footer';
-import CollectionDetails from './detailsPages/CollectionDetails';
 import NetworkErrorPage from '../../pages/NetworkErrorPage';
 
 function User() {
@@ -85,9 +84,8 @@ function User() {
             <Route path='/' element={<Navigate to='/series' />} />
             <Route path='/series' element={<Home />} />
             <Route path='/authors' element={<Home />} />
-            <Route path='/series/:serieId/:serieName?' element={<SerieDetails />} />
-            <Route path='/collections/:collectionId/:collectionName?' element={<CollectionDetails />} />
-            <Route path='/authors/:authorId/:authorName?' element={<AuthorDetails />} />
+            <Route path='/series/:serieId/:serie_name?' element={<SerieDetails />} />
+            <Route path='/authors/:authorId/:author_name?' element={<AuthorDetails />} />
             <Route path='/search' element={<SearchResults />} />
             <Route path='/about-us' element={<AboutUs />} />
             <Route path='/404' element={<NotFoundPage />} />

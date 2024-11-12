@@ -17,11 +17,6 @@ function EditSeriesForm({ onClose }) {
   const [authorOptions, setAuthorOptions] = useState([]);
   const [selectedAuthors, setSelectedAuthors] = useState([]);
 
-  const [collectionSearch, setCollectionSearch] = useState('');
-  const [collectionOptions, setCollectionOptions] = useState([]);
-  const [selectedCollections, setSelectedCollections] = useState([]); // Stores selected collection names
-  const [selectedCollectionIds, setSelectedCollectionIds] = useState([]); // Stores collection IDs
-  const [relatedCollections, setRelatedCollections] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [authorIsLoading, setAuthorIsLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(false);
@@ -45,18 +40,6 @@ function EditSeriesForm({ onClose }) {
 
         setSelectedAuthors(response.data.authors || '');
 
-        // Fetch related collections
-        if (data.related_collections) {
-          const collectionIds = data.related_collections.split(',');
-          const collectionNames = await Promise.all(
-            collectionIds.map(async (id) => {
-              const res = await axiosUtils(`/api/getCollectionById/${id}`, 'GET');
-              return res.data.collectionName;
-            })
-          );
-          setSelectedCollections(collectionNames);
-          setSelectedCollectionIds(collectionIds.map(Number));
-        }
         setFetchLoading(false);
 
       } catch (error) {
@@ -78,7 +61,7 @@ function EditSeriesForm({ onClose }) {
             const response = await axiosUtils(`/api/search?query=${authorSearch}&type=author`, 'GET');
             setAuthorOptions(response.data.results.map(author => ({
               author_id: author.id,
-              author_name: author.nickname || author.authorName
+              author_name: author.author_name
             })));
             setAuthorIsLoading(false);
           } catch (error) {
@@ -97,33 +80,6 @@ function EditSeriesForm({ onClose }) {
 
   }, [authorSearch]);
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (collectionSearch) {
-        const fetchCollections = async () => {
-          try {
-            const response = await axiosUtils(`/api/search?query=${collectionSearch}&type=collections`, 'GET');
-            // console.log('The found collections are:', response)
-            setCollectionOptions(response.data.results.map(collection => ({
-              id: collection.id,
-              collectionName: collection.collectionName
-            })));
-          } catch (error) {
-            console.error('Error fetching collections:', error);
-          }
-        };
-        fetchCollections();
-      } else {
-        setCollectionOptions([]);
-      }
-    }, 500); // 500ms delay
-
-    return () => {
-      clearTimeout(delayDebounceFn); // Clear timeout if authorSearch changes
-    };
-
-  }, [collectionSearch]);
-
   const handleAuthorChange = (e) => {
     setAuthorSearch(e.target.value);
   };
@@ -141,25 +97,6 @@ function EditSeriesForm({ onClose }) {
     setSelectedAuthors((prev) => prev.filter((author) => author.author_id !== authorId));
   };
 
-  const handleCollectionSelect = (collection) => {
-    // Prevent duplicate entries
-    if (!selectedCollectionIds.includes(collection.id)) {
-      setSelectedCollections([...selectedCollections, collection.collectionName]);
-      setSelectedCollectionIds([...selectedCollectionIds, collection.id]);
-    }
-    setCollectionSearch(''); // Clear the search input after selection
-    setCollectionOptions([]);
-  };
-
-  const handleCollectionRemove = (index) => {
-    const updatedCollections = [...selectedCollections];
-    const updatedCollectionIds = [...selectedCollectionIds];
-    updatedCollections.splice(index, 1);
-    updatedCollectionIds.splice(index, 1);
-    setSelectedCollections(updatedCollections);
-    setSelectedCollectionIds(updatedCollectionIds);
-  };
-
   const handleImageChange = (url) => {
     setSeriesImageURL(url);
   };
@@ -173,13 +110,12 @@ function EditSeriesForm({ onClose }) {
     event.preventDefault();
     const formData = new FormData(event.target);
 
-    formData.append('related_collections', selectedCollectionIds);
     let imageName = seriesData.image;
 
     if (selectedImageFile) {
       formData.append('seriesImage', selectedImageFile); // Add the uploaded image file to form data
     } else if (seriesImageURL && seriesImageURL !== seriesData.imageURL) {
-      const file = await downloadImage(seriesImageURL, seriesData.serieName);
+      const file = await downloadImage(seriesImageURL, seriesData.serie_name);
       if (file) {
         formData.append('seriesImage', file);
       } else {
@@ -222,8 +158,8 @@ function EditSeriesForm({ onClose }) {
               <label className="block text-sm font-medium">Series Name:</label>
               <input
                 type="text"
-                name="serieName"
-                defaultValue={seriesData.serieName || ''}
+                name="serie_name"
+                defaultValue={seriesData.serie_name || ''}
                 className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
                 required
               />
@@ -271,7 +207,7 @@ function EditSeriesForm({ onClose }) {
                 <div className="bg-green-700 rounded-lg my-2 flex flex-wrap gap-2 p-2">
                   {selectedAuthors.map((author, index) => (
                     <span key={author.author_id} className="bg-[rgba(255,255,255,0.3)] flex items-center max-w-fit max-h-fit text-white font-poppins font-semibold px-2 py-1 rounded-lg text-sm space-x-1">
-                      <span>{author.nickname || author.author_name}</span>
+                      <span>{author.author_name}</span>
                       <span
                         className='text-xl cursor-pointer'
                         onClick={() => handleRemoveAuthor(author.author_id)}
@@ -289,51 +225,13 @@ function EditSeriesForm({ onClose }) {
                 </div>
               )}
             </div>
-            <div className="mb-4 relative">
-              <label className="block text-sm font-medium">Search Collections:</label>
-              <input
-                type="text"
-                value={collectionSearch}
-                onChange={(e) => setCollectionSearch(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-2 py-1"
-                placeholder="Search collections..."
-              />
-              {collectionOptions.length > 0 && (
-                <ul className="border border-gray-300 rounded-lg mt-2 max-h-60 overflow-auto bg-white absolute w-full z-10">
-                  {collectionOptions.map((collection) => (
-                    <li
-                      key={collection.id}
-                      onClick={() => handleCollectionSelect(collection)}
-                      className="cursor-pointer px-4 py-2 hover:bg-gray-100"
-                    >
-                      {collection.collectionName}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            {selectedCollections.length > 0 && (
-              <div className="bg-green-700 rounded-lg mt-2 flex flex-wrap gap-2 p-2">
-                {selectedCollections.map((collection, index) => (
-                  <span key={index} className="bg-[rgba(255,255,255,0.3)] flex items-center max-w-fit max-h-fit text-white font-poppins font-semibold px-2 py-1 rounded-lg text-sm space-x-1">
-                    <span>{collection}</span>
-                    <span
-                      className='text-xl cursor-pointer'
-                      onClick={() => handleCollectionRemove(index)}
-                    >
-                      &times;
-                    </span>
-                  </span>
-                ))}
-              </div>
-            )}
             <div className="mb-2 flex space-x-2">
               <div>
                 <label className="block text-sm font-medium">Number of Books:</label>
                 <input
                   type="number"
-                  name="numBooks"
-                  defaultValue={seriesData.numBooks || ''}
+                  name="num_books"
+                  defaultValue={seriesData.num_books || ''}
                   className="w-full border border-gray-300 rounded-lg px-2 py-1"
                 />
               </div>
@@ -351,8 +249,8 @@ function EditSeriesForm({ onClose }) {
               <label className="block text-sm font-medium">Series Link:</label>
               <input
                 type="text"
-                name="link"
-                defaultValue={seriesData.link || ''}
+                name="amazon_link"
+                defaultValue={seriesData.amazon_link || ''}
                 className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
                 onClick={(e) => e.target.select()}
               />

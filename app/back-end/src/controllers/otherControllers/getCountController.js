@@ -20,7 +20,7 @@ exports.getCount = async (req, res) => {
                 WHERE (SELECT COUNT(*) 
                        FROM books b 
                        WHERE b.serie_id = s.id
-                ) >= s."numBooks";
+                ) >= s.num_books;
             `);
             
             // Incomplete series count
@@ -30,7 +30,7 @@ exports.getCount = async (req, res) => {
                 WHERE (SELECT COUNT(*) 
                        FROM books b 
                        WHERE b.serie_id = s.id
-                ) < s."numBooks";
+                ) < s.num_books;
             `);
 
             res.status(200).json({
@@ -51,7 +51,7 @@ exports.getCount = async (req, res) => {
                     FROM series s
                     LEFT JOIN books b ON s.id = b.serie_id
                     WHERE s.author_id = a.id
-                    AND (SELECT COUNT(*) FROM books b WHERE b.serie_id = s.id) < s."numBooks"
+                    AND (SELECT COUNT(*) FROM books b WHERE b.serie_id = s.id) < s."num_books"
                 );
             `);
 
@@ -64,7 +64,7 @@ exports.getCount = async (req, res) => {
                     FROM series s
                     LEFT JOIN books b ON s.id = b.serie_id
                     WHERE s.author_id = a.id
-                    AND (SELECT COUNT(*) FROM books b WHERE b.serie_id = s.id) < s."numBooks"
+                    AND (SELECT COUNT(*) FROM books b WHERE b.serie_id = s.id) < s."num_books"
                 );
             `);
 

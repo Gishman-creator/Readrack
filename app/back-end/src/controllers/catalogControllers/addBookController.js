@@ -13,15 +13,14 @@ const generateRandomId = () => {
 
 const addBook = async (req, res) => {
   try {
-    const {
-      bookName,
+    let {
+      book_name,
       author_id,
       serie_id,
-      collection_id,
-      publishDate,
-      serieIndex,
-      genres,
-      link,
+      publish_date,
+      serie_index,
+      genre,
+      amazon_link,
     } = req.body;
 
     const image = req.file ? await putImage('', req.file, 'books') : null;
@@ -43,27 +42,25 @@ const addBook = async (req, res) => {
 
     // Convert empty strings to null for foreign key fields
     const serieId = Number.isNaN(parseInt(serie_id)) ? 0 : parseInt(serie_id);
-    const collectionId = Number.isNaN(parseInt(collection_id)) ? 0 : parseInt(collection_id);
-    const serie_index = Number.isNaN(parseInt(serieIndex)) ? 0 : parseInt(serieIndex);
+    const serieIndex = Number.isNaN(parseInt(serie_index)) ? 0 : parseInt(serie_index);
 
     // Insert book data into the database with the unique ID
     const query = `
       INSERT INTO books (
-        id, image, "bookName", author_id, serie_id, collection_id, genres, "publishDate", "serieIndex", link
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        id, image, "book_name", author_id, serie_id, genre, publish_date, serie_index, amazon_link
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     `;
 
     const values = [
       uniqueId,
       image,
-      bookName,
+      book_name,
       author_id,
       serieId,
-      collectionId,
-      genres || null,
-      publishDate || null,
-      serie_index,
-      link || null,
+      genre || null,
+      publish_date || null,
+      serieIndex,
+      amazon_link || null,
     ];
 
     console.log('values', values);
@@ -71,10 +68,9 @@ const addBook = async (req, res) => {
     await poolpg.query(query, values);
 
     const { rows: bookData } = await poolpg.query(`
-      SELECT books.*, series."serieName" AS serie_name, collections."collectionName" AS collection_name
+      SELECT books.*, series.serie_name
       FROM books
-      LEFT JOIN series ON books.serie_id = series.id
-      LEFT JOIN collections ON books.collection_id = collections.id
+      LEFT JOIN series ON books.serie_id::text = series.id::text
       WHERE books.id = $1
     `, [uniqueId]);
 

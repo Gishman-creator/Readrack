@@ -13,7 +13,6 @@ import Login from '../authentication/components/Login';
 import NotFoundPage from '../../pages/NotFoundPage';
 import NetworkErrorPage from '../../pages/NetworkErrorPage';
 import logo from '../../assets/logo1.jpg';
-import Banner from './components/Banner';
 
 function Admin() {
     const [isLoggedIn, setIsLoggedIn] = useState(null);  // Manage local login state
@@ -78,7 +77,6 @@ function Admin() {
             <div className="flex min-h-screen bg-[#f9f9f9] font-poppins">
                 <Sidebar />
                 <div className={`flex-1 bg-[#f9f9f9] transition-margin duration-300 w-full ${isExpanded ? 'md:ml-[13.1rem]' : 'md:ml-[4.8rem]'}`}>
-                    <Banner />
                     <NavBar />
                     <div className="p-4 px-5 bg-[#f9f9f9]">
                         <Routes>

@@ -25,20 +25,7 @@ const addAuthor = async (req, res) => {
 
     const image = req.file ? await putImage('', req.file, 'authors') : null;
 
-    let uniqueId;
-    let isUnique = false;
-
-    // Generate a unique ID if necessary
-    while (!isUnique) {
-      uniqueId = generateRandomId();
-
-      // Check if the ID already exists in PostgreSQL
-      const { rows } = await poolpg.query('SELECT id FROM authors WHERE id = $1', [uniqueId]);
-
-      if (rows.length === 0) {
-        isUnique = true;
-      }
-    }
+    const uniqueId = await generateUniqueId('authors', 6);
 
     // Insert author data into the PostgreSQL database
     const insertQuery = `
@@ -68,14 +55,9 @@ const addAuthor = async (req, res) => {
 
     // Fetch the newly added author data with the number of series and books
     const fetchQuery = `
-      SELECT a.*, 
-        COUNT(DISTINCT s.id) AS num_series, 
-        COUNT(DISTINCT b.id) AS num_books
-      FROM authors a
-      LEFT JOIN series s ON s.author_id LIKE '%' || a.id || '%'
-      LEFT JOIN books b ON b.author_id LIKE '%' || a.id || '%'
-      WHERE a.id = $1
-      GROUP BY a.id
+      SELECT *
+      FROM authors
+      WHERE id = $1
     `;
     const { rows: authorData } = await poolpg.query(fetchQuery, [uniqueId]);
 

@@ -18,6 +18,13 @@ exports.getBooks = async (req, res) => {
     FROM books
     LEFT JOIN series ON books.serie_id::text = series.id::text
     `;
+
+    // Query to count total books
+    const countQuery = `
+    SELECT COUNT(*) AS "totalCount" 
+    FROM books
+    `;
+
     const queryParams = [];
     
     if (typeof limitStart === 'number' && typeof limitEnd === 'number') {
@@ -27,12 +34,6 @@ exports.getBooks = async (req, res) => {
     
     const booksResult = await poolpg.query(dataQuery, queryParams);
     const books = booksResult.rows;
-
-    // Query to count total books
-    const countQuery = `
-    SELECT COUNT(*) AS "totalCount" 
-    FROM books
-    `;
     
     const countResult = await poolpg.query(countQuery);
     const totalCount = parseInt(countResult.rows[0].totalCount, 10);

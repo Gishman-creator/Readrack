@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axiosUtils from '../../../utils/axiosUtils';
-import { capitalize, capitalizeGenres, spacesToHyphens } from '../../../utils/stringUtils';
+import { capitalize, capitalizeGenres, formatSeriesName, spacesToHyphens } from '../../../utils/stringUtils';
 import { bufferToBlobURL } from '../../../utils/imageUtils';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -55,12 +55,16 @@ function SerieDetails() {
       try {
         const serieResponse = await axiosUtils(`/api/getSerieById/${serieId}`, 'GET');
         setSerieData(serieResponse.data);
+
         console.log('The serie data are:', serieResponse.data);
 
         // If serie_name is not in the URL, update it
         if (!serie_name || serie_name !== serieResponse.data.serie_name) {
           navigate(`/series/${serieId}/${spacesToHyphens(serieResponse.data.serie_name)}`, { replace: true });
         }
+
+        // Update the tab title with the series name
+        document.title = `${formatSeriesName(serieResponse.data.serie_name)} by ${serieResponse.data.authors[0].author_name} - readrack`;
 
         const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}`, 'GET');
         console.log('Books response:', booksResponse.data); // Debugging
@@ -177,10 +181,10 @@ function SerieDetails() {
             <img src={serieData.imageURL || blank_image} alt="" className='h-[16rem] w-full bg-[rgba(3,149,60,0.08)] rounded-lg mx-auto object-cover' loading="lazy" />
             <div className='w-full mx-auto'>
               <p
-                title={capitalize(serieData.serie_name)}
+                title={formatSeriesName(serieData.serie_name)}
                 className='font-poppins font-medium text-lg text-center md:text-left mt-2 md:overflow-hidden md:whitespace-nowrap md:text-ellipsis cursor-default'
               >
-                {capitalize(serieData.serie_name)}
+                {formatSeriesName(serieData.serie_name)}
               </p>
               <p
                 className='font-arima text-center md:text-left'

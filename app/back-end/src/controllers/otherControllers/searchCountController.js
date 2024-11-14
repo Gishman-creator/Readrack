@@ -13,7 +13,7 @@ exports.incrementSearchCount = async (req, res) => {
             return res.status(400).json({ error: 'Invalid type' });
         }
 
-        const query = `UPDATE ${tableName} SET search_count = search_count + 1 WHERE id = $1`;
+        const query = `UPDATE ${tableName} SET search_count = COALESCE(search_count, 0) + 1 WHERE id = $1`;
         const { rowCount } = await poolpg.query(query, [id]);
 
         if (rowCount === 0) {

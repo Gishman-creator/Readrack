@@ -19,11 +19,21 @@ exports.getSeries = async (req, res) => {
       FROM series
       LEFT JOIN books ON books.serie_id::text = series.id::text
     `;
+
+    // Query to count total books
+    let countQuery = `
+    SELECT COUNT(*) AS "totalCount" 
+    FROM series
+    `;
+
     const queryParams = [];
+    const countQueryParams = [];
 
     if (genre && genre !== 'null') {
       dataQuery += ' WHERE series.genre ILIKE $1';
+      countQuery += ' WHERE series.genre ILIKE $1';
       queryParams.push(`%${genre}%`);
+      countQueryParams.push(`%${genre}%`);
     }
 
     dataQuery += ' GROUP BY series.id ORDER BY series.search_count DESC';
@@ -37,13 +47,7 @@ exports.getSeries = async (req, res) => {
     const results = await poolpg.query(dataQuery, queryParams);
     const dataRows = results.rows;
 
-    // Query to count total books
-    const countQuery = `
-    SELECT COUNT(*) AS "totalCount" 
-    FROM series
-    `;
-
-    const countResult = await poolpg.query(countQuery);
+    const countResult = await poolpg.query(countQuery, countQueryParams);
     const totalCount = parseInt(countResult.rows[0].totalCount, 10);
 
     for (const dataRow of dataRows) {

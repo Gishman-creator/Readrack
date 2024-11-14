@@ -13,21 +13,27 @@ exports.getAuthors = async (req, res) => {
 
   try {
     let dataQuery = `
-      SELECT a.*, 
-        COUNT(DISTINCT s.id) AS num_series, 
-        COUNT(DISTINCT b.id) AS num_books
-      FROM authors a
-      LEFT JOIN series s ON s.author_id::text LIKE '%' || a.id::text || '%'
-      LEFT JOIN books b ON b.author_id::text LIKE '%' || a.id::text || '%'
+      SELECT *
+      FROM authors
     `;
+
+    // Query to count total books
+    let countQuery = `
+    SELECT COUNT(*) AS "totalCount" 
+    FROM authors
+    `;
+
     let queryParams = [];
+    let countQueryParams = [];
 
     if (genre && genre !== 'null') {
-      dataQuery += ' WHERE a.genre ILIKE $1';
+      dataQuery += ' WHERE genre ILIKE $1';
+      countQuery += ' WHERE genre ILIKE $1';
       queryParams.push(`%${genre}%`);
+      countQueryParams.push(`%${genre}%`);
     }
     
-    dataQuery += ' GROUP BY a.id ORDER BY search_count DESC';
+    dataQuery += ' ORDER BY search_count DESC';
     
     if (typeof limitStart === 'number' && typeof limitEnd === 'number') {
       dataQuery += ` LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`;
@@ -37,14 +43,8 @@ exports.getAuthors = async (req, res) => {
     const [dataRows] = await Promise.all([
       poolpg.query(dataQuery, queryParams)
     ]);
-
-    // Query to count total books
-    const countQuery = `
-    SELECT COUNT(*) AS "totalCount" 
-    FROM authors
-    `;
     
-    const countResult = await poolpg.query(countQuery);
+    const countResult = await poolpg.query(countQuery, countQueryParams);
     const totalCount = parseInt(countResult.rows[0].totalCount, 10);
 
     let url = null;
@@ -71,14 +71,9 @@ exports.getAuthorById = async (req, res) => {
 
   try {
     const result = await poolpg.query(`
-      SELECT a.*, 
-        COUNT(DISTINCT s.id) AS num_series, 
-        COUNT(DISTINCT b.id) AS num_books
-      FROM authors a
-      LEFT JOIN series s ON s.author_id::text LIKE '%' || a.id::text || '%'
-      LEFT JOIN books b ON b.author_id::text LIKE '%' || a.id::text || '%'
-      WHERE a.id = $1
-      GROUP BY a.id
+      SELECT *
+      FROM authors
+      WHERE id = $1
       LIMIT $2
     `, [id, limit]);
 

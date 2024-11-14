@@ -349,7 +349,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal })
                         <td className="px-4 py-2">{item.authors.map(author => capitalize(author.author_name)).join(', ')}</td>
                         <td className="px-4 py-2">{`${parseInt(item.currentBooks)}/${item.num_books}`}</td>
                         <td className="px-4 py-2 overflow-hidden whitespace-nowrap text-ellipsis">
-                            {`${item.genres.substring(0, 15)}...`}
+                            {item.genre ? `${item.genre.substring(0, 15)}...` : ""}
                         </td>
                         <td className="px-4 py-2">
                             <a href={item.amazon_link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">

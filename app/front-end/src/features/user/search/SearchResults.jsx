@@ -14,6 +14,12 @@ const SearchResults = () => {
     const initialQuery = searchParams.get('q') || '';
     const [type, setType] = useState(searchParams.get('type') || 'All');
 
+    if(initialQuery) {
+        document.title = `Search results for "${initialQuery}" - readrack`;
+    } else {
+        document.title = `Search - readrack`;
+    }
+
     // Available types for the dropdown
     const types = ['All', 'Series', 'Authors'];
 

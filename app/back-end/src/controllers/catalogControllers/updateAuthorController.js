@@ -22,14 +22,9 @@ const updateAuthor = async (req, res) => {
 
         // Fetch updated author data
         const authorResult = await poolpg.query(`
-            SELECT a.*, 
-              COUNT(DISTINCT s.id) AS num_series, 
-              COUNT(DISTINCT b.id) AS num_books
-            FROM authors a
-            LEFT JOIN series s ON s.author_id::text LIKE '%' || a.id::text || '%'
-            LEFT JOIN books b ON b.author_id::text LIKE '%' || a.id::text || '%'
-            WHERE a.id = $1
-            GROUP BY a.id
+            SELECT *
+            FROM authors
+            WHERE id = $1
         `, [id]);
 
         if (authorResult.rows.length === 0) {

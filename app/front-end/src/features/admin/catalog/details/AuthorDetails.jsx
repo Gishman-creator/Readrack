@@ -91,6 +91,9 @@ function AuthorDetails() {
           navigate(`/admin/catalog/authors/${authorId}/${spacesToHyphens(authorResponse.data.author_name)}`, { replace: true });
         }
 
+        // Update the tab title with the series name
+        document.title = `Admin - ${capitalize(authorResponse.data.author_name)}`;
+
         // Fetching series by the author
         const seriesResponse = await axiosUtils(`/api/getSeriesByAuthorId/${authorResponse.data.id}`, 'GET');
         console.log('Series response:', seriesResponse.data); // Debugging
@@ -98,17 +101,17 @@ function AuthorDetails() {
         const sortedSeries = seriesResponse.data.series.sort(sortByFirstBookYearAsc);
 
         setSeries(sortedSeries);
-        setSeriesCount(seriesResponse.data.totalCount);
+        setSeriesCount(seriesResponse.data.series.length);
 
         // Fetching books by the author
         const booksResponse = await axiosUtils(`/api/getBooksByAuthorId/${authorResponse.data.id}`, 'GET');
         // console.log('Books response:', booksResponse.data); // Debugging
-            
+
         // Sort the books by publish date or custom date
         const sortedBooks = booksResponse.data.books.sort(sortByPublishDateAsc);
 
         setBooks(sortedBooks);
-        setBooksCount(booksResponse.data.totalCount);
+        setBooksCount(booksResponse.data.books.length);
 
         setIsLoading(false);
       } catch (error) {
@@ -187,7 +190,7 @@ function AuthorDetails() {
         console.log('Serie count is:', seriesCount);
         setSeriesCount(seriesCount + 1);
         console.log('Serie count set to:', seriesCount);
-        if (seriesLimit >= seriesCount) {setSeriesLimit(seriesLimit + 1)};
+        if (seriesLimit >= seriesCount) { setSeriesLimit(seriesLimit + 1) };
       }
     });
 
@@ -205,7 +208,7 @@ function AuthorDetails() {
           return updatedData.sort(sortByPublishDateAsc);
         });
         setBooksCount(booksCount + 1);
-        if (booksLimit >= booksCount) {setBooksLimit(booksLimit + 1)};
+        if (booksLimit >= booksCount) { setBooksLimit(booksLimit + 1) };
       }
     });
 
@@ -299,8 +302,8 @@ function AuthorDetails() {
             </p>
             <div className='font-arima font-medium text-sm text-center md:text-left'>
               <span>{capitalize(authorData.nationality)}</span>
-              <span className={`${authorData.dob || authorData.customDob  ? 'inline' : 'hidden'}`}>,</span>
-              <span className={`${authorData.dob || authorData.customDob  ? 'block' : 'hidden'}`}>Born on {authorData.dob}</span>
+              <span className={`${authorData.dob || authorData.customDob ? 'inline' : 'hidden'}`}>,</span>
+              <span className={`${authorData.dob || authorData.customDob ? 'block' : 'hidden'}`}>Born on {authorData.dob}</span>
             </div>
             {authorData.dod && (
               <>
@@ -311,7 +314,7 @@ function AuthorDetails() {
             <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
               <p className='md:inline font-medium font-poppins text-center md:text-left text-sm'>Genres:</p>
               <div className='md:inline flex flex-wrap gap-x-2 md:ml-1 text-sm text-center md:text-left font-arima items-center justify-center md:justify-start w-[90%] mx-auto'>
-                {capitalizeGenres(authorData.genres)}
+                {capitalizeGenres(authorData.genre)}
               </div>
             </div>
             <div className='flex justify-evenly items-center mt-4'>
@@ -469,7 +472,18 @@ function AuthorDetails() {
                     onClick={() => handleEditClick('book', item)}  // Handle click to open modal
                   />
                 </div>
-                <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.author_name)).join(', ')}</p>
+                <p className='font-arima text-sm'>
+                  by {item.authors.map((author, index) => (
+                    <span
+                      key={index}
+                      title={author.pen_name && author.pen_name.includes(item.pen_name) ? `${author.author_name}'s Pseudonym` : author.author_name}
+                    >
+                      {/* Check if pen_name matches the book's pen_name, otherwise display author_name */}
+                      {author.pen_name && author.pen_name.includes(item.pen_name) ? capitalize(item.pen_name) : capitalize(author.author_name)}
+                      {index < item.authors.length - 1 && ', '}
+                    </span>
+                  ))}
+                </p>
                 <p className='font-arima text-slate-400 text-sm mt-1'>
                   published {item.publish_date}
                 </p>

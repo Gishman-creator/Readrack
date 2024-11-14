@@ -39,6 +39,26 @@ export function calculateAgeAtDeath (dob, dod) {
 
 export function spacesToHyphens(str) {
     if (!str) return str;
-    return str.split(' ').join('-');  // Replace spaces with hyphens
+    return str.toLowerCase().split(' ').join('-');  // Replace spaces with hyphens
+}
+
+// New function to format series name
+export function formatSeriesName(serieName) {
+    if (!serieName) return '';
+
+    // Remove extra spaces and capitalize each word
+    let formattedName = capitalize(serieName.trim());
+
+    // Check if the name ends with "series", "mystery", or "mysteries"
+    const endsWithSeries = /(series|mystery|mysteries)$/i.test(formattedName);
+    const endsWithSerie = /serie$/i.test(formattedName);
+
+    if (endsWithSeries) {
+        return formattedName; // Return as is if it ends with "series", "mystery", or "mysteries"
+    } else if (endsWithSerie) {
+        return formattedName.replace(/serie$/i, 'Series'); // Replace "serie" with "Series"
+    } else {
+        return `${formattedName} Series`; // Append "Series" if it doesn't end with any of the above
+    }
 }
 

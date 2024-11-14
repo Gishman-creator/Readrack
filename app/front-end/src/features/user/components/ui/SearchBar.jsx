@@ -9,6 +9,7 @@ import { delay } from 'lodash';
 const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     const searchBarRef = useRef(null);
     const inputRef = useRef(null);
+    const controllerRef = useRef(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isLoading, setIsLoading] = useState(false); // Loading state
@@ -61,29 +62,48 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     }, [searchTerm]);
 
     const searchInstant = async (term) => {
-        if(!term) return;
+        // Cancel any previous request
+        if (controllerRef.current) {
+            console.log("Aborting previous fetch");
+            controllerRef.current.abort();
+        }
+
+        // Create a new AbortController for the current fetch
+        const controller = new AbortController();
+        const signal = controller.signal;
+        controllerRef.current = controller;
+
+        if (!term) return;
         setIsInputFocused(true);
         setIsLoading(true); // Set loading to true when search starts
+
         try {
-            const response = await axiosUtils('/api/search', 'GET', {}, {}, { query: term, type: 'all' });
+            const response = await axiosUtils('/api/search', 'GET', {}, {}, { query: term, type: 'all' }, signal);
             const results = response.data.results || []; // Ensure results is an array
-            // console.log('The results are:', response.data)
             setSearchResults(results.slice(0, 5));
         } catch (error) {
-            console.error('Error searching:', error);
-            setSearchResults([]); // Clear results on error
+            // Check if the error was due to an aborted request
+            if (axios.isCancel(error)) {
+                console.log('Request canceled:', error.message);
+            } else {
+                console.error('Error searching:', error);
+                setSearchResults([]); // Clear results on error
+            }
         } finally {
             setIsLoading(false); // Set loading to false after request completes
         }
     };
 
+
     const handleSearchSubmit = (e) => {
         // console.log('Handle search submit called');
-        e.preventDefault(); // Prevent form submission
-        navigate(`/search?q=${decodeURIComponent(searchTerm)}&type=all`);
-        setIsInputFocused(false);
-        setSearchTerm('');
-        toggleSearch(false);
+        if (searchTerm) {
+            e.preventDefault(); // Prevent form submission
+            navigate(`/search?q=${decodeURIComponent(searchTerm)}&type=all`);
+            setIsInputFocused(false);
+            setSearchTerm('');
+            toggleSearch(false);
+        }
     };
 
     const handleSelectResult = (result) => {
@@ -93,6 +113,7 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
         } else if (result.type == 'author') {
             navigate(`/authors/${result.id}/${spacesToHyphens(result.name)}`);
         }
+        toggleSearch(false);
         setIsInputFocused(false);
         incrementSearchCount(result.type, result.id);
     };
@@ -139,18 +160,10 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
                                     className='on-click w-7 h-7 p-1 cursor-pointer font-bold rounded-lg text-[#000]'
                                 />
                         ) : (
-                            searchTerm ?
-                                <XMarkIcon
-                                    className="w-6 h-6 mr-1 px-1 cursor-pointer font-bold rounded-lg text-[#000] on-click"
-                                    onClick={clearSearch} // Clear search term when clicked
-                                />
-                                :
-                                <MagnifyingGlassIcon
-                                    type='submit'
-                                    onClick={handleSearchSubmit} // Ensure this triggers form submission
-                                    className='on-click w-7 h-7 p-1 cursor-pointer font-bold rounded-lg text-[#000]'
-                                />
-
+                            <XMarkIcon
+                                className="w-6 h-6 mr-1 px-1 cursor-pointer font-bold rounded-lg text-[#000] on-click"
+                                onClick={clearSearch} // Clear search term when clicked
+                            />
                         )}
                     </form>
                 </div>

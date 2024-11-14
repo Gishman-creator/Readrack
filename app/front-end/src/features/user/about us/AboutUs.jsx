@@ -1,6 +1,7 @@
 import React from 'react'
 
 function AboutUs() {
+    document.title = 'About us - readrack';
     return (
         <div className='px-[4%] sm:px-[12%] space-y-4 mb-10'>
             <h2 className='font-poppins font-semibold text-xl pt-4 leading-3'>About readrack</h2>

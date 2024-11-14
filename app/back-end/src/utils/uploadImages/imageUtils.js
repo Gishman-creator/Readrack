@@ -29,14 +29,19 @@ exports.putImage = async (buffer) => {
         imageKey = randomImageName();
 
         try {
-            // Check if the generated imageKey is already in the database
-            const { rowCount } = await poolpg.query(
+            // Check if the generated imageKey is unique across the authors, series, and books tables
+            const queries = [
                 'SELECT 1 FROM books WHERE image = $1',
-                [imageKey]
-            );
+                'SELECT 1 FROM authors WHERE image = $1',
+                'SELECT 1 FROM series WHERE image = $1'
+            ];
+            
+            const promises = queries.map(query => poolpg.query(query, [imageKey]));
+            const results = await Promise.all(promises);
 
-            if (rowCount === 0) {
-                isUnique = true; // If rowCount is 0, the imageKey is unique
+            // Check if imageKey is unique in all tables
+            if (results.every(result => result.rowCount === 0)) {
+                isUnique = true; // If imageKey is unique across all tables
             }
         } catch (error) {
             console.error('Database check error:', error);

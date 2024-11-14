@@ -49,16 +49,11 @@ exports.recommendAuthors = async (req, res) => {
         console.log('Mapped Genre', mappedGenres);
 
         const query = `
-            SELECT a.*, 
-              COUNT(DISTINCT s.id) AS num_series, 
-              COUNT(DISTINCT b.id) AS num_books
-            FROM authors a
-            LEFT JOIN series s ON s.author_id::TEXT ILIKE CONCAT('%', a.id::TEXT, '%')
-            LEFT JOIN books b ON b.author_id::TEXT ILIKE CONCAT('%', a.id::TEXT, '%')
-            WHERE (${mappedGenres.map((genre, index) => `s.genre::TEXT ILIKE $${index + 1}`).join(' OR ')})
-            AND a.id != $${mappedGenres.length + 1}
-            GROUP BY a.id
-            ORDER BY a."search_count" DESC
+            SELECT *
+            FROM authors
+            WHERE (${mappedGenres.map((genre, index) => `genre::TEXT ILIKE $${index + 1}`).join(' OR ')})
+            AND id != $${mappedGenres.length + 1}
+            ORDER BY search_count DESC
             LIMIT 10;
         `;
 

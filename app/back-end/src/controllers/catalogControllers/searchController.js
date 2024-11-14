@@ -38,7 +38,7 @@ exports.search = async (req, res) => {
   try {
     // Initialize queries
     let seriesQuery = 'SELECT * FROM series';
-    let authorsQuery = `SELECT a.*, COUNT(DISTINCT s.id) AS num_series, COUNT(DISTINCT b.id) AS num_books FROM authors a LEFT JOIN series s ON s.author_id::text LIKE '%' || a.id::text || '%' LEFT JOIN books b ON b.author_id::text LIKE '%' || a.id::text || '%' `;
+    let authorsQuery = `SELECT * FROM authors`;
     let booksQuery = 'SELECT books.*, series.serie_name FROM books LEFT JOIN series ON books.serie_id::text = series.id::text';
     let seriesCountQuery = 'SELECT COUNT(*) AS "totalCount" FROM series';
     let authorsCountQuery = 'SELECT COUNT(*) AS "totalCount" FROM authors';
@@ -59,7 +59,7 @@ exports.search = async (req, res) => {
 
       // Append WHERE clauses
       seriesQuery += ` WHERE ${seriesCondition} ORDER BY search_count DESC`;
-      authorsQuery += ` WHERE ${authorsCondition} GROUP BY a.id ORDER BY search_count DESC`;
+      authorsQuery += ` WHERE ${authorsCondition} ORDER BY search_count DESC`;
       booksQuery += ` WHERE ${booksCondition} ORDER BY search_count DESC`;
 
       seriesCountQuery += ` WHERE ${seriesCondition}`;

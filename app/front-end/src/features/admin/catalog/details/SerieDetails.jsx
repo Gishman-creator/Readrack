@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axiosUtils from '../../../../utils/axiosUtils';
-import { capitalize, capitalizeGenres, spacesToHyphens } from '../../../../utils/stringUtils';
+import { capitalize, capitalizeGenres, formatSeriesName, spacesToHyphens } from '../../../../utils/stringUtils';
 import { bufferToBlobURL } from '../../../../utils/imageUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -81,6 +81,9 @@ function SerieDetails() {
           navigate(`/admin/catalog/series/${serieId}/${spacesToHyphens(serieResponse.data.serie_name)}`, { replace: true });
         }
 
+        // Update the tab title with the series name
+        document.title = `Admin - ${formatSeriesName(serieResponse.data.serie_name)} by ${serieResponse.data.authors[0].author_name}`;
+
         const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}`, 'GET');
         console.log('Books response:', booksResponse.data); // Debugging
             
@@ -88,7 +91,7 @@ function SerieDetails() {
         const sortedBooks = booksResponse.data.books.sort(sortBySerieIndexAsc);
 
         setBooks(sortedBooks);
-        setBooksCount(booksResponse.data.totalCount);
+        setBooksCount(booksResponse.data.books.length);
         // console.log('The total count is:', booksResponse.data.totalCount);
 
         setIsLoading(false);
@@ -251,7 +254,7 @@ function SerieDetails() {
             <div className='w-full md:items-center mt-4 leading-3 md:max-w-[90%]'>
               <p className='md:inline font-medium font-poppins text-center md:text-left text-sm'>Genres:</p>
               <div className='md:inline flex flex-wrap gap-x-2 md:ml-1 text-sm text-center md:text-left font-arima items-center justify-center md:justify-start w-[90%] mx-auto'>
-                {capitalizeGenres(serieData.genres)}
+                {capitalizeGenres(serieData.genre)}
               </div>
             </div>
           </div>

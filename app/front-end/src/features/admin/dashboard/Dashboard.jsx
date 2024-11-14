@@ -3,6 +3,7 @@ import AreaChart from './charts/AreaChart';
 import axiosUtils from '../../../utils/axiosUtils';
 
 function Dashboard() {
+    document.title = 'Dashboard - readrack';
     const [counts, setCounts] = useState({
         books: 0,
         series: { total: 0, complete: 0, incomplete: 0 },

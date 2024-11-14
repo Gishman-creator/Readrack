@@ -7,6 +7,7 @@ import VerifyEmail from './components/VerifyEmail';
 import Logout from './components/Logout';
 
 function Authentication() {
+    document.title = 'Login - readrack';
     return (
         <div className=" font-poppins min-h-screen bg-[#f6f9f2] flex items-center justify-center">
             <Routes>

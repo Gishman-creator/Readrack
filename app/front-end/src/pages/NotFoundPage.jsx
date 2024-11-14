@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 
 function NotFoundPage({ type }) {
 
+  document.title = 'Page not found - readrack';
+
   let data;
   
   if(type) {

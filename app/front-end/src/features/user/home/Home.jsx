@@ -15,6 +15,8 @@ export default function Home() {
     const activeGenre = useSelector((state) => state.user.activeGenre);
     console.log(`Navigating to ${activeTab}...`);
 
+    if(activeTab) document.title = `${activeTab} - readrack`;
+
     const [pageLimitStart, setPageLimitStart] = useState();
     const [pageLimitEnd, setPageLimitEnd] = useState();
     const [pageInterval, setPageInterval] = useState(0);

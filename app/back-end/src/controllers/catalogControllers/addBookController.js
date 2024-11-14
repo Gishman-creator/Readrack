@@ -5,11 +5,8 @@ const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() }); // Use memory storage for image blob
 const { putImage, getImageURL } = require('../../utils/imageUtils');
 const { getAuthorsByIds } = require('../../utils/getUtils');
+const { generateUniqueId } = require('../../utils/idUtils');
 
-// Function to generate a random ID
-const generateRandomId = () => {
-  return Math.floor(100000 + Math.random() * 900000); // Generate a random 6-digit integer
-};
 
 const addBook = async (req, res) => {
   try {
@@ -25,20 +22,7 @@ const addBook = async (req, res) => {
 
     const image = req.file ? await putImage('', req.file, 'books') : null;
 
-    let uniqueId;
-    let isUnique = false;
-
-    // Generate a unique ID
-    while (!isUnique) {
-      uniqueId = generateRandomId();
-
-      // Check if the ID already exists in PostgreSQL
-      const { rows } = await poolpg.query('SELECT id FROM books WHERE id = $1', [uniqueId]);
-
-      if (rows.length === 0) {
-        isUnique = true;
-      }
-    }
+    const uniqueId = await generateUniqueId('books', 6)
 
     // Convert empty strings to null for foreign key fields
     const serieId = Number.isNaN(parseInt(serie_id)) ? 0 : parseInt(serie_id);
@@ -47,7 +31,7 @@ const addBook = async (req, res) => {
     // Insert book data into the database with the unique ID
     const query = `
       INSERT INTO books (
-        id, image, "book_name", author_id, serie_id, genre, publish_date, serie_index, amazon_link
+        id, image, book_name, author_id, serie_id, genre, publish_date, serie_index, amazon_link
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     `;
 
@@ -64,6 +48,14 @@ const addBook = async (req, res) => {
     ];
 
     console.log('values', values);
+
+    // Increment num_books for each author in author_id
+    const authorIds = author_id.split(',').map(id => id.trim()); // Split if multiple authors
+    await poolpg.query(`
+      UPDATE authors
+      SET num_books = num_books + 1
+      WHERE id = ANY($1::int[])
+    `, [authorIds]);
 
     await poolpg.query(query, values);
 

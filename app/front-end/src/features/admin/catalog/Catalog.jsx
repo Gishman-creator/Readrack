@@ -15,6 +15,7 @@ import EditSeriesForm from './forms/edit forms/EditSeriesForm';
 import { PlusIcon } from '@heroicons/react/24/outline';
 
 function Catalog() {
+  document.title = 'Catalog - readrack';
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();

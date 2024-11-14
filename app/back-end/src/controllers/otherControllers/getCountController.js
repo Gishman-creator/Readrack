@@ -7,11 +7,11 @@ exports.getCount = async (req, res) => {
     try {
         if (type === 'books') {
             // Query for books count
-            const result = await poolpg.query('SELECT COUNT(*) AS "totalCount" FROM books');
-            res.status(200).json({ totalCount: result.rows[0].totalCount });
+            const result = await poolpg.query('SELECT COUNT(*) AS total_count FROM books');
+            res.status(200).json({ total_count: result.rows[0].total_count });
         } else if (type === 'series') {
             // Total series count
-            const totalSeriesResult = await poolpg.query('SELECT COUNT(*) AS "totalCount" FROM series');
+            const totalSeriesResult = await poolpg.query('SELECT COUNT(*) AS total_count FROM series');
             
             // Complete series count
             const completeSeriesResult = await poolpg.query(`
@@ -19,7 +19,7 @@ exports.getCount = async (req, res) => {
                 FROM series s
                 WHERE (SELECT COUNT(*) 
                        FROM books b 
-                       WHERE b.serie_id = s.id
+                       WHERE b.serie_id::text = s.id::text
                 ) >= s.num_books;
             `);
             
@@ -29,18 +29,18 @@ exports.getCount = async (req, res) => {
                 FROM series s
                 WHERE (SELECT COUNT(*) 
                        FROM books b 
-                       WHERE b.serie_id = s.id
+                       WHERE b.serie_id::text = s.id::text
                 ) < s.num_books;
             `);
 
             res.status(200).json({
-                totalCount: totalSeriesResult.rows[0].totalCount,
+                total_count: totalSeriesResult.rows[0].total_count,
                 completeCount: completeSeriesResult.rows[0].completeCount,
                 incompleteCount: incompleteSeriesResult.rows[0].incompleteCount
             });
         } else if (type === 'authors') {
             // Total authors count
-            const totalAuthorsResult = await poolpg.query('SELECT COUNT(*) AS "totalCount" FROM authors');
+            const totalAuthorsResult = await poolpg.query('SELECT COUNT(*) AS total_count FROM authors');
 
             // Complete authors count
             const completeAuthorsResult = await poolpg.query(`
@@ -49,8 +49,8 @@ exports.getCount = async (req, res) => {
                 WHERE NOT EXISTS (
                     SELECT 1
                     FROM series s
-                    LEFT JOIN books b ON s.id = b.serie_id
-                    WHERE s.author_id = a.id
+                    LEFT JOIN books b ON s.id::text = b.serie_id::text
+                    WHERE s.author_id::text = a.id::text
                     AND (SELECT COUNT(*) FROM books b WHERE b.serie_id = s.id) < s."num_books"
                 );
             `);
@@ -62,14 +62,14 @@ exports.getCount = async (req, res) => {
                 WHERE EXISTS (
                     SELECT 1
                     FROM series s
-                    LEFT JOIN books b ON s.id = b.serie_id
-                    WHERE s.author_id = a.id
-                    AND (SELECT COUNT(*) FROM books b WHERE b.serie_id = s.id) < s."num_books"
+                    LEFT JOIN books b ON s.id::text = b.serie_id::text
+                    WHERE s.author_id::text = a.id::text
+                    AND (SELECT COUNT(*) FROM books b WHERE b.serie_id = s.id) < s.num_books
                 );
             `);
 
             res.status(200).json({
-                totalCount: totalAuthorsResult.rows[0].totalCount,
+                total_count: totalAuthorsResult.rows[0].total_count,
                 completeCount: completeAuthorsResult.rows[0].completeCount,
                 incompleteCount: incompleteAuthorsResult.rows[0].incompleteCount
             });

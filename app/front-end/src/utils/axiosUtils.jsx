@@ -24,10 +24,15 @@ const axiosUtils = (url, method, data = {}, headers = {}, params = {}, signal = 
         params: params,
         signal: signal, // Pass the abort signal here
     }).then(res => res)
-      .catch(err => {
-          console.error(`Error making request: ${err}`);
-          throw err;
-      });
+    .catch(err => {
+        // Handle cancellation error
+        if (axios.isCancel(err)) {
+            console.log(`Request canceled: ${err.message}`);
+        } else {
+            console.error(`Error making request: ${err}`);
+        }
+        throw err;
+    });
 };
 
 export default axiosUtils;

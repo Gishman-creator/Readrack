@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axiosUtils from '../../../utils/axiosUtils';
-import { calculateAgeAtDeath, capitalize, capitalizeGenres, spacesToHyphens } from '../../../utils/stringUtils';
+import { calculateAgeAtDeath, capitalize, capitalizeGenres, formatSeriesName, spacesToHyphens } from '../../../utils/stringUtils';
 import { bufferToBlobURL } from '../../../utils/imageUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -83,6 +83,9 @@ function AuthorDetails() {
         if (!author_name || author_name !== authorResponse.data.author_name) {
           navigate(`/authors/${authorId}/${spacesToHyphens(authorResponse.data.author_name)}`, { replace: true });
         }
+
+        // Update the tab title with the series name
+        document.title = `${capitalize(authorResponse.data.author_name)} - readrack`;
 
         // Fetching series by the author
         const seriesResponse = await axiosUtils(`/api/getSeriesByAuthorId/${authorResponse.data.id}`, 'GET');
@@ -260,8 +263,8 @@ function AuthorDetails() {
               </p>
               <div className='font-arima font-medium text-sm text-center md:text-left'>
                 <span>{capitalize(authorData.nationality)}</span>
-                <span className={`${authorData.dob || authorData.customDob  ? 'inline' : 'hidden'}`}>,</span>
-                <span className={`${authorData.dob || authorData.customDob  ? 'block' : 'hidden'}`}>Born on {authorData.dob}</span>
+                <span className={`${authorData.dob || authorData.customDob ? 'inline' : 'hidden'}`}>,</span>
+                <span className={`${authorData.dob || authorData.customDob ? 'block' : 'hidden'}`}>Born on {authorData.dob}</span>
               </div>
               {authorData.dod && (
                 <>
@@ -338,14 +341,9 @@ function AuthorDetails() {
               </div>
               <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
                 {series.slice(0, seriesLimit).map((item, index) => (
-                  <a
-                    href={`/series/${item.id}/${spacesToHyphens(item.serie_name)}`}
+                  <div
                     key={item.id}
                     className='flex space-x-2 mt-4 pb-3 border-b-2 border-gray-300 cursor-pointer'
-                    onClick={(e) => {
-                      e.preventDefault(); 
-                      navigate(`/series/${item.id}/${spacesToHyphens(item.serie_name)}`);
-                    }}
                   >
                     <img
                       src={item.imageURL || blank_image} // Fallback image if Blob URL is null
@@ -358,9 +356,16 @@ function AuthorDetails() {
                         className='flex justify-between items-center'
                       // onClick={(e) => e.stopPropagation()}
                       >
-                        <p className='font-semibold m-0 leading-5 text-lg'>
-                          {capitalize(item.serie_name)}
-                        </p>
+                        <a
+                          href={`/series/${item.id}/${spacesToHyphens(item.serie_name)}`}
+                          className='font-semibold m-0 leading-5 text-lg hover:underline'
+                          onClick={(e) => {
+                            e.preventDefault();
+                            navigate(`/series/${item.id}/${spacesToHyphens(item.serie_name)}`);
+                          }}
+                        >
+                          {formatSeriesName(item.serie_name)}
+                        </a>
                       </div>
                       <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.author_name)).join(', ')}</p>
                       <p className='font-arima text-gray-400 text-sm mt-1'>
@@ -377,7 +382,7 @@ function AuthorDetails() {
                         </a>
                       }
                     </div>
-                  </a>
+                  </div>
                 ))}
               </div>
               {(seriesCount > seriesLimit || seriesLimit > groupRange) && (

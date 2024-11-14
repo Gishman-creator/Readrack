@@ -3,12 +3,8 @@
 const poolpg = require('../../config/dbpg');
 const { fetchPublishYearsUtil } = require('../../utils/fetchPublishYearsUtil');
 const { getAuthorsByIds } = require('../../utils/getUtils');
+const { generateUniqueId } = require('../../utils/idUtils');
 const { putImage, getImageURL } = require('../../utils/imageUtils');
-
-// Function to generate a random ID
-const generateRandomId = () => {
-    return Math.floor(100000 + Math.random() * 900000); // Generate a random 6-digit integer
-};
 
 const addSeries = async (req, res) => {
     const { serie_name, author_id, num_books, genre, amazon_link } = req.body;
@@ -16,20 +12,7 @@ const addSeries = async (req, res) => {
     const image = req.file ? await putImage('', req.file, 'series') : null; // Await the function to resolve the promise
 
     try {
-        let uniqueId;
-        let isUnique = false;
-
-        // Generate a unique ID
-        while (!isUnique) {
-            uniqueId = generateRandomId();
-
-            // Check if the ID already exists in PostgreSQL
-            const { rows } = await poolpg.query('SELECT id FROM series WHERE id = $1', [uniqueId]);
-
-            if (rows.length === 0) {
-                isUnique = true;
-            }
-        }
+        const uniqueId = await generateUniqueId('series', 6);
 
         // Insert series data into the database with the unique ID
         await poolpg.query(

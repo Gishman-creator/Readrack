@@ -88,8 +88,7 @@ function User() {
             <Route path='/authors/:authorId/:author_name?' element={<AuthorDetails />} />
             <Route path='/search' element={<SearchResults />} />
             <Route path='/about-us' element={<AboutUs />} />
-            <Route path='/404' element={<NotFoundPage />} />
-            <Route path='*' element={<Navigate to="/404" />} />
+            <Route path='*' element={<NotFoundPage />} />
           </Routes>
           <div
             ref={divRef} // Attach the ref to this div

@@ -1,7 +1,7 @@
 import React from 'react';
 import blank_image from '../../../assets/brand_blank_image.png';
 // import blank_image from '../../../assets/brand_blank_image_2.jpg';
-import { capitalize, spacesToHyphens } from '../../../utils/stringUtils';
+import { capitalize, formatSeriesName, spacesToHyphens } from '../../../utils/stringUtils';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setActiveGenre } from '../slices/userSlice';
@@ -67,12 +67,12 @@ function Card({ card, activeTab, fixedWidth }) {
             <div className="flex-col justify-center items-center py-1">
                 <p
                     title={`
-                        ${activeTab === 'Series' ? `${capitalize(card.serie_name)} Series` : ''}
+                        ${activeTab === 'Series' ? `${formatSeriesName(card.serie_name)}` : ''}
                         ${activeTab === 'Authors' ? (capitalize(card.author_name)) : ''}
                     `}
                     className="font-poppins font-medium overflow-hidden whitespace-nowrap text-ellipsis"
                 >
-                    {activeTab === 'Series' && `${capitalize(card.serie_name)} Series`}
+                    {activeTab === 'Series' && `${formatSeriesName(card.serie_name)}`}
                     {activeTab === 'Authors' && (capitalize(card.author_name))}
                 </p>
                 {activeTab === 'Series' ? (

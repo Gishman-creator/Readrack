@@ -21,10 +21,9 @@ const scrapeBookInfo = async (req, res) => {
 
         // Fetch books with missing publish_date (where bookInfo_status is null)
         const { rows: books } = await client.query(`
-            SELECT books.id, books.book_name, books.author_id, books.goodreads_link, books.amazon_link
+            SELECT *
             FROM books
-            JOIN authors ON books.author_id::text = authors.id::text
-            WHERE books.bookInfo_status IS NULL OR publish_date IS NULL or publish_year IS NULL;
+            WHERE bookInfo_status IS NULL OR image_link is null;
         `);
 
         if (books.length === 0) { 
@@ -45,7 +44,7 @@ const scrapeBookInfo = async (req, res) => {
 
         // Loop through books and attempt to scrape the publish date and genre
         for (const book of books) { // Combine author names
-            const { id, book_name, amazon_link, author_id, goodreads_link } = book;
+            const { id, book_name, amazon_link, author_id, goodreads_link, image_link: book_image_link, genre: book_genre } = book;
 
             // Split author_id into an array
             const authorIds = author_id.split(',').map(id => id.trim());
@@ -73,7 +72,7 @@ const scrapeBookInfo = async (req, res) => {
 
                 // Validate the Amazon link
                 let image_link = null;
-                if (amazon_link) {
+                if (amazon_link && !book_image_link) {
                     // Valid link, fetch image
                     image_link = await getImage(userAgent, amazon_link);
                 } else {
@@ -87,7 +86,7 @@ const scrapeBookInfo = async (req, res) => {
                     // console.log("Book yaer:", bookYear); 
                 }
                 
-                let genre = await getBookGenres(author_name, book_name);
+                let genre = !book_genre && await getBookGenres(author_name, book_name);
 
                 // Fetch the Google search result page
                 const response = await axios.get(googleSearchUrl, {
@@ -122,7 +121,7 @@ const scrapeBookInfo = async (req, res) => {
                 // Update the database with publish date and genre
                 await client.query(
                     `UPDATE books SET publish_date = $1, genre = $2, image_link = $3, bookinfo_status = 'done', publish_year = $4 WHERE id = $5`,
-                    [publishDate, genre, image_link, bookYear, id]
+                    [publishDate, genre || book_genre, image_link || book_image_link, bookYear, id]
                 );
 
                 console.log(`Publish Date: ${publishDate || 'null'}`);

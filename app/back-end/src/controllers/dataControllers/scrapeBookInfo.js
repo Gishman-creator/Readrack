@@ -6,6 +6,7 @@ const { getAuthorsByIds } = require('../../utils/scrapeBookInfo_utils/getUtils')
 const { getImage } = require('../../utils/scrapeBookInfo_utils/getImage');
 const { getBookGenres } = require('../../utils/scrapeBookInfo_utils/getBookGenres');
 const { getBookYear } = require('../../utils/scrapeBookInfo_utils/getBookYear');
+const { getAmazonLink } = require('../../utils/scrapeBookInfo_utils/getAmazonLink');
 
 let isScraping = false; // Lock variable
 
@@ -69,15 +70,21 @@ const scrapeBookInfo = async (req, res) => {
             try {
                 // Initialize bookYear to null by default
                 let bookYear = null;
+                let book_amazon_link;
 
                 // Validate the Amazon link
                 let image_link = null;
+                console.log("Book image link:", book_image_link)
                 if (amazon_link && !book_image_link) {
                     // Valid link, fetch image
                     image_link = await getImage(userAgent, amazon_link);
-                } else {
+                }
+                
+                if (!amazon_link || !image_link && !book_image_link) {
                     // Invalid or no link, skip image fetch
-                    image_link = null;
+                    book_amazon_link = await getAmazonLink(userAgent, book_name, author_name);
+                    console.log("Amazon link got from getAmazonLink:", book_amazon_link);
+                    image_link = book_amazon_link ? await getImage(userAgent, book_amazon_link) : null;
                 }
                 
                 if (bookseriesinorder_link) {
@@ -120,8 +127,8 @@ const scrapeBookInfo = async (req, res) => {
 
                 // Update the database with publish date and genre
                 await client.query(
-                    `UPDATE books SET publish_date = $1, genre = $2, image_link = $3, bookinfo_status = 'done', publish_year = $4 WHERE id = $5`,
-                    [publishDate, genre || book_genre, image_link || book_image_link, bookYear, id]
+                    `UPDATE books SET publish_date = $1, genre = $2, image_link = $3, bookinfo_status = 'done', publish_year = $4, amazon_link = $5 WHERE id = $6`,
+                    [publishDate, genre || book_genre, image_link || book_image_link, bookYear, book_amazon_link, id]
                 );
 
                 console.log(`Publish Date: ${publishDate || 'null'}`);

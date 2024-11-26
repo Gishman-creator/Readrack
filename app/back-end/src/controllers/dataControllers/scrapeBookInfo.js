@@ -70,11 +70,11 @@ const scrapeBookInfo = async (req, res) => {
             try {
                 // Initialize bookYear to null by default
                 let bookYear = null;
-                let book_amazon_link;
+                let book_amazon_link = amazon_link;
 
                 // Validate the Amazon link
-                let image_link = null;
-                console.log("Book image link:", book_image_link)
+                let image_link = book_image_link;
+                console.log("Book image link:", image_link)
                 if (amazon_link && !book_image_link) {
                     // Valid link, fetch image
                     image_link = await getImage(userAgent, amazon_link);
@@ -134,7 +134,7 @@ const scrapeBookInfo = async (req, res) => {
                 console.log(`Publish Date: ${publishDate || 'null'}`);
                 console.log(`Publish year: ${bookYear || 'null'}`);
                 console.log(`Genre: ${genre || 'null'}`);
-                console.log(`Image Link: ${image_link || 'null'} from ${amazon_link}`);
+                console.log(`Image Link: ${image_link || 'null'} from ${book_amazon_link}`);
 
             } catch (error) {
                 console.error(`Error fetching data for book: ${book_name}, Error: ${error.message}`);

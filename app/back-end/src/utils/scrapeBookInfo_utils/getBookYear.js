@@ -1,7 +1,7 @@
 const cheerio = require('cheerio');
 const axios = require("axios");
 
-exports.getBookYear = async (bookseriesinorder_link, goodreads_link, book_name, userAgent) => {
+exports.getBookYear = async (bookseriesinorder_link, goodreads_link, book_name, author_name, userAgent) => {
     try {
         // Attempt to get year from bookseriesinorder_link
         const response = await axios.get(bookseriesinorder_link, {
@@ -41,8 +41,8 @@ exports.getBookYear = async (bookseriesinorder_link, goodreads_link, book_name, 
             }
         }
 
-        console.log(`No publication date found for "${book_name}" on either source.`);
-        return null;
+        console.log(`No publication date found for "${book_name}" on either source using Gemini....................`);
+        return await generatePublishDate(author_name, book_name);
 
     } catch (error) {
         console.error(`Error fetching book year for ${book_name}:`, error.message);

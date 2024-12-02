@@ -24,7 +24,7 @@ const scrapeBookInfo = async (req, res) => {
         const { rows: books } = await client.query(`
             SELECT *
             FROM books
-            WHERE bookInfo_status IS NULL OR image_link is null;
+            WHERE bookInfo_status IS NULL OR image_link is null or (publish_date is null and publish_year is null);
         `);
 
         if (books.length === 0) { 
@@ -45,7 +45,7 @@ const scrapeBookInfo = async (req, res) => {
 
         // Loop through books and attempt to scrape the publish date and genre
         for (const book of books) { // Combine author names
-            const { id, book_name, amazon_link, author_id, goodreads_link, image_link: book_image_link, genre: book_genre } = book;
+            const { id, book_name, amazon_link, author_id, goodreads_link, image_link: book_image_link, genre: book_genre, publish_date, publish_year } = book;
 
             // Split author_id into an array
             const authorIds = author_id.split(',').map(id => id.trim());
@@ -89,7 +89,7 @@ const scrapeBookInfo = async (req, res) => {
                 
                 if (bookseriesinorder_link) {
                     // console.log("Getting book year from:", bookseriesinorder_link);
-                    bookYear = await getBookYear(bookseriesinorder_link, goodreads_link, book_name, userAgent);
+                    bookYear = await getBookYear(bookseriesinorder_link, goodreads_link, book_name, author_name, userAgent);
                     // console.log("Book yaer:", bookYear); 
                 }
                 
@@ -128,7 +128,7 @@ const scrapeBookInfo = async (req, res) => {
                 // Update the database with publish date and genre
                 await client.query(
                     `UPDATE books SET publish_date = $1, genre = $2, image_link = $3, bookinfo_status = 'done', publish_year = $4, amazon_link = $5 WHERE id = $6`,
-                    [publishDate, genre || book_genre, image_link || book_image_link, bookYear, book_amazon_link, id]
+                    [publishDate || publish_date, genre || book_genre, image_link || book_image_link, bookYear || publish_year, book_amazon_link, id]
                 );
 
                 console.log(`Publish Date: ${publishDate || 'null'}`);

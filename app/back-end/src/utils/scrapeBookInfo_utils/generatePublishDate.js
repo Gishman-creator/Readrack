@@ -26,7 +26,7 @@ async function generatePublishDate(author_name, book_name) {
             {
                 role: "user",
                 parts: [
-                    { text: "write down the publish date only of the book Silverwood: The Door by Brian Keene. In the format of MM, D YYYY or MM YYY if only the month and year is known or YYYY if the year is only known" },
+                    { text: "write down the publish date only of the book Silverwood: The Door by Brian Keene. In the format of Month, D YYYY or Month YYY if only the month and year is known or YYYY if the year is only known" },
                 ],
             },
             {
@@ -38,7 +38,7 @@ async function generatePublishDate(author_name, book_name) {
         ],
     });
 
-    const result = await chatSession.sendMessage(`write down the publish date only, of the book ${book_name} by ${author_name}. In the format of MM, D YYYY or MM YYY if only the month and year is known or YYYY if the year is only known`);
+    const result = await chatSession.sendMessage(`write down the publish date only, of the book ${book_name} by ${author_name}. In the format of Month, D YYYY or Month YYY if only the month and year is known or YYYY if the year is only known`);
     return result.response.text();
 }
 

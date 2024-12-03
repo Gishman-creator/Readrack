@@ -1,5 +1,6 @@
 const cheerio = require('cheerio');
 const axios = require("axios");
+const { generatePublishDate } = require('./generatePublishDate');
 
 exports.getBookYear = async (bookseriesinorder_link, goodreads_link, book_name, author_name, userAgent) => {
     try {

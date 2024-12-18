@@ -1,6 +1,7 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 const poolpg = require("../../config/dbpg3");
+const { generateRandomUserAgent } = require("../../utils/userAgentGenerator");
 
 let isFetching = false;
 
@@ -34,6 +35,8 @@ const validateBookPublishDate = async (req, res) => {
 
         const totalBooks = books.length;
         let processedBooks = 0;
+        
+        const userAgent = await generateRandomUserAgent();
 
         for (const book of books) {
             try {
@@ -41,7 +44,11 @@ const validateBookPublishDate = async (req, res) => {
                 console.log(`Fetching publish date for: ${book_name}`);
 
                 // Fetch the Goodreads page
-                const response = await axios.get(goodreads_link);
+                const response = await axios.get(goodreads_link, {
+                    headers: {
+                        'User-Agent': userAgent,
+                    },
+                });
                 const $ = cheerio.load(response.data);
 
                 // Extract the publication date

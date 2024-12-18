@@ -15,7 +15,7 @@ const getBoxSet = async (req, res) => {
 
         const { rows: series } = await client.query(`
             SELECT id, serie_name, goodreads_link FROM series 
-            WHERE amazon_link IS NULL; 
+            WHERE amazon_link IS NULL AND boxset_link IS NULL; 
         `);
 
         if (series.length === 0) {

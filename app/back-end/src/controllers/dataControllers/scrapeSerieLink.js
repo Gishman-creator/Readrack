@@ -22,10 +22,10 @@ const scrapeSerieLink = async (req, res) => {
         const { rows: series } = await client.query(`
             SELECT id, serie_name, boxset_link 
             FROM series
-            WHERE boxset_link IS NOT NULL;
+            WHERE boxset_link IS NOT NULL and amazon_link IS NULL;
         `);
 
-        if (series.length === 0) {
+        if (series.length === 0) { 
             console.log("No series to validate.");
             if (req.io) {
                 req.io.emit('validateMessage', 'No series to validate.');
@@ -40,7 +40,7 @@ const scrapeSerieLink = async (req, res) => {
 
         // Launch Puppeteer browser
         const browser = !prod ?
-         await puppeteer.launch({ headless: false })
+         await puppeteer.launch({ headless: true })
          : await puppeteer.launch({
             executablePath: '/usr/bin/google-chrome', // Replace with the correct path if different
             headless: true,

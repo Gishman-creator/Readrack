@@ -46,7 +46,7 @@ const validateBookPublishDate = async (req, res) => {
 
                 // Extract the publication date
                 const publicationInfo = $('p[data-testid="publicationInfo"]').text();
-                const publishDate = publicationInfo.replace(/.*\b\w*publi\w*\b\s*/, "").trim();
+                const publishDate = publicationInfo.replace(/.*\b\w*publi\w*\b\s*/i, "").trim();
 
                 if (publishDate) {
                     // Update the publish_date in the database

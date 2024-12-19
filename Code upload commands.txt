@@ -56,7 +56,7 @@ torsocks curl https://icanhazip.com
 
 **Making requests:
 
-curl -X POST http://localhost:8000/api/scrapeBookLink
+curl -X POST http://localhost:8000/api/validateBookPublishDate
 
 ***Database queries:
 

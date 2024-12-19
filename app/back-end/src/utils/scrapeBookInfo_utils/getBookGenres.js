@@ -39,7 +39,7 @@ async function getBookGenres(author_name, book_name) {
     });
 
     const result = await chatSession.sendMessage(`for this book ${book_name} by ${author_name} list all it's genres separated by commas`);
-    return result.response.text();
+    return result.response.text().trim();
 }
 
 module.exports = { getBookGenres };

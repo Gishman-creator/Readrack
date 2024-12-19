@@ -52,6 +52,7 @@ const { getBoxSet } = require('../controllers/dataControllers/getBoxSet');
 const { scrapeSerieLink } = require('../controllers/dataControllers/scrapeSerieLink');
 const { validateBookPublishDate } = require('../controllers/dataControllers/validateBookPublishDate');
 const { validateBookGenre } = require('../controllers/dataControllers/validateBookGenre');
+const { scrapeBookGoodreads } = require('../controllers/dataControllers/scrapeBookGoodreads');
 // const dataController = require('../controllers/dataControllers/dataController')
 // const generateDataController = require('../controllers/dataControllers/generateDataController');
 // const getRandomBufferByType = require('../controllers/dataControllers/getRandomBufferByType')
@@ -135,6 +136,7 @@ router.post('/getBoxSet', getBoxSet);
 router.post('/scrapeSerieLink', scrapeSerieLink);
 router.post('/validateBookPublishDate', validateBookPublishDate);
 router.post('/validateBookGenre', validateBookGenre);
+router.post('/scrapeBookGoodreads', scrapeBookGoodreads);
 
 router.post('/updateAuthorRatings', updateAuthorRatings);
 router.get('/convertPublishDate/:id', convertPublishDateController);

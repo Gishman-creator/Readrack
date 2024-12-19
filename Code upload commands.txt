@@ -65,3 +65,58 @@ drop table authors;
 drop table books;
 drop table series;
 drop table visits;
+
+-- REMOVING WHITE SPACE FOR AUTHORS
+
+UPDATE authors
+SET 
+    author_name = REGEXP_REPLACE(author_name, '\s+', ' ', 'g'),
+    nationality = REGEXP_REPLACE(nationality, '\s+', ' ', 'g'),
+    biography = REGEXP_REPLACE(biography, '\s+', ' ', 'g'),
+    awards = REGEXP_REPLACE(awards, '\s+', ' ', 'g'),
+    status = REGEXP_REPLACE(status, '\s+', ' ', 'g'),
+    goodreads_link = REGEXP_REPLACE(goodreads_link, '\s+', ' ', 'g'),
+    dob = REGEXP_REPLACE(dob, '\s+', ' ', 'g'),
+    dod = REGEXP_REPLACE(dod, '\s+', ' ', 'g'),
+    pen_name = REGEXP_REPLACE(pen_name, '\s+', ' ', 'g'),
+    genre = REGEXP_REPLACE(genre, '\s+', ' ', 'g'),
+    image = REGEXP_REPLACE(image, '\s+', ' ', 'g'),
+    image_link = REGEXP_REPLACE(image_link, '\s+', ' ', 'g'),
+    facebook = REGEXP_REPLACE(facebook, '\s+', ' ', 'g'),
+    instagram = REGEXP_REPLACE(instagram, '\s+', ' ', 'g'),
+    website = REGEXP_REPLACE(website, '\s+', ' ', 'g');
+
+-- REMOVING WHITE SPACE FOR SERIES
+
+UPDATE series
+SET 
+    serie_name = REGEXP_REPLACE(serie_name, '\s+', ' ', 'g'),
+    amazon_link = REGEXP_REPLACE(amazon_link, '\s+', ' ', 'g'),
+    author_id = REGEXP_REPLACE(author_id, '\s+', ' ', 'g'),
+    pen_name = REGEXP_REPLACE(pen_name, '\s+', ' ', 'g'),
+    book_status = REGEXP_REPLACE(book_status, '\s+', ' ', 'g'),
+    goodreads_link = REGEXP_REPLACE(goodreads_link, '\s+', ' ', 'g'),
+    image = REGEXP_REPLACE(image, '\s+', ' ', 'g'),
+    image_link = REGEXP_REPLACE(image_link, '\s+', ' ', 'g'),
+    genre = REGEXP_REPLACE(genre, '\s+', ' ', 'g'),
+    boxset_link = REGEXP_REPLACE(boxset_link, '\s+', ' ', 'g');
+
+-- REMOVING WHITE SPACE FOR BOOKS
+
+UPDATE books
+SET 
+    book_name = REGEXP_REPLACE(book_name, '\s+', ' ', 'g'),
+    amazon_link = REGEXP_REPLACE(amazon_link, '\s+', ' ', 'g'),
+    author_id = REGEXP_REPLACE(author_id, '\s+', ' ', 'g'),
+    pen_name = REGEXP_REPLACE(pen_name, '\s+', ' ', 'g'),
+    serie_id = REGEXP_REPLACE(serie_id, '\s+', ' ', 'g'),
+    serie_id_status = REGEXP_REPLACE(serie_id_status, '\s+', ' ', 'g'),
+    publish_year = REGEXP_REPLACE(publish_year, '\s+', ' ', 'g'),
+    bookinfo_status = REGEXP_REPLACE(bookinfo_status, '\s+', ' ', 'g'),
+    publish_date = REGEXP_REPLACE(publish_date, '\s+', 'g'),
+    genre = REGEXP_REPLACE(genre, '\s+', ' ', 'g'),
+    image_link = REGEXP_REPLACE(image_link, '\s+', ' ', 'g'),
+    goodreads_link = REGEXP_REPLACE(goodreads_link, '\s+', ' ', 'g'),
+    serie_id_2 = REGEXP_REPLACE(serie_id_2, '\s+', ' ', 'g'),
+    image = REGEXP_REPLACE(image, '\s+', ' ', 'g');
+

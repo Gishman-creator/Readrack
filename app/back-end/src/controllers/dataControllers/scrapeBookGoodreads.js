@@ -103,9 +103,6 @@ const scrapeBookGoodreads = async (req, res) => {
                 if (error.response && error.response.status === 429) {
                     console.error("Rate limit exceeded. Stopping the scraping process.");
                     break; // Exit the loop if rate limit is exceeded
-                } else {
-                    console.error("Stopping due to an unexpected error.");
-                    break; // Exit the loop on any other critical error
                 }
             }
 

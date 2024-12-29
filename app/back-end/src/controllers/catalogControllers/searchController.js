@@ -1,5 +1,5 @@
 const poolpg = require('../../config/dbpg');
-const { getAuthorsByIds } = require('../../utils/getUtils');
+const { getAuthorsByIds, getSeriesByIds } = require('../../utils/getUtils');
 const { getImageURL } = require('../../utils/imageUtils');
 
 // Simplified version of the buildExactOrderQuery function
@@ -40,6 +40,7 @@ exports.search = async (req, res) => {
     let seriesQuery = 'SELECT * FROM series';
     let authorsQuery = `SELECT * FROM authors`;
     let booksQuery = 'SELECT books.*, series.serie_name FROM books LEFT JOIN series ON books.serie_id::text = series.id::text';
+    let serieByBookQuery = 'SELECT books.*, series.serie_name FROM books LEFT JOIN series ON books.serie_id::text = series.id::text';
     let seriesCountQuery = 'SELECT COUNT(*) AS "totalCount" FROM series';
     let authorsCountQuery = 'SELECT COUNT(*) AS "totalCount" FROM authors';
     let booksCountQuery = 'SELECT COUNT(*) AS "totalCount" FROM books';
@@ -47,6 +48,7 @@ exports.search = async (req, res) => {
     let seriesQueryParams = [];
     let authorsQueryParams = [];
     let booksQueryParams = [];
+    let serieByBookQueryParams = [];
     let countQueryParams = [];
     let authorsCountQueryParams = [];
 
@@ -61,6 +63,7 @@ exports.search = async (req, res) => {
       seriesQuery += ` WHERE ${seriesCondition} ORDER BY search_count DESC`;
       authorsQuery += ` WHERE ${authorsCondition} ORDER BY search_count DESC`;
       booksQuery += ` WHERE ${booksCondition} ORDER BY search_count DESC`;
+      serieByBookQuery += ` WHERE book_name ILIKE $1 ORDER BY search_count DESC`;
 
       seriesCountQuery += ` WHERE ${seriesCondition}`;
       authorsCountQuery += ` WHERE ${authorsCondition}`;
@@ -70,13 +73,14 @@ exports.search = async (req, res) => {
       seriesQueryParams.push(...seriesParams);
       authorsQueryParams.push(...authorsParams);
       booksQueryParams.push(...booksParams);
+      serieByBookQueryParams.push(`%${query}%`);
 
       countQueryParams.push(...seriesParams);
       authorsCountQueryParams.push(...seriesParams);
     }
 
     // Apply limits and offsets
-    if (typeof seriePageLimitStart === 'number' && typeof seriePageLimitEnd === 'number') {
+    if (typeof seriePageLimitStart === 'number' && typeof seriePageLimitEnd === 'number' && type !== 'all') {
       seriesQuery += ` LIMIT $${seriesQueryParams.length + 1} OFFSET $${seriesQueryParams.length + 2}`;
       seriesQueryParams.push(seriePageLimitEnd - seriePageLimitStart, seriePageLimitStart);
     }
@@ -95,26 +99,16 @@ exports.search = async (req, res) => {
     // console.log("Author query:", authorsQuery)
     const authorsResult = await poolpg.query(authorsQuery, authorsQueryParams);
     const booksResult = await poolpg.query(booksQuery, booksQueryParams);
+    const serieByBookResult = await poolpg.query(serieByBookQuery, serieByBookQueryParams);
 
     const seriesRows = seriesResult.rows;
     const authorsRows = authorsResult.rows;
     const booksRows = booksResult.rows;
-
-    for (const serie of seriesRows) {
-      // Fetch authors for each serie
-      const authors = await getAuthorsByIds(serie.author_id);
-      serie.authors = authors;
-    }
-
-    for (const book of booksRows) {
-      // Fetch authors for each book
-      const authors = await getAuthorsByIds(book.author_id);
-      book.authors = authors;
-    }
+    const serieByBookRows = serieByBookResult.rows;
 
     // Execute count queries
     const totalSeriesResult = await poolpg.query(seriesCountQuery, countQueryParams);
-    const totalSeries = totalSeriesResult.rows[0]?.totalCount || 0;
+    let totalSeries = totalSeriesResult.rows[0]?.totalCount || 0;
 
     console.log('authorsCountQuery', authorsCountQuery)
     console.log('authorsCountQueryParams', authorsCountQueryParams)
@@ -123,6 +117,42 @@ exports.search = async (req, res) => {
 
     const totalBooksResult = await poolpg.query(booksCountQuery, countQueryParams);
     const totalBooks = totalBooksResult.rows[0]?.totalCount || 0;
+
+    for (const book of booksRows) {
+      // Fetch authors for each book
+      const authors = await getAuthorsByIds(book.author_id);
+      book.authors = authors;
+    }
+
+    let seriesRowsByBookCount = 0;
+    for (const book of serieByBookRows) {
+      // Fetch series for each book
+      if (book.serie_id) {
+        const series = await getSeriesByIds(book.serie_id); // Fetch series by ID(s)
+
+        // Check if the series is not already in seriesRows
+        series.forEach(serie => {
+          // Ensure the serie is not already in the seriesRows
+          if (!seriesRows.some(existingSerie => existingSerie.id === serie.id) && seriesRowsByBookCount < 2) {
+            // Unshift the serie, but limit to 3 at indexes 2, 3, and 4
+            if (seriesRows.length < 3) {
+              seriesRows.push(serie); // Add series to the beginning if there are fewer than 4
+            } else {
+              // Place the series at the 2nd, 3rd, or 4th position
+              seriesRows.splice(2, 0, serie); // Insert at the 2nd index
+            }
+            seriesRowsByBookCount++;
+            totalSeries++;
+          }
+        });
+      }
+    }
+
+    for (const serie of seriesRows) {
+      // Fetch authors for each serie
+      const authors = await getAuthorsByIds(serie.author_id);
+      serie.authors = authors;
+    }
 
 
     // Combine results

@@ -47,7 +47,7 @@ function SerieDetails() {
     console.log("The book's limit is:", booksLimit);
     console.log("The book's count is:", booksCount);
   }, [booksLimit])
-  
+
 
   useEffect(() => {
     const updatePageLimitAndInterval = () => {
@@ -86,7 +86,7 @@ function SerieDetails() {
 
         const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}`, 'GET');
         console.log('Books response:', booksResponse.data); // Debugging
-            
+
         // Sort the books by publish date or custom date
         const sortedBooks = booksResponse.data.books.sort(sortBySerieIndexAsc);
 
@@ -160,12 +160,12 @@ function SerieDetails() {
         setBooksCount((prevCount) => {
           const newCount = prevCount + 1;
           console.log('Books count set to:', newCount);
-    
+
           // Adjust booksLimit only after booksCount is incremented
           if (booksLimit <= newCount) {
             setBooksLimit((prevLimit) => prevLimit + 1);
           }
-    
+
           return newCount; // Return the updated booksCount value
         });
         console.log('Books count 2 set to:', booksCount);
@@ -293,7 +293,7 @@ function SerieDetails() {
               />
               <div className='min-h-full w-full flex flex-col justify-between'>
                 <div className='flex justify-between items-center'>
-                  <p className='font-semibold m-0 leading-5 text-lg'>
+                  <p className='m-0 leading-5 text-lg'>
                     {capitalize(item.book_name)}
                   </p>
                   <PencilSquareIcon
@@ -301,12 +301,15 @@ function SerieDetails() {
                     onClick={() => handleEditClick(item)}  // Handle click to open modal
                   />
                 </div>
-                <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.author_name)).join(', ')}</p>
-                <p className='font-arima text-slate-400 text-sm mt-1'>
+                <p className='font-arima text-sm mt-2'>by {item.authors.map(author => capitalize(author.author_name)).join(', ')}</p>
+                <p className='font-arima text-slate-400 text-sm'>
                   #{item.serie_index}, published {item.publish_date}
                 </p>
                 <a
-                  href={item.amazon_link}
+                  href={
+                    item.amazon_link ||
+                    `https://www.amazon.com/s?k=${encodeURIComponent(`${item.book_name} by ${item.authors.map(author => author.author_name).join(', ')}`)}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className='bg-[#37643B] block w-full text-center text-white text-sm font-semibold font-poppins p-3 rounded-lg mt-auto on-click-amzn'

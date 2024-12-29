@@ -54,12 +54,12 @@ function Card({ card, activeTab, fixedWidth }) {
                     className={`bg-[rgba(3,149,60,0.08)] h-48 w-full transform transition-transform duration-300 group-hover:scale-105 ${activeTab === 'Series' ? '' : 'object-cover'}`}
                     loading="lazy"
                 />
-                {card.searchCount > 5 && (
+                {card.search_count > 5 && (
                     <div
-                        title={`Searched by ${card.searchCount} people`}
+                        title={`Searched by ${card.search_count} people`}
                         className='absolute bg-[rgba(0,0,0,0.7)] hover:bg-[rgba(0,0,0,0.8)] hover:scale-105 text-white flex justify-between items-center top-1 right-1 z-[5] rounded-lg py-[2px] px-[6px] space-x-1'
                     >
-                        <p className='font-poppins font-semibold text-xs'>{card.searchCount}</p>
+                        <p className='font-poppins font-semibold text-xs'>{card.search_count}</p>
                         <MagnifyingGlassIcon className='w-3 h-3' />
                     </div>
                 )}

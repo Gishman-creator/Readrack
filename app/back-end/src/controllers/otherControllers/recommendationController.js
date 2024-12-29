@@ -81,6 +81,7 @@ exports.recommendSeries = async (req, res) => {
     const { data } = req.body;
     const genre = data.genre;
     const excludeId = data.id;
+    console.log(data)
 
     if (!genre || genre.length === 0) {
         return res.status(400).json({ message: 'No genre provided' });

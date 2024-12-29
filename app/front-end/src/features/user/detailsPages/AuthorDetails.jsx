@@ -358,7 +358,7 @@ function AuthorDetails() {
                       >
                         <a
                           href={`/series/${item.id}/${spacesToHyphens(item.serie_name)}`}
-                          className='font-semibold m-0 leading-5 text-lg hover:underline'
+                          className='m-0 leading-5 text-lg hover:underline'
                           onClick={(e) => {
                             e.preventDefault();
                             navigate(`/series/${item.id}/${spacesToHyphens(item.serie_name)}`);
@@ -367,8 +367,8 @@ function AuthorDetails() {
                           {formatSeriesName(item.serie_name)}
                         </a>
                       </div>
-                      <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.author_name)).join(', ')}</p>
-                      <p className='font-arima text-gray-400 text-sm mt-1'>
+                      <p className='font-arima text-sm mt-2'>by {item.authors.map(author => capitalize(author.author_name)).join(', ')}</p>
+                      <p className='font-arima text-gray-400 text-sm'>
                         {item.first_book_year && item.last_book_year ? `from ${item.first_book_year} to ${item.last_book_year}` : 'Coming soon'}
                       </p>
                       {item.amazon_link &&
@@ -399,7 +399,7 @@ function AuthorDetails() {
           {/* Author Books */}
           <div className='flex justify-between items-center mt-8 md:mt-12'>
             <p className='font-poppins font-semibold text-lg 2xl:text-center'>
-              Other {capitalize(authorData.author_name)} Books:
+              Standalone {capitalize(authorData.author_name)} Books:
             </p>
           </div>
           <div className='w-full grid 2xl:grid lg:grid-cols-2 gap-x-4'>
@@ -413,16 +413,19 @@ function AuthorDetails() {
                 />
                 <div className='min-h-full w-full flex flex-col justify-between'>
                   <div className='flex justify-between items-center'>
-                    <p className='font-semibold m-0 leading-5 text-lg'>
+                    <p className='m-0 leading-5 text-lg'>
                       {capitalize(item.book_name)}
                     </p>
                   </div>
-                  <p className='font-arima text-sm'>by  {item.authors.map(author => capitalize(author.author_name)).join(', ')}</p>
-                  <p className='font-arima text-slate-400 text-sm mt-1'>
+                  <p className='font-arima text-sm mt-2'>by  {item.authors.map(author => capitalize(author.author_name)).join(', ')}</p>
+                  <p className='font-arima text-slate-400 text-sm'>
                     published {item.publish_date}
                   </p>
                   <a
-                    href={item.amazon_link}
+                    href={
+                      item.amazon_link ||
+                      `https://www.amazon.com/s?k=${encodeURIComponent(`${item.book_name} by ${item.authors.map(author => author.author_name).join(', ')}`)}`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className='bg-primary block w-full text-center text-white text-sm font-semibold font-poppins p-3 rounded-lg mt-auto on-click-amzn'

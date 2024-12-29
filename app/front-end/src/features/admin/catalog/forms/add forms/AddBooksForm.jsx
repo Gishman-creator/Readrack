@@ -321,7 +321,7 @@ function AddBooksForm({ onClose }) {
             <label className="block text-sm font-medium">Genres:</label>
             <input
               type="text"
-              name="genres"
+              name="genre"
               className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
             />
           </div>

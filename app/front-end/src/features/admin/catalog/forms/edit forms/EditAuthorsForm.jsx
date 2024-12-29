@@ -215,8 +215,8 @@ function EditAuthorForm({ onClose }) {
                 <label className="block text-sm font-medium">Genres:</label>
                 <input
                   type="text"
-                  name="genres"
-                  defaultValue={authorData.genres || ''}
+                  name="genre"
+                  defaultValue={authorData.genre || ''}
                   className="w-full border border-gray-300 rounded-lg px-2 py-1"
                 />
               </div>

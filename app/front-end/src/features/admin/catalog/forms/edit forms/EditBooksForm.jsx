@@ -169,13 +169,13 @@ function EditBooksForm({ onClose }) {
 
     const formData = new FormData(event.target);
 
-    const book_ame = formData.get('book_ame') || '';
+    const book_name = formData.get('book_name') || '';
     let imageName = bookDetails.image;
 
     if (selectedImageFile) {
       formData.append('bookImage', selectedImageFile); // Add the uploaded image file to form data
     } else if (bookImageURL && bookImageURL !== bookDetails.imageURL) {
-      const file = await downloadImage(bookImageURL, book_ame);
+      const file = await downloadImage(bookImageURL, book_name);
       if (file) {
         formData.append('bookImage', file);
       } else {
@@ -237,8 +237,8 @@ function EditBooksForm({ onClose }) {
               <label className="block text-sm font-medium">Book name:</label>
               <input
                 type="text"
-                name="book_ame"
-                defaultValue={bookDetails.book_ame || ''}
+                name="book_name"
+                defaultValue={bookDetails.book_name || ''}
                 className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
                 required
               />
@@ -354,8 +354,8 @@ function EditBooksForm({ onClose }) {
               <label className="block text-sm font-medium">Genres:</label>
               <input
                 type="text"
-                name="genres"
-                defaultValue={bookDetails.genres || ''}
+                name="genre"
+                defaultValue={bookDetails.genre || ''}
                 className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
               />
             </div>

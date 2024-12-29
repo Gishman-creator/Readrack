@@ -235,16 +235,19 @@ function SerieDetails() {
                 />
                 <div className='min-h-full w-full flex flex-col'>
                   <div className='flex justify-between items-center max-w-full'>
-                    <p className='font-semibold m-0 leading-5 text-lg'>
+                    <p className='m-0 leading-5 text-lg'>
                       {capitalize(item.book_name)}
                     </p>
                   </div>
-                  <p className='font-arima text-sm'>by {item.authors.map(author => capitalize(author.author_name)).join(', ')}</p>
-                  <p className='font-arima text-slate-400 text-sm mt-1'>
+                  <p className='font-arima text-sm mt-2'>by {item.authors.map(author => capitalize(author.author_name)).join(', ')}</p>
+                  <p className='font-arima text-slate-400 text-sm'>
                     #{item.serie_index}, published {item.publish_date}
                   </p>
                   <a
-                    href={item.amazon_link}
+                    href={
+                      item.amazon_link ||
+                      `https://www.amazon.com/s?k=${encodeURIComponent(`${item.book_name} by ${item.authors.map(author => author.author_name).join(', ')}`)}`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className='bg-[#37643B] block w-full text-center text-white text-sm font-semibold font-poppins p-3 rounded-lg mt-auto on-click-amzn'

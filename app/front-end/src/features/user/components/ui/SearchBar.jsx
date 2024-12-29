@@ -67,6 +67,7 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
             console.log("Aborting previous fetch");
             controllerRef.current.abort();
         }
+        setSearchResults([]);
 
         // Create a new AbortController for the current fetch
         const controller = new AbortController();

@@ -356,7 +356,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal })
                                 Link
                             </a>
                         </td>
-                        <td className="px-4 py-2">{item.searchCount}</td>
+                        <td className="px-4 py-2">{item.search_count}</td>
                     </>
                 )}
                 {activeTab === "Books" && (
@@ -385,7 +385,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal })
                                 Website
                             </a>
                         </td>
-                        <td className="px-4 py-2">{item.searchCount}</td>
+                        <td className="px-4 py-2">{item.search_count}</td>
                     </>
                 )}
             </tr>

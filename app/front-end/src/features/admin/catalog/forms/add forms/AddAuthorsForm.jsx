@@ -143,7 +143,7 @@ function AddAuthorsForm({ onClose }) {
             </div>
             <div>
               <label className="block text-sm font-medium">Genres:</label>
-              <input type="text" name="genres" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
+              <input type="text" name="genre" className="w-full border border-gray-300 rounded-lg px-2 py-1" />
             </div>
           </div>
           <button

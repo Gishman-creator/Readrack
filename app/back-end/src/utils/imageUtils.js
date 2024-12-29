@@ -4,6 +4,7 @@ const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const dotenv = require('dotenv');
 const crypto = require('crypto');
 const poolpg = require('../config/dbpg'); // Assuming poolpg is still needed for other database queries
+const sharp = require("sharp");
 
 dotenv.config();
 

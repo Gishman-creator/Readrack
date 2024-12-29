@@ -5,14 +5,15 @@ dotenv.config();
 const prod = process.env.NODE_ENV === "production";
 
 // Create a connection pool to PostgreSQL
-// const poolpg = new Pool({
-//     connectionString: !prod ? process.env.DATABASE_URL_LOCAL : process.env.DATABASE_URL
-// });
+const poolpg = new Pool({
+    connectionString: !prod ? process.env.DATABASE_URL_LOCAL : process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+});
 
 // Create a connection pool to PostgreSQL
-const poolpg = new Pool({
-    connectionString: !prod ? process.env.DATABASE_URL_LOCAL3 : process.env.DATABASE_URL3
-});
+// const poolpg = new Pool({
+//     connectionString: !prod ? process.env.DATABASE_URL_LOCAL3 : process.env.DATABASE_URL3
+// });
 
 // Test the connection to the PostgreSQL database
 async function testConnection() {

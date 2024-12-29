@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Navigate to the back-end folder
-cd /home/ubuntu/back-end
+cd /readrack/back-end
 
 # Stop any running Docker containers
 echo "Stopping existing Docker containers..."

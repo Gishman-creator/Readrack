@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Navigate to the back-end folder
-cd /readrack/back-end
+cd /home/ubuntu/back-end
 
 # Ensure correct permissions for the folder
 echo "Setting folder permissions..."

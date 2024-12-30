@@ -1,7 +1,7 @@
 version: 0.0
 os: linux
 files:
-  - source: /app/back-end
+  - source: /
     destination: /app/back-end
     overwrite: true
 

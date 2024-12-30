@@ -1,14 +1,8 @@
 #!/bin/bash
 
 # Navigate to the back-end folder
-cd /app/back-end  || { echo "Failed to navigate to backend directory"; exit 1; }
+cd /var/www/back-end
 
-# Start the server using pm2
-echo "Starting the Node.js server using pm2..."
-pm2 start npm --name "nodeapp-backend" -- start
-
-# Save the pm2 process list
-echo "Saving the pm2 process list..."
-pm2 save
-
-echo "Node.js server started successfully."
+# Build and start the Docker container in detached mode
+echo "Building and starting Docker containers..."
+sudo docker compose up -d --build

@@ -1,9 +1,12 @@
 #!/bin/bash
 
 # Navigate to the back-end folder
-cd /app/back-end
+cd /var/www/back-end
 
 # Stop any running Docker containers
-echo "Installing dependancies..."
-npm i
+echo "Stopping existing Docker containers..."
+sudo docker compose down
 
+# Remove dangling Docker images (optional cleanup)
+echo "Cleaning up old Docker images..."
+sudo docker image prune -f

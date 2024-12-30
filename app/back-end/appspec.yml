@@ -1,8 +1,9 @@
 version: 0.0
 os: linux
 files:
-  - source: /app/back-end
-    destination: /home/ubuntu/back-end
+  - source: /
+    destination: /app/back-end
+    overwrite: true
 
 hooks:
   BeforeInstall:

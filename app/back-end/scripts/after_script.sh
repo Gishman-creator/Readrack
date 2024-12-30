@@ -1,19 +1,12 @@
 #!/bin/bash
 
 # Navigate to the back-end folder
-cd /home/ubuntu/back-end
+cd /app/back-end
 
-# Ensure correct permissions for the folder
-echo "Setting folder permissions..."
-sudo chmod -R 755 /home/ubuntu/back-end
+# Stop any running Docker containers
+echo "Stopping existing Docker containers..."
+sudo docker compose down
 
-# Install dependencies (if needed for local setup)
-if [ -f package.json ]; then
-    echo "Installing dependencies..."
-fi
-
-# Verify Docker is installed
-if ! [ -x "$(command -v docker)" ]; then
-    echo "Error: Docker is not installed." >&2
-    exit 1
-fi
+# Remove dangling Docker images (optional cleanup)
+echo "Cleaning up old Docker images..."
+sudo docker image prune -f

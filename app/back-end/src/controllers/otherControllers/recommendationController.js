@@ -46,7 +46,7 @@ exports.recommendAuthors = async (req, res) => {
         // Split genre and map to global genre
         const userGenres = genre.split(',');
         const mappedGenres = mapGenresToGlobalGenres(userGenres, globalGenres);
-        console.log('Mapped Genre', mappedGenres);
+        // console.log('Mapped Genre', mappedGenres);
 
         const query = `
             SELECT *
@@ -81,7 +81,7 @@ exports.recommendSeries = async (req, res) => {
     const { data } = req.body;
     const genre = data.genre;
     const excludeId = data.id;
-    console.log(data)
+    // console.log(data)
 
     if (!genre || genre.length === 0) {
         return res.status(400).json({ message: 'No genre provided' });

@@ -6,9 +6,15 @@ const prod = process.env.NODE_ENV === "production";
 
 // Create a connection pool to PostgreSQL
 const poolpg = new Pool({
-    connectionString: !prod ? process.env.DATABASE_URL_LOCAL : process.env.DATABASE_URL,
+    connectionString: !prod ? process.env.AWS_DATABASE_URL : process.env.AWS_DATABASE_URL,
     ssl: { rejectUnauthorized: false },
 });
+
+// Create a connection pool to PostgreSQL
+// const poolpg = new Pool({
+//     connectionString: !prod ? process.env.DATABASE_URL_LOCAL : process.env.DATABASE_URL,
+//     ssl: { rejectUnauthorized: false },
+// });
 
 // Create a connection pool to PostgreSQL
 // const poolpg = new Pool({

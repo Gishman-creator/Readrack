@@ -47,7 +47,7 @@ const addBook = async (req, res) => {
       amazon_link || null,
     ];
 
-    console.log('values', values);
+    // console.log('values', values);
 
     // Increment num_books for each author in author_id
     const authorIds = author_id.split(',').map(id => id.trim()); // Split if multiple authors

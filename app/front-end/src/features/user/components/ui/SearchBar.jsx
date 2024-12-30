@@ -5,6 +5,7 @@ import axiosUtils from '../../../../utils/axiosUtils';
 import { capitalize, spacesToHyphens } from '../../../../utils/stringUtils';
 import { incrementSearchCount } from '../../../../utils/searchCountUtils';
 import { delay } from 'lodash';
+import axios from 'axios';
 
 const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     const searchBarRef = useRef(null);
@@ -79,8 +80,9 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
         setIsLoading(true); // Set loading to true when search starts
 
         try {
-            const response = await axiosUtils('/api/search', 'GET', {}, {}, { query: term, type: 'all' }, signal);
+            const response = await axiosUtils(`/api/search`, 'GET', {}, {}, { query: term, type: 'all' }, signal);
             const results = response.data.results || []; // Ensure results is an array
+            console.log('Results:', results);
             setSearchResults(results.slice(0, 5));
         } catch (error) {
             // Check if the error was due to an aborted request

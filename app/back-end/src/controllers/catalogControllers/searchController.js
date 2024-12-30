@@ -110,8 +110,8 @@ exports.search = async (req, res) => {
     const totalSeriesResult = await poolpg.query(seriesCountQuery, countQueryParams);
     let totalSeries = totalSeriesResult.rows[0]?.totalCount || 0;
 
-    console.log('authorsCountQuery', authorsCountQuery)
-    console.log('authorsCountQueryParams', authorsCountQueryParams)
+    // console.log('authorsCountQuery', authorsCountQuery)
+    // console.log('authorsCountQueryParams', authorsCountQueryParams)
     const totalAuthorsResult = await poolpg.query(authorsCountQuery, authorsCountQueryParams);
     const totalAuthors = totalAuthorsResult.rows[0]?.totalCount || 0;
 

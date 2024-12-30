@@ -4,9 +4,6 @@
 cd /app/back-end
 
 # Stop any running Docker containers
-echo "Stopping existing Docker containers..."
-sudo docker compose down
+echo "Installing dependancies..."
+npm i
 
-# Remove dangling Docker images (optional cleanup)
-echo "Cleaning up old Docker images..."
-sudo docker image prune -f

@@ -1,27 +1,27 @@
 version: 0.0
 os: linux
 files:
-  - source: /app/back-end
-    destination: /app/back-end
+  - source: app/back-end
+    destination: /var/www/back-end
     overwrite: true
 
 hooks:
   ApplicationStop:
-    - location: scripts/stop_server.sh
+    - location: app/back-end/scripts/stop_server.sh
       timeout: 300
       runas: root
 
   BeforeInstall:
-    - location: scripts/before_script.sh
+    - location: app/back-end/scripts/before_script.sh
       timeout: 300
       runas: root
 
   AfterInstall:
-    - location: scripts/after_script.sh
+    - location: app/back-end/scripts/after_script.sh
       timeout: 300
       runas: root
 
   ApplicationStart:
-    - location: scripts/start_server.sh
+    - location: app/back-end/scripts/start_server.sh
       timeout: 300
       runas: root

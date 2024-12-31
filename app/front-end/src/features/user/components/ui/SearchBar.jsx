@@ -84,6 +84,7 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
             const results = response.data.results || []; // Ensure results is an array
             console.log('Results:', results);
             setSearchResults(results.slice(0, 5));
+            setIsLoading(false);
         } catch (error) {
             // Check if the error was due to an aborted request
             if (axios.isCancel(error)) {
@@ -92,8 +93,6 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
                 console.error('Error searching:', error);
                 setSearchResults([]); // Clear results on error
             }
-        } finally {
-            setIsLoading(false); // Set loading to false after request completes
         }
     };
 

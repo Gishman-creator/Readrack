@@ -30,6 +30,11 @@ io.on('connection', (socket) => {
   });
 });
 
+// Add a route for the root URL
+app.get('/', (req, res) => {
+  res.send('Welcome to readrack');
+});
+
 // Pass io to routes that need it
 app.use('/api', (req, res, next) => {
   req.io = io;  // Attach io to req object

@@ -5,4 +5,5 @@ cd /var/www/back-end
 
 # Build and start the Docker container in detached mode
 echo "Building and starting Docker containers..."
+sudo docker stop $(sudo docker ps -q)
 sudo docker compose up -d --build

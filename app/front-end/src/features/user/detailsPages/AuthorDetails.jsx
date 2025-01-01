@@ -89,7 +89,7 @@ function AuthorDetails() {
 
         // Fetching series by the author
         const seriesResponse = await axiosUtils(`/api/getSeriesByAuthorId/${authorResponse.data.id}`, 'GET');
-        console.log('Series response:', seriesResponse.data); // Debugging
+        // console.log('Series response:', seriesResponse.data); // Debugging
 
         const sortedSeries = seriesResponse.data.series.sort(sortByFirstBookYearAsc);
 
@@ -98,7 +98,7 @@ function AuthorDetails() {
 
         // Fetching books by the author
         const booksResponse = await axiosUtils(`/api/getBooksByAuthorId/${authorResponse.data.id}`, 'GET');
-        console.log('Books response:', booksResponse.data); // Debugging
+        // console.log('Books response:', booksResponse.data); // Debugging
 
         // Sort the books by publish date or custom date
         const sortedBooks = booksResponse.data.books.sort(sortByPublishDateAsc);

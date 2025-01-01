@@ -65,7 +65,7 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
     const searchInstant = async (term) => {
         // Cancel any previous request
         if (controllerRef.current) {
-            console.log("Aborting previous fetch");
+            // console.log("Aborting previous fetch");
             controllerRef.current.abort();
         }
         setSearchResults([]);
@@ -82,13 +82,13 @@ const SearchBar = ({ isSearchOpen, toggleSearch }) => {
         try {
             const response = await axiosUtils(`/api/search`, 'GET', {}, {}, { query: term, type: 'all' }, signal);
             const results = response.data.results || []; // Ensure results is an array
-            console.log('Results:', results);
+            // console.log('Results:', results);
             setSearchResults(results.slice(0, 5));
             setIsLoading(false);
         } catch (error) {
             // Check if the error was due to an aborted request
             if (axios.isCancel(error)) {
-                console.log('Request canceled:', error.message);
+                // console.log('Request canceled:', error.message);
             } else {
                 console.error('Error searching:', error);
                 setSearchResults([]); // Clear results on error

@@ -13,7 +13,7 @@ import NetworkErrorPage from '../../../pages/NetworkErrorPage';
 export default function Home() {
     const activeTab = useSelector((state) => state.user.activeTab);
     const activeGenre = useSelector((state) => state.user.activeGenre);
-    console.log(`Navigating to ${activeTab}...`);
+    // console.log(`Navigating to ${activeTab}...`);
 
     if(activeTab) document.title = `${activeTab} - readrack`;
 
@@ -27,14 +27,14 @@ export default function Home() {
     const [networkError, setNetworkError] = useState(false);
     const [cardData, setCardData] = useState([]);
     if(!cardData || cardData.length === 0) {
-        console.log('Card data is empty');
+        // console.log('Card data is empty');
     }
 
     const dispatch = useDispatch();
 
     useEffect(() => {
         const updatePageLimitAndInterval = () => {
-            console.log('Updating page limit and interval...');
+            // console.log('Updating page limit and interval...');
             const width = window.innerWidth;
             if (width >= 1536) {
                 setPageLimitEnd(90);
@@ -67,9 +67,9 @@ export default function Home() {
     useEffect(() => {
         const fetchData = async () => {
             setIsLoading(true);
-            console.log('The active tab is:', activeTab);
-            console.log('The pageLimitEnd is:', pageLimitEnd);
-            console.log('The pageLimitStart is:', pageLimitStart);
+            // console.log('The active tab is:', activeTab);
+            // console.log('The pageLimitEnd is:', pageLimitEnd);
+            // console.log('The pageLimitStart is:', pageLimitStart);
             if (!activeTab || !pageLimitEnd || !pageLimitStart === undefined) return; // Wait until activeTab is set
 
             try {
@@ -79,7 +79,7 @@ export default function Home() {
                 } else {
                     response = await axiosUtils(`/api/getAuthors?genre=${activeGenre}&limitStart=${pageLimitStart}&limitEnd=${pageLimitEnd}`, 'GET');
                 }
-                console.log('Response:', response);
+                // console.log('Response:', response);
 
                 const { data, totalCount } = response.data;
 

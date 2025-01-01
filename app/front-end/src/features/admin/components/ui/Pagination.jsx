@@ -10,7 +10,7 @@ function Pagination({ isSearchOpen }) {
     const totalItems = useSelector((state) => state.catalog.tableTotalItems);
     const pageInterval = 50;
 
-    console.log('Limit start:', limitStart, 'Limit end:', limitEnd, 'Total items:', totalItems);
+    // console.log('Limit start:', limitStart, 'Limit end:', limitEnd, 'Total items:', totalItems);
 
     const dispatch = useDispatch();
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 function Pagination({ pageLimitStart, pageLimitEnd, pageInterval, totalItems, onPageChange, toTop }) {
-    console.log('toTop', toTop)
+    // console.log('toTop', toTop)
     const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {

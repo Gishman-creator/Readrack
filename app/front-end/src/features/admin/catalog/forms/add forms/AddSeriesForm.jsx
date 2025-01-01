@@ -24,7 +24,7 @@ function AddSeriesForm({ onClose }) {
 
   useEffect(() => {
     // console.log('The author search is:', authorSearch);
-    console.log('The selected authors set to:', selectedAuthors)
+    // console.log('The selected authors set to:', selectedAuthors)
   }, [authorSearch, selectedAuthors])
 
   useEffect(() => {

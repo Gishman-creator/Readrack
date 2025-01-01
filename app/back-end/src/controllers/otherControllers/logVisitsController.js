@@ -81,7 +81,7 @@ exports.getVisitsData = async (req, res) => {
         const { rows: results } = await poolpg.query(query);
         // console.log('Visits Results:', results);
 
-        console.log('Labels:', labels);
+        // console.log('Labels:', labels);
 
         // Merge results with labels
         const mergedData = labels.map(labelObj => {

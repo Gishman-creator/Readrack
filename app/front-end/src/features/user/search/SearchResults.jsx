@@ -111,7 +111,7 @@ const SearchResults = () => {
             setIsLoading(true);
             try {
                 const response = await axiosUtils(`/api/search?query=${initialQuery}&type=${type}`, 'GET');
-                console.log('The search results are:', response);
+                // console.log('The search results are:', response);
 
                 const dataWithBlobs = response.data.results.map((item) => ({
                     ...item,

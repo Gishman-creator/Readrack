@@ -45,7 +45,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal })
         const fetchData = async () => {
             // Clean up the previous fetch if it exists
             if (controllerRef.current) {
-                console.log("Aborting previous fetch");
+                // console.log("Aborting previous fetch");
                 controllerRef.current.abort();
             }
 
@@ -79,21 +79,21 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal })
                             {}, {}, {}, signal  // Pass signal here
                         );
                     } else if (activeTab === "Books") {
-                        console.log('Calling books');
+                        // console.log('Calling books');
                         response = await axiosUtils(
                             `/api/getBooks?limitStart=${limitStart}&limitEnd=${limitEnd}`,
                             'GET',
                             {}, {}, {}, signal  // Pass signal here
                         );
                     } else if (activeTab === "Authors") {
-                        console.log('Calling authors');
+                        // console.log('Calling authors');
                         response = await axiosUtils(
                             `/api/getAuthors?limitStart=${limitStart}&limitEnd=${limitEnd}`,
                             'GET',
                             {}, {}, {}, signal  // Pass signal here
                         );
                     }
-                    console.log('Authors response:', response);
+                    // console.log('Authors response:', response);
                     data = response.data.data;
                     totalCount = response.data.totalCount;
                 }
@@ -105,7 +105,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal })
                 setIsLoading(false);
             } catch (error) {
                 if (error.name === "AbortError") {
-                    console.log("Fetch aborted successfully");
+                    // console.log("Fetch aborted successfully");
                 } else {
                     console.error(`Error fetching ${activeTab.toLowerCase()}:`, error);
                     if (error.message === "Network Error" || error.response?.status === 500 || error.response?.status === 501) {
@@ -120,7 +120,7 @@ function Table({ openEditAuthorModal, openEditBooksModal, openEditSeriesModal })
         // Clean up the fetch if activeTab or other dependencies change
         return () => {
             if (controllerRef.current) {
-                console.log("Cleaning up and aborting fetch");
+                // console.log("Cleaning up and aborting fetch");
                 controllerRef.current.abort();
             }
         };

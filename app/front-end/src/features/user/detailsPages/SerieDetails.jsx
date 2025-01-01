@@ -56,7 +56,7 @@ function SerieDetails() {
         const serieResponse = await axiosUtils(`/api/getSerieById/${serieId}`, 'GET');
         setSerieData(serieResponse.data);
 
-        console.log('The serie data are:', serieResponse.data);
+        // console.log('The serie data are:', serieResponse.data);
 
         // If serie_name is not in the URL, update it
         if (!serie_name || serie_name !== serieResponse.data.serie_name) {
@@ -67,7 +67,7 @@ function SerieDetails() {
         document.title = `${formatSeriesName(serieResponse.data.serie_name)} by ${serieResponse.data.authors[0].author_name} - readrack`;
 
         const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}`, 'GET');
-        console.log('Books response:', booksResponse.data); // Debugging
+        // console.log('Books response:', booksResponse.data); // Debugging
 
         // Sort the books by publish date or custom date
         const sortedBooks = booksResponse.data.books.sort(sortBySerieIndexAsc);

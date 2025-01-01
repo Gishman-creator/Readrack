@@ -13,7 +13,7 @@ function AddBooksForm({ onClose }) {
   const serieDetailsAuthor = useSelector((state) => state.catalog.author);
   const detailsAuthors = useSelector((state) => state.catalog.authors);
   const serieBookCount = useSelector((state) => state.catalog.serieBookCount);
-  console.log('The serie book count:', serieBookCount + 1);
+  // console.log('The serie book count:', serieBookCount + 1);
   
   // Safely access properties of serieDetailsAuthor
   const detailsAuthor = serieDetailsAuthor
@@ -23,7 +23,7 @@ function AddBooksForm({ onClose }) {
     }
     : {}; // Fallback to an empty object if serieDetailsAuthor is null or undefined
 
-    console.log(detailsAuthors)
+    // console.log(detailsAuthors)
   const [authorSearch, setAuthorSearch] = useState('');
   const [serieSearch, setSerieSearch] = useState(detailsSerie ? detailsSerie.serie_name : '');
   const [authorOptions, setAuthorOptions] = useState([]);
@@ -43,9 +43,9 @@ function AddBooksForm({ onClose }) {
       if(!book_name.trim()) return;
       try{
         const response = await axiosUtils(`/api/getBookNames?book_name=${book_name}`, 'GET');
-        console.log('The book names response is:', response);
+        // console.log('The book names response is:', response);
         setBookNameCount(response.data.bookNameCount);
-        console.log('The book name count is:', response.data.bookNameCount)
+        // console.log('The book name count is:', response.data.bookNameCount)
       } catch (error) {
         console.error('Error fetching book names:', error);
       }

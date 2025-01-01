@@ -96,7 +96,7 @@ function AuthorDetails() {
 
         // Fetching series by the author
         const seriesResponse = await axiosUtils(`/api/getSeriesByAuthorId/${authorResponse.data.id}`, 'GET');
-        console.log('Series response:', seriesResponse.data); // Debugging
+        // console.log('Series response:', seriesResponse.data); // Debugging
 
         const sortedSeries = seriesResponse.data.series.sort(sortByFirstBookYearAsc);
 
@@ -175,7 +175,7 @@ function AuthorDetails() {
 
     // New event listener for serieAdded
     socket.on('serieAdded', (serieData) => {
-      console.log('Series updated via socket:', serieData);
+      // console.log('Series updated via socket:', serieData);
       // Split the author_id string into an array of individual author IDs
       const authorIds = serieData.author_id.split(',').map(id => id.trim());
 
@@ -187,9 +187,9 @@ function AuthorDetails() {
           // Sort the updatedData by date in ascending order (oldest first)
           return updatedData.sort(sortByFirstBookYearAsc);
         });
-        console.log('Serie count is:', seriesCount);
+        // console.log('Serie count is:', seriesCount);
         setSeriesCount(seriesCount + 1);
-        console.log('Serie count set to:', seriesCount);
+        // console.log('Serie count set to:', seriesCount);
         if (seriesLimit >= seriesCount) { setSeriesLimit(seriesLimit + 1) };
       }
     });

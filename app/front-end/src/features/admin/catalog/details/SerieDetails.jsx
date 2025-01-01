@@ -39,13 +39,13 @@ function SerieDetails() {
   const socket = useSocket();
 
   useEffect(() => {
-    console.log('Serie book count is reset');
+    // console.log('Serie book count is reset');
     dispatch(setSerieBookCount(null));
   }, [location]);
 
   useEffect(() => {
-    console.log("The book's limit is:", booksLimit);
-    console.log("The book's count is:", booksCount);
+    // console.log("The book's limit is:", booksLimit);
+    // console.log("The book's count is:", booksCount);
   }, [booksLimit])
 
 
@@ -85,7 +85,7 @@ function SerieDetails() {
         document.title = `Admin - ${formatSeriesName(serieResponse.data.serie_name)} by ${serieResponse.data.authors[0].author_name}`;
 
         const booksResponse = await axiosUtils(`/api/getBooksBySerieId/${serieResponse.data.id}`, 'GET');
-        console.log('Books response:', booksResponse.data); // Debugging
+        // console.log('Books response:', booksResponse.data); // Debugging
 
         // Sort the books by publish date or custom date
         const sortedBooks = booksResponse.data.books.sort(sortBySerieIndexAsc);
@@ -143,7 +143,7 @@ function SerieDetails() {
 
     // Event listener for bookAdded
     socket.on('bookAdded', (bookData) => {
-      console.log('Book added via socket:', bookData.serie_id);
+      // console.log('Book added via socket:', bookData.serie_id);
       // console.log('Serie ID:', serieId);
       if (bookData.serie_id === parseInt(serieId)) {
         setBooks((prevData) => {
@@ -154,12 +154,12 @@ function SerieDetails() {
           return updatedData.sort(sortBySerieIndexAsc);
         });
         // console.log('Book added successfully');
-        console.log('Books count is:', booksCount);
+        // console.log('Books count is:', booksCount);
 
         // Use a functional update to ensure you're working with the most up-to-date state
         setBooksCount((prevCount) => {
           const newCount = prevCount + 1;
-          console.log('Books count set to:', newCount);
+          // console.log('Books count set to:', newCount);
 
           // Adjust booksLimit only after booksCount is incremented
           if (booksLimit <= newCount) {
@@ -168,7 +168,7 @@ function SerieDetails() {
 
           return newCount; // Return the updated booksCount value
         });
-        console.log('Books count 2 set to:', booksCount);
+        // console.log('Books count 2 set to:', booksCount);
       }
     });
 

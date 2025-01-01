@@ -51,7 +51,7 @@ exports.getCount = async (req, res) => {
                     FROM series s
                     LEFT JOIN books b ON s.id::text = b.serie_id::text
                     WHERE s.author_id::text = a.id::text
-                    AND (SELECT COUNT(*) FROM books b WHERE b.serie_id = s.id) < s."num_books"
+                    AND (SELECT COUNT(*) FROM books b WHERE b.serie_id::text = s.id::text) < s."num_books"
                 );
             `);
 
@@ -64,7 +64,7 @@ exports.getCount = async (req, res) => {
                     FROM series s
                     LEFT JOIN books b ON s.id::text = b.serie_id::text
                     WHERE s.author_id::text = a.id::text
-                    AND (SELECT COUNT(*) FROM books b WHERE b.serie_id = s.id) < s.num_books
+                    AND (SELECT COUNT(*) FROM books b WHERE b.serie_id::text = s.id::text) < s.num_books
                 );
             `);
 

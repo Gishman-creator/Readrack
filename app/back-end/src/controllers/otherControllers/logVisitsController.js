@@ -24,7 +24,7 @@ exports.getVisitsData = async (req, res) => {
         // Generate all 24 hours
         labels = Array.from({ length: 24 }, (_, i) => ({ label: i, visits: 0 }));
 
-        query = `SELECT EXTRACT(HOUR FROM visit_time) AS label, COUNT(*) AS visits
+        query = `SELECT EXTRACT(HOUR FROM visit_time + INTERVAL '2 hours') AS label, COUNT(*) AS visits
                  FROM visits
                  WHERE visit_time >= CURRENT_DATE
                  GROUP BY label`;
@@ -42,7 +42,8 @@ exports.getVisitsData = async (req, res) => {
 
         query = `SELECT TO_CHAR(visit_time, 'Day') AS label, COUNT(*) AS visits
                  FROM visits
-                 WHERE DATE_TRUNC('week', visit_time) = DATE_TRUNC('week', CURRENT_DATE)
+                 WHERE visit_time >= DATE_TRUNC('week', CURRENT_DATE) 
+                 AND visit_time < DATE_TRUNC('week', CURRENT_DATE) + INTERVAL '7 days'
                  GROUP BY label`;
     } else if (filter === 'Month') {
         // Generate all days of the month (1 to 31)
@@ -80,10 +81,20 @@ exports.getVisitsData = async (req, res) => {
         const { rows: results } = await poolpg.query(query);
         // console.log('Visits Results:', results);
 
+        console.log('Labels:', labels);
+
         // Merge results with labels
         const mergedData = labels.map(labelObj => {
-            const match = results.find(result => Number(result.label.trim()) === labelObj.label); // Convert to number for comparison
-            return match ? { label: match.label, visits: Number(match.visits) } : labelObj; // Convert visits to number
+            const match = results.find(result => {
+                // Compare based on the filter
+                if (typeof labelObj.label === 'number') {
+                    return Number(result.label.trim()) === labelObj.label; // For 'Day' filter, compare numbers
+                } else {
+                    return result.label.trim().toLowerCase() === labelObj.label.toLowerCase(); // For others, compare strings
+                }
+            });
+        
+            return match ? { label: labelObj.label, visits: Number(match.visits) } : labelObj;
         });
         // console.log('mergedData Results:', mergedData);
 

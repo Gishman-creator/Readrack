@@ -16,7 +16,7 @@ const updateAuthor = async (req, res) => {
              SET author_name = $1, dob = $2, dod = $3, 
                  nationality = $4, biography = $5, awards = $6, x = $7, instagram = $8, 
                  facebook = $9, website = $10, genre = $11, image = $12 
-             WHERE id = $15`,
+             WHERE id = $13`,
             [author_name, dob, dod || null, nationality, biography, awards, x, instagram, facebook, website, genre, image, id]
         );
 

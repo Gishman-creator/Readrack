@@ -19,6 +19,7 @@ async function decrementNumBooks(authorId) {
 
 exports.deleteData = async (req, res) => {
     const { type, ids } = req.body;
+    console.log(type, ids);
 
     if (!type || !ids || !Array.isArray(ids)) {
         return res.status(400).json({ error: "Invalid request. 'type' and 'ids' must be provided." });
@@ -119,8 +120,8 @@ exports.deleteData = async (req, res) => {
                     await deleteImage(books[0].image);
                 }
 
-                if (rows.length) {
-                    const authorIds = rows[0].author_id.split(',');
+                if (books.length) {
+                    const authorIds = books[0].author_id.split(',');
 
                     // Decrement num_books for each author associated with this book
                     for (const authorId of authorIds) {

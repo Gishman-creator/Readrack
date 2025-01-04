@@ -19,7 +19,7 @@ import blank_image from '../../../../assets/brand_blank_image.png';
 import DeatailsPageSkeleton from '../../../../components/skeletons/DeatailsPageSkeleton';
 import NotFoundPage from '../../../../pages/NotFoundPage';
 import NetworkErrorPage from '../../../../pages/NetworkErrorPage';
-import { sortByFirstBookYearAsc, sortByPublishDateAsc } from '../../../../utils/sortingUtils';
+import { sortByFirstBookYearAsc, sortByPublishDateDesc } from '../../../../utils/sortingUtils';
 
 function AuthorDetails() {
 
@@ -108,7 +108,7 @@ function AuthorDetails() {
         // console.log('Books response:', booksResponse.data); // Debugging
 
         // Sort the books by publish date or custom date
-        const sortedBooks = booksResponse.data.books.sort(sortByPublishDateAsc);
+        const sortedBooks = booksResponse.data.books.sort(sortByPublishDateDesc);
 
         setBooks(sortedBooks);
         setBooksCount(booksResponse.data.books.length);
@@ -169,7 +169,7 @@ function AuthorDetails() {
         );
 
         // Sort the updatedData by date in ascending order (oldest first)
-        return updatedData.sort(sortByPublishDateAsc);
+        return updatedData.sort(sortByPublishDateDesc);
       });
     });
 
@@ -205,7 +205,7 @@ function AuthorDetails() {
           const updatedData = [...prevData, bookData];
 
           // Sort the updatedData by date in ascending order (oldest first)
-          return updatedData.sort(sortByPublishDateAsc);
+          return updatedData.sort(sortByPublishDateDesc);
         });
         setBooksCount(booksCount + 1);
         if (booksLimit >= booksCount) { setBooksLimit(booksLimit + 1) };
@@ -485,7 +485,7 @@ function AuthorDetails() {
                   ))}
                 </p>
                 <p className='font-arima text-slate-400 text-sm'>
-                  published {item.publish_date}
+                  published {item.publish_date || item.publish_year}
                 </p>
                 <a
                   href={

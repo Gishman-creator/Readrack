@@ -13,7 +13,7 @@ import blank_image from '../../../assets/brand_blank_image.png'
 import DeatailsPageSkeleton from '../../../components/skeletons/DeatailsPageSkeleton';
 import { useSocket } from '../../../context/SocketContext';
 import NetworkErrorPage from '../../../pages/NetworkErrorPage';
-import { sortByFirstBookYearAsc, sortByPublishDateAsc } from '../../../utils/sortingUtils';
+import { sortByFirstBookYearAsc, sortByPublishDateDesc } from '../../../utils/sortingUtils';
 
 function AuthorDetails() {
 
@@ -101,7 +101,7 @@ function AuthorDetails() {
         // console.log('Books response:', booksResponse.data); // Debugging
 
         // Sort the books by publish date or custom date
-        const sortedBooks = booksResponse.data.books.sort(sortByPublishDateAsc);
+        const sortedBooks = booksResponse.data.books.sort(sortByPublishDateDesc);
 
         setBooks(sortedBooks);
         SetBooksCount(booksResponse.data.totalCount);
@@ -162,7 +162,7 @@ function AuthorDetails() {
         );
 
         // Sort the updatedData by date in ascending order (oldest first)
-        return updatedData.sort(sortByPublishDateAsc);
+        return updatedData.sort(sortByPublishDateDesc);
       });
     });
 
@@ -192,7 +192,7 @@ function AuthorDetails() {
           const updatedData = [...prevData, bookData];
 
           // Sort the updatedData by date in ascending order (oldest first)
-          return updatedData.sort(sortByPublishDateAsc);
+          return updatedData.sort(sortByPublishDateDesc);
         });
         SetBooksCount((prevCount) => prevCount + 1);
         if (booksLimit >= booksRange) setBooksLimit((prevCount) => prevCount + 1);
@@ -419,7 +419,7 @@ function AuthorDetails() {
                   </div>
                   <p className='font-arima text-sm mt-2'>by  {item.authors.map(author => capitalize(author.author_name)).join(', ')}</p>
                   <p className='font-arima text-slate-400 text-sm'>
-                    published {item.publish_date}
+                    published {item.publish_date || item.publish_year}
                   </p>
                   <a
                     href={

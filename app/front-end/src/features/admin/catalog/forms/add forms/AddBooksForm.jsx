@@ -14,7 +14,7 @@ function AddBooksForm({ onClose }) {
   const detailsAuthors = useSelector((state) => state.catalog.authors);
   const serieBookCount = useSelector((state) => state.catalog.serieBookCount);
   // console.log('The serie book count:', serieBookCount + 1);
-  
+
   // Safely access properties of serieDetailsAuthor
   const detailsAuthor = serieDetailsAuthor
     ? {
@@ -23,7 +23,7 @@ function AddBooksForm({ onClose }) {
     }
     : {}; // Fallback to an empty object if serieDetailsAuthor is null or undefined
 
-    // console.log(detailsAuthors)
+  // console.log(detailsAuthors)
   const [authorSearch, setAuthorSearch] = useState('');
   const [serieSearch, setSerieSearch] = useState(detailsSerie ? detailsSerie.serie_name : '');
   const [authorOptions, setAuthorOptions] = useState([]);
@@ -33,15 +33,15 @@ function AddBooksForm({ onClose }) {
   const [isLoading, setIsLoading] = useState(false);
   const [authorIsLoading, setAuthorIsLoading] = useState(false);
   const [serieIsLoading, setSerieIsLoading] = useState(false);
-  
+
   const dispatch = useDispatch();
   const [book_name, setBookName] = useState();
   const [bookNameCount, setBookNameCount] = useState(0);
 
   useEffect(() => {
     const fetchBookNames = async () => {
-      if(!book_name.trim()) return;
-      try{
+      if (!book_name.trim()) return;
+      try {
         const response = await axiosUtils(`/api/getBookNames?book_name=${book_name}`, 'GET');
         // console.log('The book names response is:', response);
         setBookNameCount(response.data.bookNameCount);
@@ -169,7 +169,6 @@ function AddBooksForm({ onClose }) {
     formData.append('author_id', selectedAuthors.map((author) => author.author_id).join(', '));
     // console.log('The selected authors ids:', formData.author_id);
     formData.append('serie_id', selectedSerie.id);
-    formData.append('serie_index', serieBookCount + 1);
 
     try {
       const response = await axiosUtils('/api/addBook', 'POST', formData, {
@@ -308,6 +307,17 @@ function AddBooksForm({ onClose }) {
               </ul>
             )}
           </div>
+          {selectedSerie && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Serie index:</label>
+              <input
+                type="text"
+                value={serieBookCount + 1}
+                name="serie_index"
+                className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
+              />
+            </div>
+          )}
           <div className="mb-4">
             <label className="block text-sm font-medium">Publish date:</label>
             <input

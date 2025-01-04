@@ -5,7 +5,7 @@ const { putImage, getImageURL } = require('../../utils/imageUtils');
 const updateBook = async (req, res) => {
   const { id } = req.params;
 
-  const { book_name, serie_id, author_id, publish_date, genre, amazon_link, imageName } = req.body;
+  const { book_name, serie_id, author_id, serie_index, publish_date, genre, amazon_link, imageName } = req.body;
 
   const image = req.file ? await putImage(id, req.file, 'books') : imageName;
   const serieId = Number.isNaN(parseInt(serie_id)) ? 0 : parseInt(serie_id);
@@ -14,10 +14,10 @@ const updateBook = async (req, res) => {
     // Update the book in the database
     const updateResult = await poolpg.query(
       `UPDATE books 
-       SET book_name = $1, serie_id = $2, author_id = $3, 
-        publish_date = $4, genre = $5, amazon_link = $6, image = $7
-       WHERE id = $8`,
-      [book_name, serieId, author_id || null, publish_date || null, genre, amazon_link, image, id]
+       SET book_name = $1, serie_id = $2, author_id = $3, serie_index = $4,
+        publish_date = $5, genre = $6, amazon_link = $7, image = $8
+       WHERE id = $9`,
+      [book_name, serieId, author_id || null, serie_index || null, publish_date || null, genre, amazon_link, image, id]
     );
 
     if (updateResult.rowCount === 0) {

@@ -5,20 +5,27 @@ export function sortByFirstBookYearAsc(a, b) {
     return yearA - yearB;  // Ascending order
 };
 
-export function sortByPublishDateAsc(a, b) {
+export function sortByPublishDateDesc(a, b) {
     // Parse publish dates
-    const dateA = parsePublishDate(a.publish_date);
-    const dateB = parsePublishDate(b.publish_date);
+    const dateA = parsePublishDate(a.publish_date) || parsePublishDate(a.publish_year);
+    const dateB = parsePublishDate(b.publish_date) || parsePublishDate(b.publish_year);
 
     // If both dates are null, consider them equal
     if (!dateA && !dateB) return 0;
 
     // If one date is null, consider it greater (push it later in ascending order)
-    if (!dateA) return 1;
-    if (!dateB) return -1;
+    // if (!dateA) return 1;
+    // if (!dateB) return -1;
+
+    // If one date is null, consider it greater (push it later in descending order)
+    if (!dateA) return -1;
+    if (!dateB) return 1;
 
     // Compare dates in ascending order
-    return dateA - dateB;
+    // return dateA - dateB;
+
+    // Compare dates in descending order
+    return dateB - dateA;
 }
 
 // Helper function to parse publish_date

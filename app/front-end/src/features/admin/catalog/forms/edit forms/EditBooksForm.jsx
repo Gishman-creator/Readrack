@@ -5,6 +5,7 @@ import { bufferToBlobURL, downloadImage } from '../../../../../utils/imageUtils'
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import FormSkeleton from '../../../../../components/skeletons/FormSkeleton';
+import Modal from '../../../components/Modal';
 
 function EditBooksForm({ onClose }) {
   const selectedRowBookId = useSelector((state) => state.catalog.selectedRowIds[0]);
@@ -23,6 +24,7 @@ function EditBooksForm({ onClose }) {
   const [authorIsLoading, setAuthorIsLoading] = useState(false);
   const [serieIsLoading, setSerieIsLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -157,6 +159,21 @@ function EditBooksForm({ onClose }) {
   const handleImageUpload = (file) => {
     setSelectedImageFile(file); // Track the uploaded file
   };
+
+  const handleDeleteClick = async () => {
+    const userConfirmed = window.confirm("Are you sure you want to delete this book?");
+    if (userConfirmed) {
+      const type = 'books';
+      try {
+        const response = await axiosUtils('/api/deleteData', 'DELETE', { ids: [bookId], type });
+        toast.success(response.data.message);
+        if (onClose) onClose(); // Close modal if applicable
+      } catch (error) {
+        console.error('Error deleting:', error);
+        toast.error('Error deleting the book');
+      }
+    }
+  }
 
   const handleSubmit = async (event) => {
     setIsLoading(true);
@@ -340,6 +357,18 @@ function EditBooksForm({ onClose }) {
                 </ul>
               )}
             </div>
+            {selectedSerie && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium">Serie index:</label>
+                <input
+                  type="text"
+                  name="serie_index"
+                  defaultValue={bookDetails.serie_index || ''}
+                  className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
+                  placeholder="e.g., October 8, 2024"
+                />
+              </div>
+            )}
             <div className="mb-4">
               <label className="block text-sm font-medium">Publish date:</label>
               <input
@@ -370,20 +399,29 @@ function EditBooksForm({ onClose }) {
                 required
               />
             </div>
-            <button
-              type="submit"
-              className={`bg-green-700 flex items-center space-x-2 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <span className='white-loader'></span>
-                  <span>Saving...</span>
-                </>
-              ) :
-                'Save Changes'
-              }
-            </button>
+            <div className='flex justify-between items-center'>
+              <button
+                type='button'
+                className={`bg-red-700 flex items-center space-x-2 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg`}
+                onClick={handleDeleteClick}
+              >
+                Delete
+              </button>
+              <button
+                type="submit"
+                className={`bg-green-700 flex items-center space-x-2 text-white text-sm font-semibold font-poppins px-4 py-2 rounded-lg on-click-amzn ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <span className='white-loader'></span>
+                    <span>Saving...</span>
+                  </>
+                ) :
+                  'Save Changes'
+                }
+              </button>
+            </div>
           </div>
         </form>
       )}

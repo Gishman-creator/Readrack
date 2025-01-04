@@ -15,7 +15,7 @@ import blank_image from '../../../../assets/brand_blank_image.png';
 import DeatailsPageSkeleton from '../../../../components/skeletons/DeatailsPageSkeleton';
 import NotFoundPage from '../../../../pages/NotFoundPage';
 import NetworkErrorPage from '../../../../pages/NetworkErrorPage';
-import { sortByPublishDateAsc, sortBySerieIndexAsc } from '../../../../utils/sortingUtils';
+import { sortByPublishDateDesc, sortBySerieIndexAsc } from '../../../../utils/sortingUtils';
 
 function SerieDetails() {
 
@@ -303,7 +303,7 @@ function SerieDetails() {
                 </div>
                 <p className='font-arima text-sm mt-2'>by {item.authors.map(author => capitalize(author.author_name)).join(', ')}</p>
                 <p className='font-arima text-slate-400 text-sm'>
-                  #{item.serie_index}, published {item.publish_date}
+                  #{item.serie_index}, published {item.publish_date || item.publish_year}
                 </p>
                 <a
                   href={

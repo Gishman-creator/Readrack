@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const apiRoutes = require('./src/routes/apiRoutes'); // Ensure this is correct
+const poolpg = require('./src/config/dbpg');
+const { SitemapStream, streamToPromise } = require('sitemap'); // Import new utilities
+const { Readable } = require('stream');
 const { sendEmail } = require('./src/services/emailService');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -48,6 +51,45 @@ if (!prod) {
 app.get('/', (req, res) => {
   res.send('Welcome to readrack');
 });
+
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    // Fetch series and authors from your database
+    const series = await poolpg.query('SELECT id, serie_name FROM series');
+    const authors = await poolpg.query('SELECT id, author_name FROM authors');
+
+    // Generate URLs for series and authors
+    const seriesUrls = series.rows.map(serie => ({
+      url: `/series/${serie.id}/${serie.serie_name.toLowerCase().split(' ').join('-')}`,
+      changefreq: 'weekly',
+      priority: 0.8
+    }));
+
+    const authorsUrls = authors.rows.map(author => ({
+      url: `/authors/${author.id}/${author.author_name.toLowerCase().split(' ').join('-')}`,
+      changefreq: 'weekly',
+      priority: 0.8
+    }));
+
+    // Combine the URLs for series and authors
+    const urls = [...seriesUrls, ...authorsUrls];
+
+    // Create a stream for generating the sitemap
+    const sitemapStream = new SitemapStream({
+      hostname: 'https://readrack.net',
+    });
+
+    // Convert the URLs to a readable stream and pipe them to the sitemap stream
+    const xml = await streamToPromise(Readable.from(urls).pipe(sitemapStream));
+
+    res.header('Content-Type', 'application/xml');
+    res.send(xml.toString());
+  } catch (error) {
+    console.error('Error generating sitemap:', error);
+    res.status(500).send('Error generating sitemap');
+  }
+});
+
 
 // Pass io to routes that need it
 app.use('/api', (req, res, next) => {

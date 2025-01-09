@@ -309,12 +309,14 @@ function AddBooksForm({ onClose }) {
           </div>
           {selectedSerie && (
             <div className="mb-4">
-              <label className="block text-sm font-medium">Serie index:</label>
+              <label htmlFor="serie_index" className="block text-sm font-medium">Serie Index:</label>
               <input
                 type="text"
-                value={serieBookCount + 1}
+                id="serie_index"
                 name="serie_index"
+                defaultValue={serieBookCount + 1} // Prefill with calculated value
                 className="w-full border border-gray-300 rounded-lg px-2 py-1 focus:border-green-700 focus:ring-green-700"
+                required
               />
             </div>
           )}

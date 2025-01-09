@@ -5,12 +5,15 @@ import User from './features/user/User';
 import Admin from './features/admin/Admin';
 import Authentication from './features/authentication/Authentication';
 import NotFoundPage from './pages/NotFoundPage';
+import axiosUtils from './utils/axiosUtils';
+import Sitemap from './Sitemap';
 
 if (import.meta.env.MODE === 'production') {
     console.log = function () {};
 }
 
 const App = () => {
+
     return (
         <div className='h-screen-nonav bg-[#f9f9f9]'>
             <Router>
@@ -18,6 +21,7 @@ const App = () => {
                     <Route path="/*" element={<User />} />
                     <Route path="/admin/*" element={<Admin />} />
                     <Route path="/auth/*" element={<Authentication />} />
+                    <Route path="/sitemap.xml" element={<Sitemap />} />
                     <Route path='*' element={<NotFoundPage />} />
                 </Routes>
             </Router>

@@ -35,7 +35,7 @@ function AuthorDetails() {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const socket = useSocket();
+  const [jsonLD, setJsonLD] = useState(null);
 
   useEffect(() => {
 
@@ -68,6 +68,8 @@ function AuthorDetails() {
       try {
         const authorResponse = await axiosUtils(`/api/getAuthorById/${authorId}`, 'GET');
 
+        console.log('Author response:', authorResponse.data);
+
         // Adding the age property to the author data
         const authorDataWithAge = {
           ...authorResponse.data,
@@ -86,6 +88,18 @@ function AuthorDetails() {
 
         // Update the tab title with the series name
         document.title = `${capitalize(authorResponse.data.author_name)} - readrack`;
+
+        // Update the meta description
+        const metaDescription = document.querySelector('meta[name="description"]');
+        if (metaDescription) {
+          metaDescription.setAttribute('content', authorResponse.data.biography || "Default description here");
+        } else {
+          // If the description meta tag doesn't exist, create it
+          const newMetaDescription = document.createElement('meta');
+          newMetaDescription.name = 'description';
+          newMetaDescription.content = authorResponse.data.biography || "Default description here";
+          document.head.appendChild(newMetaDescription);
+        }
 
         // Fetching series by the author
         const seriesResponse = await axiosUtils(`/api/getSeriesByAuthorId/${authorResponse.data.id}`, 'GET');
@@ -106,6 +120,27 @@ function AuthorDetails() {
         setBooks(sortedBooks);
         SetBooksCount(booksResponse.data.totalCount);
 
+        const authorJsonLD = {
+          "@context": "https://schema.org",
+          "@type": "Person",
+          "name": authorData.author_name,
+          "image": authorData.imageURL,
+          "birthDate": authorData.dob,
+          "deathDate": authorData.dod,
+          "nationality": authorData.nationality,
+          "genre": authorData.genre,
+          "description": authorData.biography,
+          "url": window.location.href, // URL to the author's page
+          "sameAs": [
+            authorData.website,
+            authorData.x,
+            authorData.instagram,
+            authorData.facebook
+          ].filter(Boolean), // Remove any empty social media links
+        };
+
+        setJsonLD(authorJsonLD);
+
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching books data:', error);
@@ -120,107 +155,7 @@ function AuthorDetails() {
 
     fetchBooksData();
 
-    if (!socket) {
-      console.error("Socket is not initialized");
-      return;
-    }
-
-    socket.on('authorsUpdated', (updatedAuthors) => {
-      setAuthorData((prevAuthorData) => {
-        // Only update if the IDs match
-        if (prevAuthorData.id === updatedAuthors.id) {
-          // console.log("The ids are equal...............")
-          return {
-            ...prevAuthorData,
-            ...updatedAuthors,
-          };
-        }
-
-        return prevAuthorData; // Return the previous state if IDs don't match
-      });
-    });
-
-    // Listen for series updates via socket
-    socket.on('seriesUpdated', (updatedSeries) => {
-      // console.log("Series updated via socket:", updatedSeries);
-      setSeries((prevData) => {
-        const updatedData = prevData.map((series) =>
-          series.id === updatedSeries.id ? updatedSeries : series
-        );
-
-        // Sort the updatedData by date in ascending order (oldest first)
-        return updatedData.sort(sortByFirstBookYearAsc);
-      });
-    });
-
-    // Event listener for booksUpdated
-    socket.on('booksUpdated', (updatedBooks) => {
-      // console.log('Books updated via socket:', updatedBooks);
-      setBooks((prevData) => {
-        const updatedData = prevData.map((book) =>
-          book.id === updatedBooks.id ? updatedBooks : book
-        );
-
-        // Sort the updatedData by date in ascending order (oldest first)
-        return updatedData.sort(sortByPublishDateDesc);
-      });
-    });
-
-    // New event listener for serieAdded
-    socket.on('serieAdded', (serieData) => {
-      // console.log('New serie added via socket:', serieData);
-      if (serieData.author_id === parseInt(authorId)) {
-        setSeries((prevData) => {
-          const updatedData = [...prevData, serieData];
-
-          // Sort the updatedData by date in ascending order (oldest first)
-          return updatedData.sort(sortByFirstBookYearAsc);
-        });
-        SetSeriesCount((prevCount) => prevCount + 1);
-        if (seriesLimit >= groupRange) setSeriesLimit((prevCount) => prevCount + 1);
-      }
-    });
-
-    // Event listener for bookAdded
-    socket.on('bookAdded', (bookData) => {
-      // Split the author_id string into an array of individual author IDs
-      const authorIds = bookData.author_id.split(',').map(id => id.trim());
-
-      // Check if the current authorId is one of the authorIds
-      if (authorIds.includes(authorId)) {
-        setBooks((prevData) => {
-          const updatedData = [...prevData, bookData];
-
-          // Sort the updatedData by date in ascending order (oldest first)
-          return updatedData.sort(sortByPublishDateDesc);
-        });
-        SetBooksCount((prevCount) => prevCount + 1);
-        if (booksLimit >= booksRange) setBooksLimit((prevCount) => prevCount + 1);
-      }
-    });
-
-    socket.on('dataDeleted', ({ ids, type }) => {
-      // console.log('Data deleted via socket:', { ids, type });
-      if (type = 'series') {
-        setSeries((prevData) => prevData.filter((item) => !ids.includes(item.id)));
-        SetSeriesCount((prevCount) => prevCount - ids.length);
-      } else if (type = 'books') {
-        setBooks((prevData) => prevData.filter((item) => !ids.includes(item.id)));
-        SetBooksCount((prevCount) => prevCount - ids.length);
-      }
-    });
-
-
-    return () => {
-      socket.off('authorsUpdated');
-      socket.off('seriesUpdated');
-      socket.off('booksUpdated');
-      socket.off('serieAdded');
-      socket.off('bookAdded');
-      socket.off('dataDeleted');
-    };
-
-  }, [authorId, author_name, navigate, socket]);
+  }, [authorId, author_name, navigate]);
 
   const handleSetLimit = (type) => {
     if (type == 'series') {
@@ -250,6 +185,16 @@ function AuthorDetails() {
 
   return (
     <div className='px-[4%] sm:px-[12%]'>
+
+      {/* Your existing JSX content */}
+
+      {jsonLD && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLD) }}
+        />
+      )}
+
       <div className='md:flex md:flex-row md:space-x-6 xl:space-x-8 mb-10'>
         <div className='w-full pt-2 md:w-[22rem] md:h-full md:sticky md:top-20 lg:top-[4rem] overflow-auto'>
           <div className=' max-w-[13rem] mx-auto'>

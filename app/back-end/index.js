@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const bodyParser = require('body-parser');
 const apiRoutes = require('./src/routes/apiRoutes'); // Ensure this is correct
 const poolpg = require('./src/config/dbpg');
@@ -91,7 +92,20 @@ app.get('/sitemap.xml', async (req, res) => {
     // Convert the URLs to a readable stream and pipe them to the sitemap stream
     const xml = await streamToPromise(Readable.from(urls).pipe(sitemapStream));
 
+    // Ensure the 'downloads' directory exists, if not, create it
+    const downloadDir = path.join(__dirname, 'downloads');
+    if (!fs.existsSync(downloadDir)) {
+        fs.mkdirSync(downloadDir);
+    }
+
+    // Define the path to save the sitemap file
+    const filePath = path.join(downloadDir, 'sitemap.xml');
+
+    // Write the sitemap XML to the 'downloads' folder
+    fs.writeFileSync(filePath, xml.toString(), 'utf8');
+
     res.header('Content-Type', 'application/xml');
+    res.header('Content-Disposition', 'attachment; filename="sitemap.xml"');
     res.send(xml.toString());
   } catch (error) {
     console.error('Error generating sitemap:', error);

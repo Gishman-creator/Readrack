@@ -50,8 +50,8 @@ const App = () => {
                     <Route path="/*" element={<User />} />
                     <Route path="/admin/*" element={<Admin />} />
                     <Route path="/auth/*" element={<Authentication />} />
-                    <Route path="/sitemap.xml" element={<Sitemap />} />
-                    <Route path="/robots.txt" element={<GetRobotsTxt />} />
+                    {/* <Route path="/sitemap.xml" element={<Sitemap />} /> */}
+                    {/* <Route path="/robots.txt" element={<GetRobotsTxt />} /> */}
                     <Route path='*' element={<NotFoundPage />} />
                 </Routes>
             </Router>

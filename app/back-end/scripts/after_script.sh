@@ -5,7 +5,7 @@ cd /var/www/back-end
 
 # Remove any running Docker containers
 echo "Stopping existing Docker containers..."
-sudo docker stop $(docker ps -q)
+sudo docker ps -q | ForEach-Object { docker stop $_ }
 sudo docker rm $(docker ps -a -q)
 
 # Remove dangling Docker images (optional cleanup)

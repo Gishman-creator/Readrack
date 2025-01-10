@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, BrowserRouter } from 'react-router-dom';
 import Home from './features/user/home/Home';
 import User from './features/user/User';
 import Admin from './features/admin/Admin';
@@ -12,40 +12,40 @@ if (import.meta.env.MODE === 'production') {
     console.log = function () { };
 }
 
-const GetRobotsTxt = () => {
-    const [robotsTxt, setRobotsTxt] = useState(null);
-    const [error, setError] = useState(null);
+// const GetRobotsTxt = () => {
+//     const [robotsTxt, setRobotsTxt] = useState(null);
+//     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const fetchRobotsTxt = async () => {
-            try {
-                const response = await axiosUtils('/robots.txt', 'GET');
-                setRobotsTxt(response.data); // Set the data to state
-            } catch (error) {
-                setError('Error fetching robots.txt');
-                console.error('Error fetching robots.txt:', error);
-            }
-        };
+//     useEffect(() => {
+//         const fetchRobotsTxt = async () => {
+//             try {
+//                 const response = await axiosUtils('/robots.txt', 'GET');
+//                 setRobotsTxt(response.data); // Set the data to state
+//             } catch (error) {
+//                 setError('Error fetching robots.txt');
+//                 console.error('Error fetching robots.txt:', error);
+//             }
+//         };
 
-        fetchRobotsTxt();
-    }, []);
+//         fetchRobotsTxt();
+//     }, []);
 
-    if (error) {
-        return <div>{error}</div>;
-    }
+//     if (error) {
+//         return <div>{error}</div>;
+//     }
 
-    if (!robotsTxt) {
-        return <div>Loading robots.txt...</div>;
-    }
+//     if (!robotsTxt) {
+//         return <div>Loading robots.txt...</div>;
+//     }
 
-    return <pre>{robotsTxt}</pre>; // Render the robots.txt content
-};
+//     return <pre>{robotsTxt}</pre>; // Render the robots.txt content
+// };
 
 const App = () => {
 
     return (
-        <div className='h-screen-nonav bg-[#f9f9f9]'>
-            <Router>
+        <BrowserRouter>
+            <div className='h-screen-nonav bg-[#f9f9f9]'>
                 <Routes>
                     <Route path="/*" element={<User />} />
                     <Route path="/admin/*" element={<Admin />} />
@@ -54,8 +54,8 @@ const App = () => {
                     {/* <Route path="/robots.txt" element={<GetRobotsTxt />} /> */}
                     <Route path='*' element={<NotFoundPage />} />
                 </Routes>
-            </Router>
-        </div>
+            </div>
+        </BrowserRouter>
     );
 };
 

@@ -5,7 +5,7 @@ cd /var/www/back-end
 
 # Stop any running Docker containers
 echo "Stopping existing Docker containers..."
-sudo docker compose down
+sudo docker stop $(sudo docker ps -q)
 
 # Remove dangling Docker images (optional cleanup)
 echo "Cleaning up old Docker images..."

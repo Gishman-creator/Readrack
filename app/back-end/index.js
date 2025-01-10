@@ -10,8 +10,10 @@ const http = require('http');
 const { Server } = require('socket.io');
 require('dotenv').config();
 
-const serverless = require('serverless-http');
 const prod = process.env.NODE_ENV === "production";
+
+// Import `socket.io-client` for client-side connection
+const { io: clientIo } = require('socket.io-client');
 
 const app = express();
 const server = http.createServer(app);
@@ -27,7 +29,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 if (!prod) {
-  // Socket.IO connection
+  // Server-Side Socket.IO connection
   io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
 
@@ -36,9 +38,11 @@ if (!prod) {
     });
   });
 } else {
-  const socket = io('https://api.readrack.net', {
+  // Client-Side Socket.IO connection
+  const socket = clientIo('https://api.readrack.net', {
     transports: ['websocket', 'polling'],
   });
+
   socket.on('connect', () => {
     console.log('Connected to Socket.IO server:', socket.id);
   });

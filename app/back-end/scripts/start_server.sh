@@ -6,4 +6,5 @@ cd /var/www/back-end
 # Build and start the Docker container in detached mode
 echo "Building and starting Docker containers..."
 sudo docker stop $(sudo docker ps -q)
-sudo docker compose up -d --build
+sudo docker build -t my-api .           
+sudo docker run -d --name my-api-container -p 8000:8000 my-api

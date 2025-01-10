@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const bodyParser = require('body-parser');
 const apiRoutes = require('./src/routes/apiRoutes'); // Ensure this is correct
 const poolpg = require('./src/config/dbpg');
@@ -54,6 +55,10 @@ if (!prod) {
 // Add a route for the root URL
 app.get('/', (req, res) => {
   res.send('Welcome to readrack');
+});
+
+app.get('/robots.txt', (req, res) => {
+  res.sendFile(path.join(__dirname, 'robots.txt'));
 });
 
 app.get('/sitemap.xml', async (req, res) => {

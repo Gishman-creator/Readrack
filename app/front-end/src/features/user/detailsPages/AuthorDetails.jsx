@@ -89,6 +89,20 @@ function AuthorDetails() {
         // Update the tab title with the series name
         document.title = `${capitalize(authorResponse.data.author_name)} - readrack`;
 
+        // Dynamically create the canonical URL
+        const canonicalUrl = `https://readrack.net/authors/${authorId}/${spacesToHyphens(authorResponse.data.author_name)}`;
+        
+        // Update the canonical link tag in the <head>
+        const canonicalLink = document.querySelector('link[rel="canonical"]');
+        if (canonicalLink) {
+          canonicalLink.setAttribute('href', canonicalUrl);
+        } else {
+          const linkElement = document.createElement('link');
+          linkElement.setAttribute('rel', 'canonical');
+          linkElement.setAttribute('href', canonicalUrl);
+          document.head.appendChild(linkElement);
+        }
+
         // Update the meta description
         const metaDescription = document.querySelector('meta[name="description"]');
         if (metaDescription) {

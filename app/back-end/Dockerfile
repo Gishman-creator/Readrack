@@ -9,6 +9,6 @@ RUN apt-get update && apt-get install -y ca-certificates
 RUN npm install --timeout=600000
 
 ENV NODE_ENV=production
-EXPOSE 8000
+EXPOSE 8080
 
 CMD ["node", "index.js"]

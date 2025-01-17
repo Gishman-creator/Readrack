@@ -1,0 +1,9 @@
+
+app/back-end/.env
+app/front-end/.env.production
+app/front-end/appspec.yml
+/app/front-end/scripts
+/app/back-end/.github
+/app/front-end/.github
+codeUploadCommands.yml
+prompts.yml

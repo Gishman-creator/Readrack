@@ -8,3 +8,4 @@ app/front-end/appspec.yml
 /app/front-end/.github
 codeUploadCommands.yml
 prompts.yml
+app/back-end/.env
